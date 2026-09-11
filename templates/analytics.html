@@ -1,0 +1,708 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SupportPilot - Analytics</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <style>
+      body {
+        display: flex;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+      .sidebar {
+        width: 250px;
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        z-index: 1040;
+        height: 100vh;
+        position: sticky;
+        top: 0;
+        border-right: 1px solid #dee2e6;
+      }
+      .main-content {
+        flex-grow: 1;
+        padding: 2rem 3rem;
+        overflow-y: auto;
+        max-height: 100vh;
+      }
+      .brand-logo {
+        background-color: #6366f1;
+        color: white;
+        border-radius: 0.375rem;
+        padding: 0.25rem 0.5rem;
+        font-weight: bold;
+        font-size: 14px;
+      }
+      .mobile-toggle {
+        display: none;
+      }
+      .analytics-shell {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+      .analytics-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 1rem;
+      }
+      .analytics-title {
+        font-size: 2rem;
+        line-height: 1.15;
+        margin: 0;
+      }
+      .analytics-subtitle {
+        margin: 0.25rem 0 0;
+        color: #667085;
+        font-size: 0.95rem;
+      }
+      .analytics-kpi-card {
+        border: 1px solid #dfeaf8;
+        border-radius: 20px;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        padding: 1.2rem 1.25rem;
+        box-shadow: 0 10px 24px rgba(59, 130, 246, 0.06);
+        height: 100%;
+      }
+      .kpi-topline {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+      }
+      .kpi-icon-wrap {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #dbeafe, #eff6ff);
+        border: 1px solid #bfd7ff;
+        font-size: 1.1rem;
+      }
+      .kpi-value {
+        margin: 0;
+        font-size: clamp(1.65rem, 1.6rem + 0.4vw, 2.3rem);
+        line-height: 1.1;
+        font-weight: 800;
+        color: #111827;
+      }
+      .kpi-label {
+        margin: 0 0 0.2rem;
+        color: #667085;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-weight: 700;
+      }
+      .kpi-meta {
+        margin-top: 0.45rem;
+        color: #667085;
+        font-size: 0.82rem;
+      }
+      .section-card {
+        border: 1px solid #dfeaf8;
+        border-radius: 20px;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        box-shadow: 0 10px 24px rgba(59, 130, 246, 0.05);
+      }
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+      }
+      .section-title {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #111827;
+      }
+      .section-mini-note {
+        font-size: 0.8rem;
+        color: #667085;
+      }
+      .chart-panel {
+        height: 280px;
+      }
+      .chart-panel-small {
+        height: 250px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .distribution-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+      }
+      .distribution-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem 0.85rem;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.75);
+        border: 1px solid #e6eef9;
+      }
+      .distribution-label {
+        font-size: 0.86rem;
+        color: #475467;
+        font-weight: 600;
+      }
+      .distribution-count {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: #111827;
+      }
+      .resolution-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1rem;
+      }
+      .resolution-stat {
+        border: 1px solid #dfeaf8;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.7);
+        padding: 1rem 0.85rem;
+        height: 100%;
+      }
+      .resolution-stat .fs-4,
+      .resolution-stat .fs-6 {
+        color: #111827;
+      }
+      @media (max-width: 991.98px) {
+        .sidebar {
+          position: fixed;
+          left: -250px;
+          height: 100vh;
+          transition: left 0.3s ease;
+          background: white;
+        }
+        .sidebar.show {
+          left: 0;
+        }
+        .mobile-toggle {
+          display: block;
+        }
+        .main-content {
+          padding: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Sidebar -->
+    <aside class="sidebar py-4" id="sidebarMenu">
+      <div class="px-4 mb-5 d-flex align-items-center">
+        <span class="brand-logo me-2">SP</span>
+        <span class="fw-bold text-dark fs-5">SupportPilot</span>
+        <button
+          class="btn-close d-lg-none ms-auto"
+          onclick="
+            document.getElementById('sidebarMenu').classList.remove('show')
+          "
+        ></button>
+      </div>
+
+      <ul class="nav flex-column gap-1 px-3 mb-auto">
+        <li class="nav-item">
+          <a
+            href="/"
+            class="nav-link d-flex align-items-center rounded py-2 px-3"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="me-3"
+            >
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+            Dashboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a
+            href="/my_tickets"
+            class="nav-link d-flex align-items-center rounded py-2 px-3"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="me-3"
+            >
+              <path
+                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+              ></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            Add Tickets
+          </a>
+        </li>
+        <li class="nav-item">
+          <a
+            href="/all_tickets"
+            class="nav-link d-flex align-items-center rounded py-2 px-3"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="me-3"
+            >
+              <line x1="8" y1="6" x2="21" y2="6"></line>
+              <line x1="8" y1="12" x2="21" y2="12"></line>
+              <line x1="8" y1="18" x2="21" y2="18"></line>
+              <line x1="3" y1="6" x2="3.01" y2="6"></line>
+              <line x1="3" y1="12" x2="3.01" y2="12"></line>
+              <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+            My Tickets
+          </a>
+        </li>
+        <li class="nav-item">
+          <a
+            href="/agents"
+            class="nav-link d-flex align-items-center rounded py-2 px-3"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="me-3"
+            >
+              <path
+                d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
+              ></path>
+            </svg>
+            AI Agent
+          </a>
+        </li>
+        <li class="nav-item">
+          <a
+            href="/integrations"
+            class="nav-link d-flex align-items-center rounded py-2 px-3"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="me-3"
+            >
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+            </svg>
+            Integrations
+          </a>
+        </li>
+        <li class="nav-item">
+          <a
+            href="/analytics"
+            class="nav-link active d-flex align-items-center rounded py-2 px-3"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="me-3"
+            >
+              <line x1="18" y1="20" x2="18" y2="10"></line>
+              <line x1="12" y1="20" x2="12" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+            Analytics
+          </a>
+        </li>
+        <li class="nav-item">
+          <a
+            href="/settings"
+            class="nav-link d-flex align-items-center rounded py-2 px-3"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="me-3"
+            >
+              <circle cx="12" cy="12" r="3"></circle>
+              <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+              ></path>
+            </svg>
+            Settings
+          </a>
+        </li>
+      </ul>
+
+      <div class="px-4 mt-auto">
+        <div
+          class="border-top border-secondary pt-3 d-flex align-items-center justify-content-between"
+        >
+          <div class="text-truncate pe-2">
+            <div class="small fw-semibold text-dark">{{ user.full_name }}</div>
+            <div class="small text-muted" style="font-size: 0.75rem">
+              {{ user.department }}
+            </div>
+          </div>
+          <a
+            href="/logout"
+            class="text-muted d-flex flex-shrink-0"
+            title="Logout"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </aside>
+    <!-- Main Content -->
+    <main
+      class="main-content"
+      data-ticket-activity="{{ summary.ticket_activity | tojson }}"
+      data-category-distribution="{{ summary.category_distribution | tojson }}"
+    >
+      <div
+        class="d-flex align-items-center justify-content-between mb-4 d-lg-none"
+      >
+        <a
+          class="navbar-brand fw-bold d-flex align-items-center fs-5 text-decoration-none text-dark"
+          href="/"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="me-2"
+          >
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          SupportPilot
+        </a>
+        <button
+          class="btn btn-outline-light btn-sm"
+          onclick="document.getElementById('sidebarMenu').classList.add('show')"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="analytics-shell">
+        <div class="analytics-header">
+          <div>
+            <h2 class="analytics-title text-dark">Analytics</h2>
+            <p class="analytics-subtitle">
+              Real metrics computed from your submitted tickets - no simulated
+              data.
+            </p>
+          </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="row g-4">
+          <div class="col-sm-6 col-xl-3">
+            <div class="analytics-kpi-card">
+              <div class="kpi-topline">
+                <div class="kpi-icon-wrap">◫</div>
+              </div>
+              <div class="kpi-label">Total Tickets</div>
+              <p class="kpi-value">{{ summary.total_tickets }}</p>
+              <div class="kpi-meta">Across all submitted tickets</div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-3">
+            <div class="analytics-kpi-card">
+              <div class="kpi-topline">
+                <div class="kpi-icon-wrap">◔</div>
+              </div>
+              <div class="kpi-label">Avg. Ticket Confidence</div>
+              <p class="kpi-value">
+                {% if extra.avg_classification_confidence is not none %} {{
+                "%.1f"|format(extra.avg_classification_confidence) }}%{% else
+                %}&mdash;{% endif %}
+              </p>
+              <div class="kpi-meta">Across all classified tickets</div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-3">
+            <div class="analytics-kpi-card">
+              <div class="kpi-topline">
+                <div class="kpi-icon-wrap">✦</div>
+              </div>
+              <div class="kpi-label">AI Resolution Rate</div>
+              <p class="kpi-value">{{ extra.ai_resolution_rate }}%</p>
+              <div class="kpi-meta">Generated resolutions vs total tickets</div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xl-3">
+            <div class="analytics-kpi-card">
+              <div class="kpi-topline">
+                <div class="kpi-icon-wrap">◎</div>
+              </div>
+              <div class="kpi-label">Avg. Resolution Confidence</div>
+              <p class="kpi-value">
+                {% if extra.avg_resolution_confidence is not none %} {{
+                "%.1f"|format(extra.avg_resolution_confidence) }}%{% else
+                %}&mdash;{% endif %}
+              </p>
+              <div class="kpi-meta">KB relevance used in resolutions</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-lg-7">
+            <div class="section-card p-4 h-100">
+              <div class="section-header">
+                <h5 class="section-title">Ticket Activity</h5>
+                <span class="section-mini-note">Last 30 days</span>
+              </div>
+              <div class="chart-panel">
+                <canvas id="activityChart"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-5">
+            <div class="section-card p-4 h-100">
+              <div class="section-header">
+                <h5 class="section-title">Category Distribution</h5>
+                <span class="section-mini-note">Live breakdown</span>
+              </div>
+              <div class="chart-panel-small">
+                <canvas id="categoryChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-md-6">
+            <div class="section-card p-4 h-100">
+              <div class="section-header">
+                <h5 class="section-title">Severity Breakdown</h5>
+              </div>
+              <div class="distribution-list">
+                {% for level, count in summary.severity_distribution.items() %}
+                <div class="distribution-item">
+                  <span class="distribution-label">{{ level }}</span>
+                  <span class="distribution-count">{{ count }}</span>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="section-card p-4 h-100">
+              <div class="section-header">
+                <h5 class="section-title">Priority Distribution</h5>
+              </div>
+              <div class="distribution-list">
+                {% for level, count in summary.priority_distribution.items() %}
+                <div class="distribution-item">
+                  <span class="distribution-label">{{ level }}</span>
+                  <span class="distribution-count">{{ count }}</span>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-card p-4 mb-5">
+          <div class="section-header">
+            <h5 class="section-title">Resolution Engine Usage</h5>
+          </div>
+          <p class="text-muted small mb-3">
+            Which method actually produced each ticket's AI resolution -
+            honestly reported per ticket, not assumed.
+          </p>
+          <div class="resolution-grid">
+            <div class="resolution-stat">
+              <div class="fs-4 fw-bold text-dark">
+                {{ extra.engine_counts.llm }}
+              </div>
+              <div class="text-muted small">OpenRouter LLM</div>
+            </div>
+            <div class="resolution-stat">
+              <div class="fs-4 fw-bold text-dark">
+                {{ extra.engine_counts.template }}
+              </div>
+              <div class="text-muted small">Template Fallback</div>
+            </div>
+            {% if model_info %}
+            <div class="resolution-stat">
+              <div class="fs-6 fw-bold text-dark">
+                {{ model_info.model_name }}
+              </div>
+              <div class="text-muted small">Classifier Model</div>
+            </div>
+            <div class="resolution-stat">
+              <div class="fs-4 fw-bold text-dark">
+                {{ "%.1f"|format(model_info.accuracy * 100) }}%
+              </div>
+              <div class="text-muted small">Model Test Accuracy</div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      window.USER_EMAIL = "{{ user.email }}";
+      window.USER_DEPT = "{{ user.department }}";
+
+      const analyticsRoot = document.querySelector(".main-content");
+      const activityData = JSON.parse(
+        analyticsRoot.dataset.ticketActivity || "{}",
+      );
+      const categoryData = JSON.parse(
+        analyticsRoot.dataset.categoryDistribution || "{}",
+      );
+
+      new Chart(document.getElementById("activityChart"), {
+        type: "line",
+        data: {
+          labels: activityData.dates,
+          datasets: [
+            {
+              label: "Tickets Submitted",
+              data: activityData.counts,
+              borderColor: "#1d4ed8",
+              backgroundColor: "rgba(29, 78, 216, 0.08)",
+              tension: 0.3,
+              fill: true,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+        },
+      });
+
+      new Chart(document.getElementById("categoryChart"), {
+        type: "doughnut",
+        data: {
+          labels: Object.keys(categoryData),
+          datasets: [
+            {
+              data: Object.values(categoryData),
+              backgroundColor: [
+                "#1d4ed8",
+                "#10b981",
+                "#f59e0b",
+                "#ef4444",
+                "#3b82f6",
+                "#8b5cf6",
+              ],
+            },
+          ],
+        },
+        options: { responsive: true, maintainAspectRatio: false },
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

@@ -1,0 +1,1316 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ticket Result - SupportPilot</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <style>
+      body {
+        display: flex;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+      .sidebar {
+        width: 250px;
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        z-index: 1040;
+        height: 100vh;
+        position: sticky;
+        top: 0;
+      }
+      .main-content {
+        flex-grow: 1;
+        padding: 2rem 3rem;
+        overflow-y: auto;
+        max-height: 100vh;
+      }
+      .brand-logo {
+        background-color: #6366f1;
+        color: white;
+        border-radius: 0.375rem;
+        padding: 0.25rem 0.5rem;
+        font-weight: bold;
+        font-size: 14px;
+      }
+      .mobile-toggle {
+        display: none;
+      }
+      .ai-resolution-panel {
+        border: 1px solid #cfe0ff;
+        border-radius: 18px;
+        background: linear-gradient(180deg, #f8fbff 0%, #f3f8ff 100%);
+        box-shadow: 0 10px 24px rgba(59, 130, 246, 0.08);
+        overflow: hidden;
+      }
+      .ai-resolution-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid #dce8f7;
+        background: rgba(255, 255, 255, 0.12);
+      }
+      .ai-icon-wrap {
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #dbeafe, #eff6ff);
+        border: 1px solid #bfd7ff;
+        color: #2563eb;
+        font-size: 1.1rem;
+      }
+      .ai-resolution-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin: 0;
+        color: #1f2937;
+      }
+      .ai-resolution-subtitle {
+        margin: 4px 0 0;
+        color: #667085;
+        font-size: 0.92rem;
+        line-height: 1.45;
+      }
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        border-radius: 999px;
+        padding: 0.5rem 0.8rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .status-processing {
+        background: #edf5ff;
+        color: #1d4ed8;
+        border: 1px solid #bfd7ff;
+      }
+      .status-generated {
+        background: #ecfdf5;
+        color: #0f766e;
+        border: 1px solid #aee8d0;
+      }
+      .status-insufficient {
+        background: #fff7ed;
+        color: #b45309;
+        border: 1px solid #fdba74;
+      }
+      .ai-resolution-content {
+        padding: 20px 24px 22px;
+      }
+      .ai-stage-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+      .ai-stage-card {
+        min-height: 96px;
+        border-radius: 14px;
+        border: 1px solid #dbe7f6;
+        background: rgba(255, 255, 255, 0.7);
+        padding: 12px 10px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 6px;
+        transition: all 0.2s ease;
+      }
+      .ai-stage-card.complete {
+        border-color: #7ad7ad;
+        background: #ebfff3;
+      }
+      .ai-stage-card.active {
+        border-color: #79aefc;
+        background: #edf5ff;
+        box-shadow: 0 0 0 0.15rem rgba(79, 142, 247, 0.08);
+      }
+      .ai-stage-card.pending {
+        opacity: 0.77;
+      }
+      .stage-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 10px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        background: rgba(59, 130, 246, 0.12);
+        color: #2563eb;
+      }
+      .ai-stage-card.complete .stage-number {
+        background: rgba(16, 185, 129, 0.15);
+        color: #0f766e;
+      }
+      .ai-stage-card.active .stage-number {
+        background: rgba(59, 130, 246, 0.18);
+        color: #1d4ed8;
+      }
+      .stage-title {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #1f2937;
+      }
+      .stage-detail {
+        font-size: 0.73rem;
+        color: #6b7280;
+      }
+      .stage-status {
+        margin-top: 2px;
+        font-size: 0.72rem;
+        font-weight: 600;
+      }
+      .stage-status.complete {
+        color: #0f766e;
+      }
+      .stage-status.active {
+        color: #1d4ed8;
+      }
+      .stage-status.pending {
+        color: #7b8794;
+      }
+      .ai-processing-box {
+        margin-top: 8px;
+        border-radius: 14px;
+        border: 1px solid #d8e8ff;
+        background: linear-gradient(180deg, #f8fbff 0%, #f3f7ff 100%);
+        padding: 18px 16px;
+      }
+      .ai-processing-header {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+      }
+      .mini-loader {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .mini-loader span {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #4f8ef7;
+        display: inline-block;
+        animation: aiPulse 1.2s infinite ease-in-out;
+      }
+      .mini-loader span:nth-child(2) {
+        animation-delay: 0.15s;
+      }
+      .mini-loader span:nth-child(3) {
+        animation-delay: 0.3s;
+      }
+      .ai-processing-title {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #1f2937;
+        text-align: center;
+      }
+      .ai-processing-subtitle {
+        margin: 6px 0 0;
+        font-size: 0.8rem;
+        color: #6b7280;
+        text-align: center;
+      }
+      .ai-result-shell {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+      .result-divider {
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          rgba(148, 163, 184, 0.6),
+          rgba(148, 163, 184, 0.15)
+        );
+      }
+      .result-section {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .result-heading {
+        font-size: 0.96rem;
+        font-weight: 700;
+        color: #1f2937;
+      }
+      .result-pre {
+        margin: 0;
+        background: rgba(255, 255, 255, 0.7);
+        border: 1px solid #dbe7f6;
+        border-radius: 12px;
+        padding: 16px;
+        white-space: pre-wrap;
+        font-family: inherit;
+        line-height: 1.7;
+        color: #1f2937;
+      }
+      .meta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .meta-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.45rem 0.7rem;
+        border-radius: 999px;
+        background: #edf5ff;
+        border: 1px solid #cfe0ff;
+        color: #1d4ed8;
+        font-size: 0.76rem;
+        font-weight: 600;
+      }
+      .source-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .source-chip {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        border: 1px solid #dbe7f6;
+        background: #ffffff;
+        color: #40536b;
+        padding: 0.45rem 0.7rem;
+        font-size: 0.76rem;
+        font-weight: 600;
+      }
+      .ai-empty-state {
+        padding: 8px 0;
+      }
+      .ai-empty-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        padding: 8px 0;
+      }
+      .ai-empty-copy {
+        font-size: 0.95rem;
+        color: #475467;
+      }
+      @keyframes aiPulse {
+        0%,
+        80%,
+        100% {
+          transform: scale(0.75);
+          opacity: 0.45;
+        }
+        40% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+      @media (max-width: 991.98px) {
+        .sidebar {
+          position: fixed;
+          left: -250px;
+          height: 100vh;
+          transition: left 0.3s ease;
+        }
+        .sidebar.show {
+          left: 0;
+        }
+        .mobile-toggle {
+          display: block;
+        }
+        .main-content {
+          padding: 1rem;
+        }
+      }
+      /* Removed FAB Styling */
+    </style>
+  </head>
+  <body>
+    <!-- Sidebar -->
+    <aside class="sidebar py-4" id="sidebarMenu">
+      <div class="px-4 mb-5 d-flex align-items-center">
+        <span class="brand-logo me-2">SP</span>
+        <span class="fw-bold text-dark fs-5">SupportPilot</span>
+        <button
+          class="btn-close d-lg-none ms-auto"
+          onclick="
+            document.getElementById('sidebarMenu').classList.remove('show')
+          "
+        ></button>
+      </div>
+
+      <ul class="nav flex-column gap-1 px-3 mb-auto">
+        <li class="nav-item">
+          <a
+            href="/"
+            class="nav-link d-flex align-items-center rounded py-2 px-3"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="me-3"
+            >
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+            Dashboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a
+            href="/my_tickets"
+            class="nav-link d-flex align-items-center rounded py-2 px-3"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="me-3"
+            >
+              <path
+                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+              ></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            Add Tickets
+          </a>
+        </li>
+        <li class="nav-item">
+          <a
+            href="/all_tickets"
+            class="nav-link d-flex align-items-center rounded py-2 px-3"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="me-3"
+            >
+              <line x1="8" y1="6" x2="21" y2="6"></line>
+              <line x1="8" y1="12" x2="21" y2="12"></line>
+              <line x1="8" y1="18" x2="21" y2="18"></line>
+              <line x1="3" y1="6" x2="3.01" y2="6"></line>
+              <line x1="3" y1="12" x2="3.01" y2="12"></line>
+              <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+            My Tickets
+          </a>
+        </li>
+        <li class="nav-item">
+          <a
+            href="/agents"
+            class="nav-link d-flex align-items-center rounded py-2 px-3"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="me-3"
+            >
+              <path
+                d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
+              ></path>
+            </svg>
+            AI Agent
+          </a>
+        </li>
+        <li class="nav-item">
+          <a
+            href="/integrations"
+            class="nav-link d-flex align-items-center rounded py-2 px-3"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="me-3"
+            >
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+            </svg>
+            Integrations
+          </a>
+        </li>
+        <li class="nav-item">
+          <a
+            href="/analytics"
+            class="nav-link d-flex align-items-center rounded py-2 px-3"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="me-3"
+            >
+              <line x1="18" y1="20" x2="18" y2="10"></line>
+              <line x1="12" y1="20" x2="12" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+            Analytics
+          </a>
+        </li>
+        <li class="nav-item">
+          <a
+            href="/settings"
+            class="nav-link d-flex align-items-center rounded py-2 px-3"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="me-3"
+            >
+              <circle cx="12" cy="12" r="3"></circle>
+              <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+              ></path>
+            </svg>
+            Settings
+          </a>
+        </li>
+      </ul>
+
+      <div class="px-4 mt-auto">
+        <div
+          class="border-top border-secondary pt-3 d-flex align-items-center justify-content-between"
+        >
+          <div class="text-truncate pe-2">
+            <div class="small fw-semibold text-dark">{{ user.full_name }}</div>
+            <div class="small text-muted" style="font-size: 0.75rem">
+              {{ user.department }}
+            </div>
+          </div>
+          <a
+            href="/logout"
+            class="text-muted d-flex flex-shrink-0"
+            title="Logout"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <!-- Mobile Header -->
+      <div
+        class="d-flex align-items-center justify-content-between mb-4 d-lg-none"
+      >
+        <a
+          class="navbar-brand fw-bold text-gradient d-flex align-items-center fs-5 text-decoration-none"
+          href="/"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="me-2"
+          >
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          SupportPilot
+        </a>
+        <button
+          class="btn btn-outline-light btn-sm"
+          onclick="document.getElementById('sidebarMenu').classList.add('show')"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Dashboard Header -->
+      <div class="d-flex justify-content-between align-items-end mb-4 pb-2">
+        <div>
+          <h2 class="fw-bold mb-1 d-flex align-items-center text-dark">
+            <span id="greeting-text">Good morning</span>, {{
+            user.full_name.split()[0] }} <span class="ms-2 fs-4">👋</span>
+          </h2>
+          <p class="text-muted mb-0">Ticket Details</p>
+        </div>
+        <div class="d-none d-md-block">
+          <a
+            href="/all_tickets"
+            class="btn btn-sm btn-outline-primary rounded-pill px-3 d-inline-flex align-items-center gap-2"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to My Tickets
+          </a>
+        </div>
+      </div>
+
+      <div class="row g-4 justify-content-center">
+        <div class="col-lg-7">
+          <div class="light-card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <span
+                class="badge badge-soft-info px-3 py-2 text-uppercase fw-semibold tracking-wider"
+                >Ticket #T-{{ ticket.ticket_id }}</span
+              >
+              <span
+                class="badge rounded-pill px-3 py-2 {% if ticket.status == 'Open' %}badge-soft-warning {% elif ticket.status == 'In Progress' %}badge-soft-info {% elif ticket.status == 'Resolved' %}badge-soft-success {% elif ticket.status == 'Closed' %}badge-soft-secondary {% else %}badge-soft-primary{% endif %}"
+              >
+                {{ ticket.status }}
+              </span>
+            </div>
+            <h3 class="fw-bold mb-3 text-dark">{{ ticket.title }}</h3>
+
+            <div class="bg-light p-4 rounded border border-secondary mb-4">
+              <p
+                class="text-dark mb-0"
+                style="line-height: 1.6; white-space: pre-wrap"
+              >
+                {{ ticket.description }}
+              </p>
+            </div>
+
+            <div class="row text-muted small">
+              <div class="col-sm-6 mb-2 mb-sm-0">
+                <strong>Requester:</strong> {{ ticket.employee_name }} ({{
+                ticket.email }})
+              </div>
+              <div class="col-sm-6 text-sm-end">
+                <strong>Submitted:</strong> {{ ticket.created_at[:16] }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-5">
+          <div class="light-card p-0 overflow-hidden h-100">
+            <div class="bg-gradient-header p-4 border-bottom border-secondary">
+              <h5 class="mb-0 fw-bold text-dark d-flex align-items-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="me-2 text-info"
+                >
+                  <path
+                    d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
+                  ></path>
+                </svg>
+                AI Classification Result
+              </h5>
+            </div>
+
+            <div class="p-4">
+              <div class="classification-card mb-3">
+                <div class="text-muted small text-uppercase fw-semibold mb-2">
+                  Category Identified
+                </div>
+                <div class="classification-value text-info">
+                  {{ ticket.category }}
+                </div>
+              </div>
+
+              <div class="classification-card mb-3">
+                <div class="text-muted small text-uppercase fw-semibold mb-2">
+                  Severity Predicted
+                </div>
+                <div>
+                  <span
+                    class="classification-badge {% if ticket.severity == 'Critical' %}severity-critical {% elif ticket.severity == 'High' %}severity-high {% elif ticket.severity == 'Medium' %}severity-medium {% else %}severity-low{% endif %}"
+                  >
+                    {{ ticket.severity }} Severity
+                  </span>
+                </div>
+              </div>
+
+              <div class="classification-card mb-4">
+                <div class="text-muted small text-uppercase fw-semibold mb-2">
+                  Priority Assigned
+                </div>
+                <div
+                  class="classification-priority {% if ticket.priority in ['P1', 'P2'] %}priority-high{% else %}priority-standard{% endif %}"
+                >
+                  {{ ticket.priority }}
+                </div>
+              </div>
+
+              <div class="mt-4 pt-3 border-top border-secondary text-center">
+                <span class="text-muted small"
+                  >Ticket Confidence Score:
+                  <strong class="text-dark"
+                    >{{ "%.1f"|format(ticket.confidence * 100) }}%</strong
+                  ></span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="row g-4 justify-content-center mt-1"
+        id="ai-resolution-section"
+        data-ticket-id="{{ ticket.ticket_id }}"
+      >
+        <div class="col-lg-12">
+          <div class="ai-resolution-panel">
+            <div class="ai-resolution-header">
+              <div
+                class="d-flex justify-content-between align-items-start gap-3"
+              >
+                <div class="d-flex align-items-center gap-3">
+                  <div class="ai-icon-wrap">✦</div>
+                  <div>
+                    <h5 class="ai-resolution-title">AI Resolution Agent</h5>
+                    <p class="ai-resolution-subtitle">
+                      Grounded resolution generated from enterprise knowledge
+                      using Retrieval-Augmented Generation (RAG).
+                    </p>
+                  </div>
+                </div>
+                <span
+                  class="status-badge {% if ticket.ai_resolution %}status-generated{% else %}status-processing{% endif %}"
+                  id="ai-status-badge"
+                >
+                  {% if ticket.ai_resolution %}✓ Generated{% else %}●
+                  Processing{% endif %}
+                </span>
+              </div>
+            </div>
+
+            <div class="ai-resolution-content" id="ai-resolution-content">
+              {% if ticket.ai_resolution %}
+              <div class="ai-result-shell">
+                <div class="ai-stage-grid">
+                  <div class="ai-stage-card complete">
+                    <div class="stage-number">01</div>
+                    <div class="stage-title">Ticket Analysis</div>
+                    <div class="stage-status complete">✓ Completed</div>
+                  </div>
+                  <div class="ai-stage-card complete">
+                    <div class="stage-number">02</div>
+                    <div class="stage-title">Knowledge Retrieval</div>
+                    <div class="stage-status complete">✓ Completed</div>
+                  </div>
+                  <div class="ai-stage-card complete">
+                    <div class="stage-number">03</div>
+                    <div class="stage-title">Context Augmentation</div>
+                    <div class="stage-status complete">✓ Completed</div>
+                  </div>
+                  <div class="ai-stage-card complete">
+                    <div class="stage-number">04</div>
+                    <div class="stage-title">AI Resolution</div>
+                    <div class="stage-status complete">✓ Completed</div>
+                  </div>
+                </div>
+
+                <div class="result-divider"></div>
+
+                <div class="result-section">
+                  <div class="result-heading">Recommended Resolution</div>
+                  <pre class="result-pre">{{ ticket.ai_resolution }}</pre>
+                </div>
+
+                <div class="meta-row">
+                  {% if ticket.resolution_confidence is not none %}
+                  <span class="meta-pill"
+                    >Resolution confidence: {{
+                    "%.0f"|format((ticket.resolution_confidence or 0) * 100)
+                    }}%</span
+                  >
+                  {% endif %}
+                  <span class="meta-pill"
+                    >Generated by {% if ticket.resolution_engine %}{{
+                    ticket.resolution_engine|upper }}{% else %}Template{% endif
+                    %}</span
+                  >
+                </div>
+
+                <div class="result-section">
+                  <div class="result-heading">Sources</div>
+                  <div class="source-list">
+                    {% if ticket.resolution_sources %} {% for source in
+                    ticket.resolution_sources.split(',') %} {% if source.strip()
+                    %}
+                    <span class="source-chip">{{ source.strip() }}</span>
+                    {% endif %} {% endfor %} {% else %}
+                    <span class="text-muted small">No sources available.</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+              {% else %}
+              <div class="ai-empty-state">
+                <div class="ai-empty-row">
+                  <div class="ai-empty-copy">
+                    Generate a grounded troubleshooting recommendation using the
+                    enterprise knowledge base.
+                  </div>
+                  <button
+                    type="button"
+                    id="generate-ai-resolution-btn"
+                    class="btn btn-primary btn-gradient px-4 py-2 fw-medium"
+                  >
+                    Generate AI Resolution
+                  </button>
+                </div>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const generateButton = document.getElementById(
+          "generate-ai-resolution-btn",
+        );
+        if (!generateButton) {
+          return;
+        }
+
+        const shouldAutoGenerate =
+          new URLSearchParams(window.location.search).get("generate") ===
+          "true";
+        const contentContainer = document.getElementById(
+          "ai-resolution-content",
+        );
+        const statusBadge = document.getElementById("ai-status-badge");
+        const stageLabels = [
+          { label: "Ticket Analysis", detail: "Query generated", icon: "01" },
+          { label: "Knowledge Retrieval", detail: "Searching KB", icon: "02" },
+          {
+            label: "Context Augmentation",
+            detail: "Preparing context",
+            icon: "03",
+          },
+          { label: "AI Resolution", detail: "Generating response", icon: "04" },
+        ];
+
+        function setStatusBadge(status) {
+          if (!statusBadge) {
+            return;
+          }
+
+          statusBadge.className = "status-badge";
+          if (status === "generated") {
+            statusBadge.classList.add("status-generated");
+            statusBadge.textContent = "✓ Generated";
+          } else if (status === "insufficient") {
+            statusBadge.classList.add("status-insufficient");
+            statusBadge.textContent = "⚠ Insufficient Knowledge";
+          } else {
+            statusBadge.classList.add("status-processing");
+            statusBadge.textContent = "● Processing";
+          }
+        }
+
+        function renderStageCards(activeIndex) {
+          return stageLabels
+            .map((stage, index) => {
+              let className = "ai-stage-card pending";
+              let statusText = "Pending";
+              let statusClass = "pending";
+
+              if (index < activeIndex) {
+                className = "ai-stage-card complete";
+                statusText = "✓ Completed";
+                statusClass = "complete";
+              } else if (index === activeIndex) {
+                className = "ai-stage-card active";
+                statusText = "● Running";
+                statusClass = "active";
+              }
+
+              return `
+                <div class="${className}">
+                  <div class="stage-number">${stage.icon}</div>
+                  <div class="stage-title">${stage.label}</div>
+                  <div class="stage-detail">${stage.detail}</div>
+                  <div class="stage-status ${statusClass}">${statusText}</div>
+                </div>
+              `;
+            })
+            .join("");
+        }
+
+        function renderProcessingState(activeIndex) {
+          setStatusBadge("processing");
+
+          contentContainer.innerHTML = `
+            <div class="ai-result-shell">
+              <div class="ai-stage-grid">
+                ${renderStageCards(activeIndex)}
+              </div>
+
+              <div class="ai-processing-box">
+                <div class="ai-processing-header">
+                  <div class="mini-loader">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                </div>
+                <div class="ai-processing-title">Generating a grounded resolution from the retrieved knowledge-base context...</div>
+                <div class="ai-processing-subtitle">
+                  Using the retrieved knowledge to prepare a grounded support response.
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        function renderGeneratedState(ticket) {
+          const sources = ticket.resolution_sources
+            ? ticket.resolution_sources
+                .split(",")
+                .map((item) => item.trim())
+                .filter(Boolean)
+            : [];
+
+          const confidence =
+            ticket.resolution_confidence != null
+              ? `${Math.round(ticket.resolution_confidence * 100)}%`
+              : null;
+
+          const engine = ticket.resolution_engine
+            ? ticket.resolution_engine.toUpperCase()
+            : "Template";
+
+          setStatusBadge("generated");
+
+          contentContainer.innerHTML = `
+            <div class="ai-result-shell">
+              <div class="ai-stage-grid">
+                ${renderStageCards(3)}
+              </div>
+
+              <div class="result-divider"></div>
+
+              <div class="result-section">
+                <div class="result-heading">Recommended Resolution</div>
+                <pre class="result-pre">${escapeHtml(ticket.ai_resolution || "")}</pre>
+              </div>
+
+              <div class="meta-row">
+                ${confidence ? `<span class="meta-pill">Resolution confidence: ${confidence}</span>` : ""}
+                <span class="meta-pill">Generated by ${engine}</span>
+              </div>
+
+              <div class="result-section">
+                <div class="result-heading">Sources</div>
+                <div class="source-list">
+                  ${
+                    sources.length
+                      ? sources
+                          .map(
+                            (source) =>
+                              `<span class="source-chip">${escapeHtml(source)}</span>`,
+                          )
+                          .join("")
+                      : '<span class="text-muted small">No sources available.</span>'
+                  }
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        generateButton.addEventListener("click", async function () {
+          const ticketId = Number(
+            document.getElementById("ai-resolution-section").dataset.ticketId,
+          );
+          const originalText = generateButton.textContent;
+
+          generateButton.disabled = true;
+          generateButton.textContent = "Generating...";
+
+          let activeIndex = 0;
+          renderProcessingState(activeIndex);
+
+          const stageInterval = setInterval(() => {
+            activeIndex = Math.min(activeIndex + 1, stageLabels.length - 1);
+            renderProcessingState(activeIndex);
+          }, 450);
+
+          try {
+            const response = await fetch(
+              `/api/tickets/${ticketId}/generate-resolution`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              },
+            );
+
+            if (!response.ok) {
+              throw new Error("Unable to generate AI resolution");
+            }
+
+            const ticket = await response.json();
+
+            if (!ticket.ai_resolution) {
+              throw new Error("No AI resolution returned");
+            }
+
+            clearInterval(stageInterval);
+            renderGeneratedState(ticket);
+          } catch (error) {
+            console.error(error);
+            clearInterval(stageInterval);
+            setStatusBadge("insufficient");
+            contentContainer.innerHTML = `
+              <div class="ai-processing-box">
+                <div class="ai-processing-title">Unable to generate a grounded resolution.</div>
+                <div class="ai-processing-subtitle">
+                  Please check the retrieved knowledge base results and try again.
+                </div>
+              </div>
+            `;
+          } finally {
+            generateButton.disabled = false;
+            generateButton.textContent = originalText;
+          }
+        });
+
+        if (shouldAutoGenerate) {
+          generateButton.click();
+        }
+      });
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+    </script>
+
+    <!-- Floating Action Button removed based on user feedback -->
+    <!-- Create Ticket Modal -->
+    <div
+      class="modal fade"
+      id="newTicketModal"
+      tabindex="-1"
+      aria-hidden="true"
+      data-bs-backdrop="static"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content light-card border-secondary">
+          <div class="modal-header border-secondary p-4">
+            <h5 class="modal-title fw-bold text-dark">Create New Ticket</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+              onclick="resetModalForm()"
+            ></button>
+          </div>
+          <div class="modal-body p-4">
+            <!-- Result State (Hidden initially) -->
+            <div id="modal-result-state" class="d-none text-center py-4">
+              <div class="mb-3">
+                <div
+                  class="d-inline-flex align-items-center justify-content-center bg-success bg-opacity-10 text-success rounded-circle"
+                  style="width: 64px; height: 64px"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="32"
+                    height="32"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+              </div>
+              <h4 class="fw-bold mb-4">Ticket Created Successfully</h4>
+
+              <div class="row g-3 text-start mb-4 justify-content-center">
+                <div class="col-md-3 col-6">
+                  <div class="light-card p-3 h-100 text-center border">
+                    <div class="text-muted small text-uppercase mb-1">
+                      Category
+                    </div>
+                    <div class="fw-bold text-info" id="res-modal-cat"></div>
+                  </div>
+                </div>
+                <div class="col-md-3 col-6">
+                  <div class="light-card p-3 h-100 text-center border">
+                    <div class="text-muted small text-uppercase mb-1">
+                      Severity
+                    </div>
+                    <div class="fw-bold" id="res-modal-sev"></div>
+                  </div>
+                </div>
+                <div class="col-md-3 col-6">
+                  <div class="light-card p-3 h-100 text-center border">
+                    <div class="text-muted small text-uppercase mb-1">
+                      Priority
+                    </div>
+                    <div class="fw-bold" id="res-modal-pri"></div>
+                  </div>
+                </div>
+                <div class="col-md-3 col-6">
+                  <div class="light-card p-3 h-100 text-center border">
+                    <div class="text-muted small text-uppercase mb-1">
+                      Ticket Confidence
+                    </div>
+                    <div class="fw-bold text-muted" id="res-modal-conf"></div>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                class="btn btn-primary btn-gradient px-4 py-2 fw-medium"
+                data-bs-dismiss="modal"
+                onclick="
+                  resetModalForm();
+                  window.location.reload();
+                "
+              >
+                Close & Refresh
+              </button>
+            </div>
+
+            <!-- Form State -->
+            <form id="ticketModalForm">
+              <div class="mb-3">
+                <label
+                  class="form-label text-muted small fw-semibold text-uppercase"
+                  >Ticket Title</label
+                >
+                <input
+                  type="text"
+                  class="form-control glass-input"
+                  id="title"
+                  name="title"
+                  required
+                  placeholder="E.g. VPN Connection Failing"
+                />
+              </div>
+
+              <div class="mb-3">
+                <label
+                  class="form-label text-muted small fw-semibold text-uppercase"
+                  >Description</label
+                >
+                <textarea
+                  class="form-control glass-input"
+                  id="description"
+                  name="description"
+                  rows="4"
+                  required
+                  placeholder="Detailed error messages and troubleshooting steps..."
+                ></textarea>
+              </div>
+
+              <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                  <label
+                    class="form-label text-muted small fw-semibold text-uppercase"
+                    >Requester Email</label
+                  >
+                  <input
+                    type="email"
+                    class="form-control glass-input opacity-75"
+                    id="email"
+                    name="email"
+                    value="{{ user.email }}"
+                    readonly
+                  />
+                </div>
+                <div class="col-md-6">
+                  <label
+                    class="form-label text-muted small fw-semibold text-uppercase"
+                    >Department</label
+                  >
+                  <select
+                    class="form-select glass-input opacity-75"
+                    id="department"
+                    name="department"
+                    disabled
+                  >
+                    <option value="{{ user.department }}" selected>
+                      {{ user.department }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="mb-4">
+                <label
+                  class="form-label text-muted small fw-semibold text-uppercase"
+                  >Business Impact</label
+                >
+                <select
+                  class="form-select glass-input"
+                  id="business_impact"
+                  name="business_impact"
+                  required
+                >
+                  <option value="Low">Low</option>
+                  <option value="Medium">Medium</option>
+                  <option value="High">High</option>
+                  <option value="Critical">Critical</option>
+                </select>
+              </div>
+
+              <div class="text-end pt-3 border-top border-secondary mt-2">
+                <button
+                  type="button"
+                  class="btn btn-link text-muted text-decoration-none me-2"
+                  data-bs-dismiss="modal"
+                  onclick="resetModalForm()"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  id="modalSubmitBtn"
+                  class="btn btn-primary btn-gradient px-4 py-2 fw-medium d-inline-flex align-items-center"
+                >
+                  Submit Ticket
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- User context for JS -->
+    <script>
+      window.USER_EMAIL = "{{ user.email }}";
+      window.USER_DEPT = "{{ user.department }}";
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  </body>
+</html>

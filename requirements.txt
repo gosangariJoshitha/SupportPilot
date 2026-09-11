@@ -1,0 +1,10 @@
+Flask
+PyJWT
+scikit-learn
+pandas
+joblib
+matplotlib
+seaborn
+pytest
+requests
+python-dotenv

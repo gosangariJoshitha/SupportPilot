@@ -1,0 +1,724 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SupportPilot - AI Agent</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <style>
+      body {
+        display: flex;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+      .sidebar {
+        width: 250px;
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        z-index: 1040;
+        height: 100vh;
+        position: sticky;
+        top: 0;
+        border-right: 1px solid #dee2e6;
+      }
+      .main-content {
+        flex-grow: 1;
+        padding: 2rem 3rem;
+        overflow-y: auto;
+        max-height: 100vh;
+      }
+      .brand-logo {
+        background-color: #6366f1;
+        color: white;
+        border-radius: 0.375rem;
+        padding: 0.25rem 0.5rem;
+        font-weight: bold;
+        font-size: 14px;
+      }
+      .mobile-toggle {
+        display: none;
+      }
+      .pipeline-panel {
+        border: 1px solid #dbeafe;
+        border-radius: 1rem;
+        background: linear-gradient(180deg, #f8fbff 0%, #eef6ff 100%);
+        padding: 1rem;
+      }
+      .pipeline-step {
+        border: 1px solid #dfe7f5;
+        border-radius: 0.9rem;
+        background: rgba(255, 255, 255, 0.7);
+        padding: 0.85rem 0.9rem;
+        min-height: 72px;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        transition: all 0.2s ease;
+        color: #495057;
+      }
+      .pipeline-step .step-index {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: 700;
+        background: #e9ecef;
+        color: #495057;
+      }
+      .pipeline-step.active {
+        border-color: #4f8ef7;
+        background: #edf5ff;
+        box-shadow: 0 0 0 0.15rem rgba(79, 142, 247, 0.12);
+      }
+      .pipeline-step.active .step-index {
+        background: #4f8ef7;
+        color: white;
+      }
+      .pipeline-step.completed {
+        border-color: #34c759;
+        background: #ecfdf5;
+      }
+      .pipeline-step.completed .step-index {
+        background: #34c759;
+        color: white;
+      }
+      .pipeline-step.skipped {
+        border-style: dashed;
+        opacity: 0.7;
+      }
+      .pipeline-step.skipped .step-index {
+        background: #f1f3f5;
+        color: #6c757d;
+      }
+      .pipeline-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #1f2937;
+      }
+      .pipeline-subtitle {
+        font-size: 0.72rem;
+        color: #6b7280;
+      }
+      @media (max-width: 991.98px) {
+        .sidebar {
+          position: fixed;
+          left: -250px;
+          height: 100vh;
+          transition: left 0.3s ease;
+          background: white;
+        }
+        .sidebar.show {
+          left: 0;
+        }
+        .mobile-toggle {
+          display: block;
+        }
+        .main-content {
+          padding: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Sidebar -->
+    <aside class="sidebar py-4" id="sidebarMenu">
+      <div class="px-4 mb-5 d-flex align-items-center">
+        <span class="brand-logo me-2">SP</span>
+        <span class="fw-bold text-dark fs-5">SupportPilot</span>
+        <button
+          class="btn-close d-lg-none ms-auto"
+          onclick="
+            document.getElementById('sidebarMenu').classList.remove('show')
+          "
+        ></button>
+      </div>
+
+      <ul class="nav flex-column gap-1 px-3 mb-auto">
+        <li class="nav-item">
+          <a
+            href="/"
+            class="nav-link d-flex align-items-center rounded py-2 px-3"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="me-3"
+            >
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+            Dashboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a
+            href="/my_tickets"
+            class="nav-link d-flex align-items-center rounded py-2 px-3"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="me-3"
+            >
+              <path
+                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+              ></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            Add Tickets
+          </a>
+        </li>
+        <li class="nav-item">
+          <a
+            href="/all_tickets"
+            class="nav-link d-flex align-items-center rounded py-2 px-3"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="me-3"
+            >
+              <line x1="8" y1="6" x2="21" y2="6"></line>
+              <line x1="8" y1="12" x2="21" y2="12"></line>
+              <line x1="8" y1="18" x2="21" y2="18"></line>
+              <line x1="3" y1="6" x2="3.01" y2="6"></line>
+              <line x1="3" y1="12" x2="3.01" y2="12"></line>
+              <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+            My Tickets
+          </a>
+        </li>
+        <li class="nav-item">
+          <a
+            href="/agents"
+            class="nav-link active d-flex align-items-center rounded py-2 px-3"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="me-3"
+            >
+              <path
+                d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
+              ></path>
+            </svg>
+            AI Agent
+          </a>
+        </li>
+        <li class="nav-item">
+          <a
+            href="/integrations"
+            class="nav-link d-flex align-items-center rounded py-2 px-3"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="me-3"
+            >
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+            </svg>
+            Integrations
+          </a>
+        </li>
+        <li class="nav-item">
+          <a
+            href="/analytics"
+            class="nav-link d-flex align-items-center rounded py-2 px-3"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="me-3"
+            >
+              <line x1="18" y1="20" x2="18" y2="10"></line>
+              <line x1="12" y1="20" x2="12" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+            Analytics
+          </a>
+        </li>
+        <li class="nav-item">
+          <a
+            href="/settings"
+            class="nav-link d-flex align-items-center rounded py-2 px-3"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="me-3"
+            >
+              <circle cx="12" cy="12" r="3"></circle>
+              <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+              ></path>
+            </svg>
+            Settings
+          </a>
+        </li>
+      </ul>
+
+      <div class="px-4 mt-auto">
+        <div
+          class="border-top border-secondary pt-3 d-flex align-items-center justify-content-between"
+        >
+          <div class="text-truncate pe-2">
+            <div class="small fw-semibold text-dark">{{ user.full_name }}</div>
+            <div class="small text-muted" style="font-size: 0.75rem">
+              {{ user.department }}
+            </div>
+          </div>
+          <a
+            href="/logout"
+            class="text-muted d-flex flex-shrink-0"
+            title="Logout"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </aside>
+    <!-- Main Content -->
+    <main class="main-content">
+      <div
+        class="d-flex align-items-center justify-content-between mb-4 d-lg-none"
+      >
+        <a
+          class="navbar-brand fw-bold d-flex align-items-center fs-5 text-decoration-none text-dark"
+          href="/"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="me-2"
+          >
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          SupportPilot
+        </a>
+        <button
+          class="btn btn-outline-light btn-sm"
+          onclick="document.getElementById('sidebarMenu').classList.add('show')"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-end mb-4 pb-2">
+        <div>
+          <h2 class="fw-bold mb-1 text-dark">AI Agent</h2>
+          <p class="text-muted mb-0">
+            The Milestone 2 RAG pipeline: ticket analysis &rarr; knowledge
+            retrieval &rarr; context augmentation &rarr; resolution generation.
+          </p>
+        </div>
+        <span
+          class="badge {{ 'badge-soft-success' if llm_configured else 'badge-soft-warning' }} rounded-pill px-3 py-2 fw-medium"
+        >
+          {{ 'LLM-Enhanced (OpenRouter)' if llm_configured else 'Template
+          Fallback Mode' }}
+        </span>
+      </div>
+
+      <!-- Stats -->
+      <div class="row g-4 mb-4">
+        <div class="col-sm-6 col-xl-3">
+          <div class="light-card p-4 h-100">
+            <div class="text-muted small fw-semibold text-uppercase mb-2">
+              Resolutions Generated
+            </div>
+            <div class="fs-2 fw-bold text-dark">
+              {{ stats.resolutions_generated }}
+            </div>
+            <div class="text-muted small mt-2">
+              out of {{ stats.total_tickets }} tickets
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+          <div class="light-card p-4 h-100">
+            <div class="text-muted small fw-semibold text-uppercase mb-2">
+              Avg. Resolution Confidence
+            </div>
+            <div class="fs-2 fw-bold text-dark">
+              {% if stats.avg_resolution_confidence is not none %}{{
+              "%.1f"|format(stats.avg_resolution_confidence) }}%{% else
+              %}&mdash;{% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+          <div class="light-card p-4 h-100">
+            <div class="text-muted small fw-semibold text-uppercase mb-2">
+              Via LLM
+            </div>
+            <div class="fs-2 fw-bold text-dark">{{ stats.llm_generated }}</div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+          <div class="light-card p-4 h-100">
+            <div class="text-muted small fw-semibold text-uppercase mb-2">
+              Via Template Fallback
+            </div>
+            <div class="fs-2 fw-bold text-dark">
+              {{ stats.template_generated }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live test panel -->
+      <div class="light-card p-4 mb-4">
+        <h5 class="fw-bold mb-1 text-dark">Test the Pipeline Live</h5>
+        <p class="text-muted small mb-4">
+          This runs the real pipeline (classification &rarr; retrieval &rarr;
+          generation) against whatever you type below - not a canned demo.
+        </p>
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label small fw-semibold text-dark">Title</label>
+            <input
+              type="text"
+              class="form-control"
+              id="agent-title"
+              placeholder="e.g. VPN not connecting"
+            />
+          </div>
+          <div class="col-md-8">
+            <label class="form-label small fw-semibold text-dark"
+              >Description</label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="agent-desc"
+              placeholder="Describe the issue in detail..."
+            />
+          </div>
+        </div>
+        <button
+          class="btn btn-primary mt-3"
+          id="agent-run-btn"
+          onclick="runAgentTest()"
+        >
+          Run Pipeline
+        </button>
+
+        <div
+          id="agent-pipeline"
+          class="pipeline-panel mt-4"
+          style="display: none"
+        >
+          <div class="fw-bold text-dark mb-3">Pipeline Progress</div>
+          <div class="row g-2">
+            <div class="col-md-3">
+              <div class="pipeline-step pending" data-step="ticket_analysis">
+                <span class="step-index">1</span>
+                <div>
+                  <div class="pipeline-title">Analyzed</div>
+                  <div class="pipeline-subtitle">Ticket analysis</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div
+                class="pipeline-step pending"
+                data-step="knowledge_retrieval"
+              >
+                <span class="step-index">2</span>
+                <div>
+                  <div class="pipeline-title">Retrieved</div>
+                  <div class="pipeline-subtitle">KB retrieval</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div
+                class="pipeline-step pending"
+                data-step="context_augmentation"
+              >
+                <span class="step-index">3</span>
+                <div>
+                  <div class="pipeline-title">Context</div>
+                  <div class="pipeline-subtitle">Augmentation</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div
+                class="pipeline-step pending"
+                data-step="response_generation"
+              >
+                <span class="step-index">4</span>
+                <div>
+                  <div class="pipeline-title">Generated</div>
+                  <div class="pipeline-subtitle">Resolution</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="agent-result" class="mt-4" style="display: none">
+          <div class="row g-3 mb-3">
+            <div class="col-6 col-md-3">
+              <div class="stat-box">
+                <div class="fw-bold text-dark" id="res-category">-</div>
+                <div class="text-muted small">Category</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="stat-box">
+                <div class="fw-bold text-dark" id="res-severity">-</div>
+                <div class="text-muted small">Severity</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="stat-box">
+                <div class="fw-bold text-dark" id="res-priority">-</div>
+                <div class="text-muted small">Priority</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="stat-box">
+                <div class="fw-bold text-dark" id="res-engine">-</div>
+                <div class="text-muted small">Engine Used</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <h6 class="fw-bold text-dark mb-2">
+              Retrieved Knowledge Base Articles
+            </h6>
+            <div id="res-docs" class="d-flex flex-column gap-2"></div>
+          </div>
+
+          <div>
+            <h6 class="fw-bold text-dark mb-2">Generated Resolution</h6>
+            <pre
+              class="bg-light p-3 rounded border text-dark"
+              style="white-space: pre-wrap; font-family: inherit"
+              id="res-resolution"
+            ></pre>
+          </div>
+        </div>
+        <div
+          id="agent-error"
+          class="alert alert-danger mt-3"
+          style="display: none"
+        ></div>
+      </div>
+    </main>
+
+    <script>
+      window.USER_EMAIL = "{{ user.email }}";
+      window.USER_DEPT = "{{ user.department }}";
+
+      function renderPipelineStages(statusMap) {
+        const steps = document.querySelectorAll(".pipeline-step");
+
+        steps.forEach((step) => {
+          const stepName = step.dataset.step;
+          step.classList.remove("active", "completed", "skipped", "pending");
+
+          if (!statusMap || !statusMap[stepName]) {
+            step.classList.add("pending");
+            return;
+          }
+
+          const state = statusMap[stepName];
+          if (state === "completed") {
+            step.classList.add("completed");
+          } else if (state === "active") {
+            step.classList.add("active");
+          } else if (state === "skipped") {
+            step.classList.add("skipped");
+          } else {
+            step.classList.add("pending");
+          }
+        });
+      }
+
+      async function runAgentTest() {
+        const title =
+          document.getElementById("agent-title").value || "Test Ticket";
+        const description = document.getElementById("agent-desc").value;
+        const btn = document.getElementById("agent-run-btn");
+        const errBox = document.getElementById("agent-error");
+        const resultBox = document.getElementById("agent-result");
+        const pipelinePanel = document.getElementById("agent-pipeline");
+        errBox.style.display = "none";
+
+        if (!description.trim()) {
+          errBox.textContent = "Please enter a description.";
+          errBox.style.display = "block";
+          return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = "Running...";
+        pipelinePanel.style.display = "block";
+        renderPipelineStages({
+          ticket_analysis: "active",
+          knowledge_retrieval: "pending",
+          context_augmentation: "pending",
+          response_generation: "pending",
+        });
+
+        try {
+          const resp = await fetch("/api/agent/test", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title, description }),
+          });
+          const data = await resp.json();
+          if (!resp.ok) {
+            throw new Error(data.error || "Request failed");
+          }
+
+          renderPipelineStages(data.workflow_status || {});
+
+          document.getElementById("res-category").textContent = data.category;
+          document.getElementById("res-severity").textContent = data.severity;
+          document.getElementById("res-priority").textContent = data.priority;
+          document.getElementById("res-engine").textContent =
+            data.engine === "llm"
+              ? "OpenRouter LLM"
+              : data.engine === "template"
+                ? "Template Fallback"
+                : "None";
+          document.getElementById("res-resolution").textContent =
+            data.resolution;
+
+          const docsContainer = document.getElementById("res-docs");
+          docsContainer.innerHTML = "";
+          if (data.retrieved_documents.length === 0) {
+            docsContainer.innerHTML =
+              '<div class="text-muted small">No relevant knowledge-base articles found above the relevance threshold.</div>';
+          } else {
+            data.retrieved_documents.forEach((doc) => {
+              const div = document.createElement("div");
+              div.className = "stat-box text-start";
+              div.innerHTML = `<div class="fw-semibold text-dark">${doc.title}</div><div class="text-muted small">${doc.id} &middot; relevance ${(doc.score * 100).toFixed(0)}%</div>`;
+              docsContainer.appendChild(div);
+            });
+          }
+
+          resultBox.style.display = "block";
+        } catch (e) {
+          errBox.textContent = e.message;
+          errBox.style.display = "block";
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Run Pipeline";
+        }
+      }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

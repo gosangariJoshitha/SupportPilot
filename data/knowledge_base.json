@@ -1,0 +1,3021 @@
+[
+  {
+    "id": "KB001",
+    "title": "VPN Troubleshooting Guide",
+    "category": "VPN",
+    "subcategory": "General Troubleshooting",
+    "content": "Step-by-step instructions for resolving VPN connection issues.",
+    "symptoms": [
+      "VPN client fails to connect",
+      "VPN connects then drops immediately",
+      "Authentication rejected by VPN server"
+    ],
+    "solution": [
+      "Verify that the user has an active internet connection.",
+      "Check the VPN client configuration.",
+      "Verify the VPN server address.",
+      "Verify authentication settings.",
+      "Restart the VPN service.",
+      "Clear cached credentials if authentication fails."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "VPN",
+      "connection",
+      "troubleshooting",
+      "client"
+    ]
+  },
+  {
+    "id": "KB002",
+    "title": "Network Firewall Configuration",
+    "category": "Network",
+    "subcategory": "Firewall",
+    "content": "Corporate firewalls must allow VPN and general network traffic.",
+    "symptoms": [
+      "VPN traffic blocked at the firewall",
+      "Outbound HTTPS connections failing",
+      "Intermittent connectivity after firewall changes"
+    ],
+    "solution": [
+      "Verify that VPN traffic is permitted on ports 500 and 4500 for IPsec-based connections.",
+      "Confirm outbound HTTPS (443) is not blocked.",
+      "Check for proxy interference on the affected machine.",
+      "Escalate to network team if firewall rules were recently changed."
+    ],
+    "severity": "High",
+    "keywords": [
+      "firewall",
+      "network",
+      "ports",
+      "VPN"
+    ]
+  },
+  {
+    "id": "KB003",
+    "title": "VPN Authentication Problems",
+    "category": "VPN",
+    "subcategory": "VPN",
+    "content": "If VPN authentication fails, verify the following.",
+    "symptoms": [
+      "VPN login rejected",
+      "MFA prompt not completing during VPN login",
+      "Repeated authentication failure after password change"
+    ],
+    "solution": [
+      "Confirm the username and password are correct.",
+      "Check MFA configuration and that the authenticator app is in sync.",
+      "Clear cached credentials in the VPN client.",
+      "Verify the authentication method configured in the VPN client matches the server."
+    ],
+    "severity": "High",
+    "keywords": [
+      "VPN",
+      "authentication",
+      "MFA",
+      "credentials"
+    ]
+  },
+  {
+    "id": "KB004",
+    "title": "Wi-Fi and Internet Connectivity Guide",
+    "category": "Network",
+    "subcategory": "Wi-Fi",
+    "content": "Steps to resolve Wi-Fi or internet connectivity issues.",
+    "symptoms": [
+      "Cannot connect to Wi-Fi network",
+      "No internet access despite Wi-Fi connection",
+      "Intermittent Wi-Fi drops"
+    ],
+    "solution": [
+      "Confirm the Wi-Fi network name and password are correct.",
+      "Toggle Wi-Fi off and on, then reconnect.",
+      "Restart the router or switch to a wired Ethernet connection to isolate the issue.",
+      "Check for an IP address conflict or DHCP failure by running ipconfig /release and ipconfig /renew.",
+      "Verify DNS settings; try a public DNS such as 8.8.8.8 if internal DNS fails."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "Wi-Fi",
+      "internet",
+      "connectivity",
+      "DNS"
+    ]
+  },
+  {
+    "id": "KB005",
+    "title": "Slow Network Performance",
+    "category": "Network",
+    "subcategory": "Performance",
+    "content": "Steps to diagnose slow or intermittent network speeds.",
+    "symptoms": [
+      "Slow file transfers or page loads",
+      "Intermittent network slowdowns",
+      "High latency on shared network segment"
+    ],
+    "solution": [
+      "Run a speed test to confirm the actual throughput.",
+      "Check how many devices are connected to the same network segment.",
+      "Test with a wired connection to rule out Wi-Fi interference.",
+      "Check for background applications consuming bandwidth.",
+      "Escalate to the network team if the issue persists across multiple devices."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "network",
+      "performance",
+      "bandwidth",
+      "latency"
+    ]
+  },
+  {
+    "id": "KB006",
+    "title": "Password Reset Guide",
+    "category": "Password",
+    "subcategory": "Password",
+    "content": "Steps to reset a forgotten or expired password.",
+    "symptoms": [
+      "User forgot password",
+      "Password expired and login blocked",
+      "User locked out after multiple failed attempts"
+    ],
+    "solution": [
+      "Navigate to the company password self-service portal.",
+      "Verify identity using the registered email or MFA device.",
+      "Set a new password meeting the complexity requirements (minimum 12 characters, upper/lowercase, number, symbol).",
+      "Sign out and sign back in on all devices to refresh cached credentials."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "password",
+      "reset",
+      "self-service",
+      "credentials"
+    ]
+  },
+  {
+    "id": "KB007",
+    "title": "Account Lockout Resolution",
+    "category": "Password",
+    "subcategory": "Account",
+    "content": "Steps to resolve an account lockout after failed login attempts.",
+    "symptoms": [
+      "Account locked after failed logins",
+      "User unable to sign in despite correct password",
+      "Repeated lockout after password reset"
+    ],
+    "solution": [
+      "Confirm the account is actually locked (check Active Directory / IAM status).",
+      "Wait for the automatic lockout timer to expire, or have an admin manually unlock it.",
+      "Reset the password if the lockout was caused by an outdated cached credential.",
+      "Advise the user to update saved passwords in browsers and mobile devices after reset."
+    ],
+    "severity": "High",
+    "keywords": [
+      "account",
+      "lockout",
+      "Active Directory",
+      "IAM"
+    ]
+  },
+  {
+    "id": "KB008",
+    "title": "Single Sign-On (SSO) and MFA Issues",
+    "category": "Password",
+    "subcategory": "SSO",
+    "content": "Steps to resolve SSO or multi-factor authentication failures.",
+    "symptoms": [
+      "SSO login fails or loops",
+      "MFA code not accepted",
+      "MFA enrollment lost after device replacement"
+    ],
+    "solution": [
+      "Confirm the identity provider (SSO) service is online.",
+      "Check that the MFA authenticator app's time is synced correctly.",
+      "Resend or regenerate the MFA enrollment if the device was replaced.",
+      "Clear browser cache/cookies for the SSO login page and retry."
+    ],
+    "severity": "High",
+    "keywords": [
+      "SSO",
+      "MFA",
+      "authentication",
+      "identity provider"
+    ]
+  },
+  {
+    "id": "KB009",
+    "title": "Software Installation and Licensing Guide",
+    "category": "Software",
+    "subcategory": "Installation",
+    "content": "Steps to resolve software installation or licensing issues.",
+    "symptoms": [
+      "Software fails to install",
+      "License key rejected or unavailable",
+      "Installer reports a corrupted package"
+    ],
+    "solution": [
+      "Confirm the software is approved and available in the internal software catalog.",
+      "Check available disk space and administrator rights before installing.",
+      "Verify the license key or seat availability in the license management portal.",
+      "Reinstall the application if the installer reports a corrupted package."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "software",
+      "installation",
+      "licensing",
+      "catalog"
+    ]
+  },
+  {
+    "id": "KB010",
+    "title": "Application Crash or Freeze Troubleshooting",
+    "category": "Software",
+    "subcategory": "Application",
+    "content": "Steps to resolve an application that is crashing, freezing, or unresponsive.",
+    "symptoms": [
+      "Application crashes on use",
+      "Application freezes or becomes unresponsive",
+      "Repeated crashes after an update"
+    ],
+    "solution": [
+      "Close and reopen the application.",
+      "Check for pending software updates and apply them.",
+      "Clear the application's cache/temporary files.",
+      "Reinstall the application if the issue persists after updates.",
+      "Check Event Viewer / crash logs for a specific error code to escalate with detail."
+    ],
+    "severity": "High",
+    "keywords": [
+      "application",
+      "crash",
+      "freeze",
+      "troubleshooting"
+    ]
+  },
+  {
+    "id": "KB011",
+    "title": "Browser Issues and Extensions",
+    "category": "Software",
+    "subcategory": "Browser",
+    "content": "Steps to resolve browser crashes, slowness, or extension conflicts.",
+    "symptoms": [
+      "Browser crashes or freezes",
+      "Browser runs slowly",
+      "Extension causing conflicts or errors"
+    ],
+    "solution": [
+      "Clear the browser cache and cookies.",
+      "Disable extensions one by one to isolate a conflicting extension.",
+      "Update the browser to the latest version.",
+      "Try an alternate supported browser to confirm whether the issue is browser-specific."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "browser",
+      "extensions",
+      "cache",
+      "performance"
+    ]
+  },
+  {
+    "id": "KB012",
+    "title": "Laptop and Peripheral Hardware Guide",
+    "category": "Hardware",
+    "subcategory": "Peripheral",
+    "content": "Steps to resolve common laptop and peripheral hardware issues.",
+    "symptoms": [
+      "Peripheral device not responding",
+      "Intermittent connection to keyboard/mouse/monitor",
+      "Battery or charging failure"
+    ],
+    "solution": [
+      "Reseat or replace the cable/peripheral (keyboard, mouse, monitor, USB device) to rule out a loose connection.",
+      "Test the peripheral on another machine to isolate whether the fault is the device or the port.",
+      "Update or reinstall the device driver.",
+      "For battery/charging issues, test with a different charger before requesting a replacement.",
+      "Log a hardware replacement request if the fault is confirmed physical."
+    ],
+    "severity": "High",
+    "keywords": [
+      "hardware",
+      "laptop",
+      "peripheral",
+      "driver"
+    ]
+  },
+  {
+    "id": "KB013",
+    "title": "Printer Troubleshooting Guide",
+    "category": "Hardware",
+    "subcategory": "Printer",
+    "content": "Steps to resolve printer issues.",
+    "symptoms": [
+      "Printer not printing",
+      "Print jobs stuck in queue",
+      "Printer shows offline or low supplies warning"
+    ],
+    "solution": [
+      "Confirm the printer has power and is connected to the network or via USB.",
+      "Clear the print queue and restart the print spooler service.",
+      "Check for paper jams, low toner, or ink warnings.",
+      "Reinstall the printer driver if print jobs fail silently."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "printer",
+      "print queue",
+      "driver",
+      "hardware"
+    ]
+  },
+  {
+    "id": "KB014",
+    "title": "Display and Docking Station Issues",
+    "category": "Hardware",
+    "subcategory": "Display",
+    "content": "Steps to resolve monitor, docking station, or external display issues.",
+    "symptoms": [
+      "External monitor not detected",
+      "Docking station not connecting peripherals",
+      "Display resolution incorrect or flickering"
+    ],
+    "solution": [
+      "Confirm the display cable is fully seated at both ends.",
+      "Test the monitor/dock with another laptop to isolate the fault.",
+      "Update the laptop's display/dock drivers.",
+      "Check display settings for correct resolution and detected output."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "display",
+      "monitor",
+      "docking station",
+      "drivers"
+    ]
+  },
+  {
+    "id": "KB015",
+    "title": "Server and Production System Outage Guide",
+    "category": "System",
+    "subcategory": "Outage",
+    "content": "Steps to triage a server, database, or production system outage.",
+    "symptoms": [
+      "Production service unreachable",
+      "Server or database outage affecting users",
+      "Widespread system downtime"
+    ],
+    "solution": [
+      "Confirm the scope of the outage (single service vs entire system).",
+      "Check server resource usage: CPU, memory, and disk space.",
+      "Review recent deployments or configuration changes that may correlate with the outage.",
+      "Restart the affected service if safe to do so, following the incident runbook.",
+      "Escalate immediately to the infrastructure/on-call team for production-down incidents."
+    ],
+    "severity": "Critical",
+    "keywords": [
+      "server",
+      "outage",
+      "production",
+      "incident"
+    ]
+  },
+  {
+    "id": "KB016",
+    "title": "Database Connectivity and Performance",
+    "category": "System",
+    "subcategory": "Database",
+    "content": "Steps to resolve database connectivity or performance issues.",
+    "symptoms": [
+      "Application cannot connect to database",
+      "Database queries running slowly",
+      "Connection pool exhausted"
+    ],
+    "solution": [
+      "Verify the database service is running and reachable on the expected port.",
+      "Check active connection counts against the configured connection pool limit.",
+      "Review slow query logs for long-running queries.",
+      "Check disk space on the database server; full disks are a common cause of failure."
+    ],
+    "severity": "High",
+    "keywords": [
+      "database",
+      "connectivity",
+      "performance",
+      "connection pool"
+    ]
+  },
+  {
+    "id": "KB017",
+    "title": "Deployment and Service Failure Guide",
+    "category": "System",
+    "subcategory": "Deployment",
+    "content": "Steps to resolve a failed deployment or crashed background service.",
+    "symptoms": [
+      "Deployment pipeline failure",
+      "Background service crashed after release",
+      "Service unstable following deployment"
+    ],
+    "solution": [
+      "Check the deployment pipeline logs for the failure point.",
+      "Roll back to the last known good release if the failure is deployment-related.",
+      "Restart the affected service and monitor for stability.",
+      "Check system logs for out-of-memory or resource-exhaustion errors."
+    ],
+    "severity": "High",
+    "keywords": [
+      "deployment",
+      "service",
+      "rollback",
+      "logs"
+    ]
+  },
+  {
+    "id": "KB018",
+    "title": "VPN connection fails",
+    "category": "Network",
+    "subcategory": "VPN",
+    "problem": "User cannot connect to the corporate VPN.",
+    "symptoms": [
+      "VPN connection fails",
+      "Connection timeout",
+      "Internal resources unavailable"
+    ],
+    "solution": [
+      "Verify internet connectivity.",
+      "Restart the VPN client.",
+      "Verify VPN credentials.",
+      "Restart the computer and try again.",
+      "If the issue continues, contact the network support team."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "VPN",
+      "remote access",
+      "connection",
+      "timeout"
+    ]
+  },
+  {
+    "id": "KB019",
+    "title": "VPN disconnects frequently",
+    "category": "Network",
+    "subcategory": "VPN",
+    "problem": "VPN disconnects repeatedly during remote work.",
+    "symptoms": [
+      "Frequent disconnections",
+      "Network drops",
+      "VPN reconnects automatically"
+    ],
+    "solution": [
+      "Check internet stability.",
+      "Restart the VPN client.",
+      "Switch to a stable network.",
+      "Disable unnecessary network adapters.",
+      "Update the VPN client."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "VPN",
+      "disconnect",
+      "remote work",
+      "network"
+    ]
+  },
+  {
+    "id": "KB020",
+    "title": "VPN authentication error",
+    "category": "Network",
+    "subcategory": "VPN",
+    "problem": "VPN authentication fails even though the user believes the password is correct.",
+    "symptoms": [
+      "Authentication failed",
+      "Invalid credentials",
+      "VPN login rejected"
+    ],
+    "solution": [
+      "Verify the username.",
+      "Reset the password if required.",
+      "Check whether the account is locked.",
+      "Verify MFA approval.",
+      "Retry the VPN connection."
+    ],
+    "severity": "High",
+    "keywords": [
+      "VPN",
+      "authentication",
+      "password",
+      "MFA"
+    ]
+  },
+  {
+    "id": "KB021",
+    "title": "Slow VPN performance",
+    "category": "Network",
+    "subcategory": "VPN",
+    "problem": "Applications become slow when connected to VPN.",
+    "symptoms": [
+      "Slow browsing",
+      "Slow file access",
+      "High latency"
+    ],
+    "solution": [
+      "Test internet speed.",
+      "Disconnect unused VPN sessions.",
+      "Reconnect to the VPN.",
+      "Use the nearest approved VPN gateway.",
+      "Contact network support if latency remains high."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "VPN",
+      "slow",
+      "latency",
+      "performance"
+    ]
+  },
+  {
+    "id": "KB022",
+    "title": "Cannot access internal application through VPN",
+    "category": "Network",
+    "subcategory": "VPN",
+    "problem": "User connects successfully to VPN but cannot access an internal application.",
+    "symptoms": [
+      "Application unavailable",
+      "Connection refused",
+      "Internal website inaccessible"
+    ],
+    "solution": [
+      "Verify VPN connection status.",
+      "Check DNS resolution.",
+      "Restart the VPN client.",
+      "Test another internal application.",
+      "Escalate to network support if multiple applications are affected."
+    ],
+    "severity": "High",
+    "keywords": [
+      "VPN",
+      "internal application",
+      "DNS",
+      "access"
+    ]
+  },
+  {
+    "id": "KB023",
+    "title": "Wi-Fi cannot connect",
+    "category": "Network",
+    "subcategory": "Wi-Fi",
+    "problem": "Laptop cannot connect to the corporate Wi-Fi.",
+    "symptoms": [
+      "Wi-Fi unavailable",
+      "Authentication failure",
+      "No internet"
+    ],
+    "solution": [
+      "Turn Wi-Fi off and on.",
+      "Forget and reconnect to the corporate network.",
+      "Verify credentials.",
+      "Restart the laptop.",
+      "Check whether other devices can connect."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "Wi-Fi",
+      "wireless",
+      "network",
+      "connection"
+    ]
+  },
+  {
+    "id": "KB024",
+    "title": "Wi-Fi keeps disconnecting",
+    "category": "Network",
+    "subcategory": "Wi-Fi",
+    "problem": "Wireless connection repeatedly disconnects.",
+    "symptoms": [
+      "Intermittent connection",
+      "Wi-Fi drops",
+      "Network reconnects"
+    ],
+    "solution": [
+      "Move closer to the access point.",
+      "Restart the Wi-Fi adapter.",
+      "Update the wireless driver.",
+      "Forget and reconnect to the network.",
+      "Contact network support if the problem affects multiple users."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "Wi-Fi",
+      "disconnect",
+      "wireless",
+      "driver"
+    ]
+  },
+  {
+    "id": "KB025",
+    "title": "No internet connection",
+    "category": "Network",
+    "subcategory": "Internet",
+    "problem": "User has connected to the network but cannot access the internet.",
+    "symptoms": [
+      "Websites do not load",
+      "No internet",
+      "Network connected but offline"
+    ],
+    "solution": [
+      "Check network status.",
+      "Restart the router or approved network equipment.",
+      "Restart the computer.",
+      "Run network diagnostics.",
+      "Escalate if the outage affects multiple users."
+    ],
+    "severity": "High",
+    "keywords": [
+      "internet",
+      "network",
+      "offline",
+      "connectivity"
+    ]
+  },
+  {
+    "id": "KB026",
+    "title": "DNS resolution failure",
+    "category": "Network",
+    "subcategory": "DNS",
+    "problem": "User cannot access websites because domain names are not resolving.",
+    "symptoms": [
+      "DNS error",
+      "Website unavailable",
+      "Name resolution failure"
+    ],
+    "solution": [
+      "Verify network connectivity.",
+      "Flush the DNS cache.",
+      "Reconnect to the network.",
+      "Verify configured DNS servers.",
+      "Escalate persistent DNS failures to network support."
+    ],
+    "severity": "High",
+    "keywords": [
+      "DNS",
+      "domain",
+      "resolution",
+      "network"
+    ]
+  },
+  {
+    "id": "KB027",
+    "title": "IP address conflict",
+    "category": "Network",
+    "subcategory": "IP Address",
+    "problem": "Two devices are using the same IP address.",
+    "symptoms": [
+      "Network unavailable",
+      "IP conflict warning",
+      "Intermittent connectivity"
+    ],
+    "solution": [
+      "Disconnect and reconnect to the network.",
+      "Restart the device.",
+      "Renew the IP address.",
+      "Check DHCP availability.",
+      "Escalate recurring conflicts to network administration."
+    ],
+    "severity": "High",
+    "keywords": [
+      "IP",
+      "DHCP",
+      "conflict",
+      "network"
+    ]
+  },
+  {
+    "id": "KB028",
+    "title": "Password reset required",
+    "category": "Authentication",
+    "subcategory": "Password",
+    "problem": "User has forgotten the corporate password.",
+    "symptoms": [
+      "Cannot log in",
+      "Password forgotten",
+      "Authentication failed"
+    ],
+    "solution": [
+      "Open the approved password reset portal.",
+      "Verify identity using MFA.",
+      "Set a new strong password.",
+      "Sign in again after the reset."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "password",
+      "reset",
+      "login",
+      "authentication"
+    ]
+  },
+  {
+    "id": "KB029",
+    "title": "Account locked",
+    "category": "Authentication",
+    "subcategory": "Account",
+    "problem": "User account has been locked after repeated failed login attempts.",
+    "symptoms": [
+      "Account locked",
+      "Login rejected",
+      "Too many attempts"
+    ],
+    "solution": [
+      "Stop repeated login attempts.",
+      "Wait for automatic unlock if configured.",
+      "Use the approved account unlock process.",
+      "Reset the password if necessary.",
+      "Contact the identity support team."
+    ],
+    "severity": "High",
+    "keywords": [
+      "account",
+      "locked",
+      "login",
+      "password"
+    ]
+  },
+  {
+    "id": "KB030",
+    "title": "MFA code not received",
+    "category": "Authentication",
+    "subcategory": "MFA",
+    "problem": "User does not receive the expected MFA verification code.",
+    "symptoms": [
+      "MFA code missing",
+      "Authentication timeout",
+      "Cannot complete login"
+    ],
+    "solution": [
+      "Verify the registered device.",
+      "Check network connectivity.",
+      "Request a new code.",
+      "Check the authenticator application.",
+      "Contact identity support if MFA remains unavailable."
+    ],
+    "severity": "High",
+    "keywords": [
+      "MFA",
+      "OTP",
+      "authentication",
+      "verification"
+    ]
+  },
+  {
+    "id": "KB031",
+    "title": "MFA push notification not appearing",
+    "category": "Authentication",
+    "subcategory": "MFA",
+    "problem": "The authentication approval notification does not appear on the registered device.",
+    "symptoms": [
+      "No push notification",
+      "MFA timeout",
+      "Login blocked"
+    ],
+    "solution": [
+      "Open the authenticator application manually.",
+      "Verify notifications are enabled.",
+      "Check device connectivity.",
+      "Request another authentication attempt.",
+      "Contact identity support if necessary."
+    ],
+    "severity": "High",
+    "keywords": [
+      "MFA",
+      "push",
+      "authenticator",
+      "notification"
+    ]
+  },
+  {
+    "id": "KB032",
+    "title": "New employee account access",
+    "category": "Authentication",
+    "subcategory": "Account Provisioning",
+    "problem": "A new employee needs access to corporate systems.",
+    "symptoms": [
+      "Account not created",
+      "Applications unavailable",
+      "Access missing"
+    ],
+    "solution": [
+      "Verify the employee onboarding request.",
+      "Confirm manager approval.",
+      "Create the corporate account.",
+      "Assign required groups and applications.",
+      "Verify successful login."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "onboarding",
+      "account",
+      "access",
+      "employee"
+    ]
+  },
+  {
+    "id": "KB033",
+    "title": "Employee cannot access shared folder",
+    "category": "Authentication",
+    "subcategory": "Permissions",
+    "problem": "User cannot access an authorized shared folder.",
+    "symptoms": [
+      "Access denied",
+      "Folder unavailable",
+      "Permission error"
+    ],
+    "solution": [
+      "Verify the folder path.",
+      "Check user group membership.",
+      "Confirm required permissions.",
+      "Reconnect to the network.",
+      "Request access through the approved access-management process."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "permissions",
+      "shared folder",
+      "access denied",
+      "groups"
+    ]
+  },
+  {
+    "id": "KB034",
+    "title": "Single sign-on failure",
+    "category": "Authentication",
+    "subcategory": "SSO",
+    "problem": "User cannot sign in to an application through SSO.",
+    "symptoms": [
+      "SSO error",
+      "Login redirect failure",
+      "Authentication rejected"
+    ],
+    "solution": [
+      "Verify the corporate account.",
+      "Clear browser cookies for the application.",
+      "Retry SSO.",
+      "Check whether other SSO applications work.",
+      "Escalate if the issue is application-wide."
+    ],
+    "severity": "High",
+    "keywords": [
+      "SSO",
+      "single sign-on",
+      "authentication",
+      "login"
+    ]
+  },
+  {
+    "id": "KB035",
+    "title": "Expired user password",
+    "category": "Authentication",
+    "subcategory": "Password",
+    "problem": "Corporate password has expired.",
+    "symptoms": [
+      "Password expired",
+      "Login blocked",
+      "Password change required"
+    ],
+    "solution": [
+      "Open the approved password-change portal.",
+      "Authenticate the account.",
+      "Create a new password.",
+      "Sign in again using the new password."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "password",
+      "expired",
+      "login",
+      "authentication"
+    ]
+  },
+  {
+    "id": "KB036",
+    "title": "Application permission denied",
+    "category": "Authentication",
+    "subcategory": "Permissions",
+    "problem": "User can log in but cannot access a required application feature.",
+    "symptoms": [
+      "Permission denied",
+      "Feature unavailable",
+      "Access restricted"
+    ],
+    "solution": [
+      "Verify the user's role.",
+      "Check application group membership.",
+      "Confirm manager approval.",
+      "Request the required role through the access-management process."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "permissions",
+      "role",
+      "access",
+      "application"
+    ]
+  },
+  {
+    "id": "KB037",
+    "title": "Inactive account",
+    "category": "Authentication",
+    "subcategory": "Account",
+    "problem": "Corporate account has been disabled due to inactivity.",
+    "symptoms": [
+      "Account disabled",
+      "Login rejected",
+      "Authentication failure"
+    ],
+    "solution": [
+      "Verify the user's identity.",
+      "Confirm employment status.",
+      "Submit an account reactivation request.",
+      "Reset credentials if required.",
+      "Verify login after reactivation."
+    ],
+    "severity": "High",
+    "keywords": [
+      "account",
+      "disabled",
+      "inactive",
+      "login"
+    ]
+  },
+  {
+    "id": "KB038",
+    "title": "Laptop does not power on",
+    "category": "Hardware",
+    "subcategory": "Laptop",
+    "problem": "Laptop does not start when the power button is pressed.",
+    "symptoms": [
+      "No power",
+      "No display",
+      "No indicator lights"
+    ],
+    "solution": [
+      "Connect the approved power adapter.",
+      "Check the power outlet.",
+      "Hold the power button for several seconds.",
+      "Disconnect external devices and retry.",
+      "Escalate for hardware inspection if unsuccessful."
+    ],
+    "severity": "High",
+    "keywords": [
+      "laptop",
+      "power",
+      "hardware",
+      "startup"
+    ]
+  },
+  {
+    "id": "KB039",
+    "title": "Laptop battery drains quickly",
+    "category": "Hardware",
+    "subcategory": "Battery",
+    "problem": "Laptop battery does not hold charge for the expected duration.",
+    "symptoms": [
+      "Fast battery drain",
+      "Low battery",
+      "Short battery life"
+    ],
+    "solution": [
+      "Check battery health.",
+      "Reduce screen brightness.",
+      "Close unnecessary applications.",
+      "Disable unused wireless devices.",
+      "Replace the battery if health is poor."
+    ],
+    "severity": "Low",
+    "keywords": [
+      "battery",
+      "laptop",
+      "power",
+      "charging"
+    ]
+  },
+  {
+    "id": "KB040",
+    "title": "External monitor not detected",
+    "category": "Hardware",
+    "subcategory": "Monitor",
+    "problem": "External monitor is not detected by the computer.",
+    "symptoms": [
+      "No display",
+      "Monitor not detected",
+      "Black screen"
+    ],
+    "solution": [
+      "Check the display cable.",
+      "Select the correct monitor input.",
+      "Reconnect the cable.",
+      "Use the operating system display-detection option.",
+      "Restart the computer if necessary."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "monitor",
+      "display",
+      "HDMI",
+      "screen"
+    ]
+  },
+  {
+    "id": "KB041",
+    "title": "Keyboard not working",
+    "category": "Hardware",
+    "subcategory": "Keyboard",
+    "problem": "Keyboard input is not being detected.",
+    "symptoms": [
+      "Keys do not work",
+      "No keyboard input",
+      "Intermittent input"
+    ],
+    "solution": [
+      "Reconnect the keyboard.",
+      "Try another USB port.",
+      "Restart the computer.",
+      "Check keyboard drivers.",
+      "Replace the keyboard if hardware failure is confirmed."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "keyboard",
+      "USB",
+      "input",
+      "hardware"
+    ]
+  },
+  {
+    "id": "KB042",
+    "title": "Mouse not responding",
+    "category": "Hardware",
+    "subcategory": "Mouse",
+    "problem": "Mouse pointer does not move or respond.",
+    "symptoms": [
+      "Mouse frozen",
+      "Pointer unavailable",
+      "Clicks not working"
+    ],
+    "solution": [
+      "Reconnect the mouse.",
+      "Replace the battery if wireless.",
+      "Try another USB port.",
+      "Restart the computer.",
+      "Test with another mouse."
+    ],
+    "severity": "Low",
+    "keywords": [
+      "mouse",
+      "pointer",
+      "USB",
+      "hardware"
+    ]
+  },
+  {
+    "id": "KB043",
+    "title": "Printer not printing",
+    "category": "Hardware",
+    "subcategory": "Printer",
+    "problem": "User sends a document to the printer but receives no printed output.",
+    "symptoms": [
+      "Print job stuck",
+      "No output",
+      "Printer unavailable"
+    ],
+    "solution": [
+      "Check printer power.",
+      "Verify paper and toner.",
+      "Confirm the correct printer is selected.",
+      "Clear stuck print jobs.",
+      "Restart the print service or printer."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "printer",
+      "printing",
+      "print job",
+      "toner"
+    ]
+  },
+  {
+    "id": "KB044",
+    "title": "Printer shows offline",
+    "category": "Hardware",
+    "subcategory": "Printer",
+    "problem": "Network printer appears offline.",
+    "symptoms": [
+      "Printer offline",
+      "Cannot print",
+      "Connection unavailable"
+    ],
+    "solution": [
+      "Check printer network connection.",
+      "Restart the printer.",
+      "Verify the printer IP address.",
+      "Reconnect the printer if required.",
+      "Contact printer support if the issue persists."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "printer",
+      "offline",
+      "network",
+      "IP"
+    ]
+  },
+  {
+    "id": "KB045",
+    "title": "Laptop overheating",
+    "category": "Hardware",
+    "subcategory": "Laptop",
+    "problem": "Laptop becomes unusually hot during normal usage.",
+    "symptoms": [
+      "High temperature",
+      "Fan noise",
+      "Performance slowdown"
+    ],
+    "solution": [
+      "Move the laptop to a hard surface.",
+      "Close unnecessary applications.",
+      "Check CPU usage.",
+      "Ensure ventilation openings are clear.",
+      "Escalate for hardware inspection if overheating continues."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "overheating",
+      "fan",
+      "laptop",
+      "temperature"
+    ]
+  },
+  {
+    "id": "KB046",
+    "title": "Webcam not working",
+    "category": "Hardware",
+    "subcategory": "Webcam",
+    "problem": "Camera does not work in a video meeting application.",
+    "symptoms": [
+      "Camera unavailable",
+      "Black camera screen",
+      "Camera permission error"
+    ],
+    "solution": [
+      "Check camera privacy settings.",
+      "Close other applications using the camera.",
+      "Restart the meeting application.",
+      "Update the camera driver.",
+      "Restart the computer."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "webcam",
+      "camera",
+      "video",
+      "meeting"
+    ]
+  },
+  {
+    "id": "KB047",
+    "title": "Headset microphone not working",
+    "category": "Hardware",
+    "subcategory": "Audio",
+    "problem": "Microphone input from a headset is not detected.",
+    "symptoms": [
+      "No microphone input",
+      "Audio unavailable",
+      "Meeting participants cannot hear user"
+    ],
+    "solution": [
+      "Check headset connection.",
+      "Select the correct microphone input.",
+      "Verify microphone permissions.",
+      "Test the microphone in system settings.",
+      "Try another headset."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "headset",
+      "microphone",
+      "audio",
+      "meeting"
+    ]
+  },
+  {
+    "id": "KB048",
+    "title": "Application crashes on startup",
+    "category": "Software",
+    "subcategory": "Application",
+    "problem": "An enterprise application closes immediately after launch.",
+    "symptoms": [
+      "Application crashes",
+      "Application closes",
+      "Startup failure"
+    ],
+    "solution": [
+      "Restart the application.",
+      "Restart the computer.",
+      "Check application updates.",
+      "Clear the application's temporary data if supported.",
+      "Escalate with application logs if the problem continues."
+    ],
+    "severity": "High",
+    "keywords": [
+      "application",
+      "crash",
+      "startup",
+      "software"
+    ]
+  },
+  {
+    "id": "KB049",
+    "title": "Application is running slowly",
+    "category": "Software",
+    "subcategory": "Application",
+    "problem": "An enterprise application responds slowly.",
+    "symptoms": [
+      "Slow response",
+      "Freezing",
+      "Long loading time"
+    ],
+    "solution": [
+      "Check system resource usage.",
+      "Close unnecessary applications.",
+      "Restart the application.",
+      "Check network connectivity.",
+      "Escalate if multiple users experience the same problem."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "application",
+      "slow",
+      "performance",
+      "freezing"
+    ]
+  },
+  {
+    "id": "KB050",
+    "title": "Software installation failure",
+    "category": "Software",
+    "subcategory": "Installation",
+    "problem": "Approved software fails to install.",
+    "symptoms": [
+      "Installation error",
+      "Setup fails",
+      "Software unavailable"
+    ],
+    "solution": [
+      "Verify sufficient disk space.",
+      "Run the approved installer with required permissions.",
+      "Remove an incomplete previous installation.",
+      "Restart the computer.",
+      "Escalate the installation error."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "installation",
+      "software",
+      "installer",
+      "error"
+    ]
+  },
+  {
+    "id": "KB051",
+    "title": "Software update failed",
+    "category": "Software",
+    "subcategory": "Updates",
+    "problem": "Application update cannot be completed.",
+    "symptoms": [
+      "Update failed",
+      "Version unchanged",
+      "Update error"
+    ],
+    "solution": [
+      "Verify network connectivity.",
+      "Restart the application.",
+      "Check available disk space.",
+      "Retry the update.",
+      "Use the approved software deployment process if manual updating fails."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "software",
+      "update",
+      "patch",
+      "installation"
+    ]
+  },
+  {
+    "id": "KB052",
+    "title": "Browser pages not loading",
+    "category": "Software",
+    "subcategory": "Browser",
+    "problem": "Web pages fail to load correctly.",
+    "symptoms": [
+      "Blank page",
+      "Page timeout",
+      "Browser error"
+    ],
+    "solution": [
+      "Check internet connectivity.",
+      "Refresh the page.",
+      "Clear browser cache.",
+      "Try an approved alternate browser.",
+      "Check whether the website is available to other users."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "browser",
+      "website",
+      "cache",
+      "internet"
+    ]
+  },
+  {
+    "id": "KB053",
+    "title": "Browser cache causing application issues",
+    "category": "Software",
+    "subcategory": "Browser",
+    "problem": "A web application behaves incorrectly because of stale browser data.",
+    "symptoms": [
+      "Old page displayed",
+      "Incorrect application behavior",
+      "Login loop"
+    ],
+    "solution": [
+      "Close the browser.",
+      "Clear cache and site data for the affected application.",
+      "Restart the browser.",
+      "Sign in again.",
+      "Verify the application works normally."
+    ],
+    "severity": "Low",
+    "keywords": [
+      "browser",
+      "cache",
+      "cookies",
+      "web application"
+    ]
+  },
+  {
+    "id": "KB054",
+    "title": "PDF file will not open",
+    "category": "Software",
+    "subcategory": "Documents",
+    "problem": "User cannot open a PDF document.",
+    "symptoms": [
+      "PDF error",
+      "File does not open",
+      "Application freezes"
+    ],
+    "solution": [
+      "Verify the file is completely downloaded.",
+      "Try opening another PDF.",
+      "Restart the PDF application.",
+      "Update the approved PDF reader.",
+      "Request a new copy if the document is corrupted."
+    ],
+    "severity": "Low",
+    "keywords": [
+      "PDF",
+      "document",
+      "file",
+      "reader"
+    ]
+  },
+  {
+    "id": "KB055",
+    "title": "Office document is read-only",
+    "category": "Software",
+    "subcategory": "Office",
+    "problem": "User cannot edit an office document.",
+    "symptoms": [
+      "Read-only mode",
+      "Editing disabled",
+      "Document locked"
+    ],
+    "solution": [
+      "Check file permissions.",
+      "Verify whether another user has the document open.",
+      "Save a local copy if permitted.",
+      "Check document protection settings.",
+      "Request write access if required."
+    ],
+    "severity": "Low",
+    "keywords": [
+      "Office",
+      "document",
+      "read-only",
+      "permissions"
+    ]
+  },
+  {
+    "id": "KB056",
+    "title": "Application license expired",
+    "category": "Software",
+    "subcategory": "Licensing",
+    "problem": "An application reports that its license has expired.",
+    "symptoms": [
+      "License expired",
+      "Activation error",
+      "Application restricted"
+    ],
+    "solution": [
+      "Verify the assigned license.",
+      "Sign out and sign in again.",
+      "Check network connectivity.",
+      "Use the approved license activation process.",
+      "Contact software administration if the license is unavailable."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "license",
+      "activation",
+      "software",
+      "subscription"
+    ]
+  },
+  {
+    "id": "KB057",
+    "title": "Application cannot connect to server",
+    "category": "Software",
+    "subcategory": "Application",
+    "problem": "Enterprise application cannot communicate with its backend server.",
+    "symptoms": [
+      "Server unavailable",
+      "Connection timeout",
+      "Application error"
+    ],
+    "solution": [
+      "Check network connectivity.",
+      "Verify VPN status if required.",
+      "Restart the application.",
+      "Check whether the server is available to other users.",
+      "Escalate a widespread outage to application support."
+    ],
+    "severity": "High",
+    "keywords": [
+      "application",
+      "server",
+      "connection",
+      "timeout"
+    ]
+  },
+  {
+    "id": "KB058",
+    "title": "Phishing email reported",
+    "category": "Security",
+    "subcategory": "Phishing",
+    "problem": "User receives a suspicious email requesting credentials or payment information.",
+    "symptoms": [
+      "Suspicious email",
+      "Unknown sender",
+      "Credential request"
+    ],
+    "solution": [
+      "Do not click links or attachments.",
+      "Do not provide credentials.",
+      "Report the email using the approved security-reporting mechanism.",
+      "Delete or quarantine the message after reporting."
+    ],
+    "severity": "High",
+    "keywords": [
+      "phishing",
+      "email",
+      "security",
+      "credentials"
+    ]
+  },
+  {
+    "id": "KB059",
+    "title": "Malware alert on workstation",
+    "category": "Security",
+    "subcategory": "Malware",
+    "problem": "Endpoint security software reports possible malware.",
+    "symptoms": [
+      "Malware alert",
+      "Security warning",
+      "Suspicious process"
+    ],
+    "solution": [
+      "Do not disable endpoint protection.",
+      "Disconnect the device from the network if instructed by security procedures.",
+      "Record the alert details.",
+      "Contact the security team immediately.",
+      "Follow incident-response instructions."
+    ],
+    "severity": "Critical",
+    "keywords": [
+      "malware",
+      "antivirus",
+      "security",
+      "endpoint"
+    ]
+  },
+  {
+    "id": "KB060",
+    "title": "Suspicious login notification",
+    "category": "Security",
+    "subcategory": "Account Security",
+    "problem": "User receives a notification for a login they do not recognize.",
+    "symptoms": [
+      "Unknown login",
+      "Security notification",
+      "Unrecognized location"
+    ],
+    "solution": [
+      "Do not approve unknown MFA requests.",
+      "Change the account password.",
+      "Review recent account activity.",
+      "Report the incident to security.",
+      "Follow account-compromise procedures."
+    ],
+    "severity": "Critical",
+    "keywords": [
+      "security",
+      "login",
+      "MFA",
+      "account compromise"
+    ]
+  },
+  {
+    "id": "KB061",
+    "title": "Endpoint antivirus disabled",
+    "category": "Security",
+    "subcategory": "Endpoint Protection",
+    "problem": "Endpoint security protection appears disabled.",
+    "symptoms": [
+      "Antivirus disabled",
+      "Security warning",
+      "Protection unavailable"
+    ],
+    "solution": [
+      "Do not install unauthorized security software.",
+      "Restart the endpoint protection service if permitted.",
+      "Restart the computer.",
+      "Verify protection status.",
+      "Contact security support if protection remains disabled."
+    ],
+    "severity": "Critical",
+    "keywords": [
+      "antivirus",
+      "endpoint",
+      "security",
+      "protection"
+    ]
+  },
+  {
+    "id": "KB062",
+    "title": "USB device security restriction",
+    "category": "Security",
+    "subcategory": "Device Control",
+    "problem": "A USB storage device is blocked by corporate security policy.",
+    "symptoms": [
+      "USB blocked",
+      "Access denied",
+      "Storage device unavailable"
+    ],
+    "solution": [
+      "Verify whether the device is approved.",
+      "Do not bypass security controls.",
+      "Submit an approved device-access request.",
+      "Contact security support if business justification exists."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "USB",
+      "security",
+      "device",
+      "blocked"
+    ]
+  },
+  {
+    "id": "KB063",
+    "title": "Security certificate warning",
+    "category": "Security",
+    "subcategory": "Certificates",
+    "problem": "Browser reports an invalid or expired security certificate.",
+    "symptoms": [
+      "Certificate warning",
+      "HTTPS error",
+      "Secure connection unavailable"
+    ],
+    "solution": [
+      "Do not bypass certificate warnings on unknown sites.",
+      "Verify the website address.",
+      "Check system date and time.",
+      "Contact application or security support if the corporate site certificate appears invalid."
+    ],
+    "severity": "High",
+    "keywords": [
+      "certificate",
+      "HTTPS",
+      "security",
+      "browser"
+    ]
+  },
+  {
+    "id": "KB064",
+    "title": "Unauthorized software detected",
+    "category": "Security",
+    "subcategory": "Software Security",
+    "problem": "Endpoint management detects software that is not approved.",
+    "symptoms": [
+      "Unauthorized software",
+      "Compliance warning",
+      "Application blocked"
+    ],
+    "solution": [
+      "Do not attempt to bypass endpoint controls.",
+      "Identify the software.",
+      "Remove it if instructed.",
+      "Submit an approved software request if the application is required for business use."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "unauthorized",
+      "software",
+      "security",
+      "compliance"
+    ]
+  },
+  {
+    "id": "KB065",
+    "title": "Account suspected of compromise",
+    "category": "Security",
+    "subcategory": "Incident Response",
+    "problem": "User believes corporate credentials may have been compromised.",
+    "symptoms": [
+      "Unexpected login",
+      "Unknown activity",
+      "Suspicious MFA requests"
+    ],
+    "solution": [
+      "Change the password immediately.",
+      "Do not approve unexpected MFA requests.",
+      "Report the incident to security.",
+      "Disconnect suspicious sessions if available.",
+      "Follow the organization's incident-response process."
+    ],
+    "severity": "Critical",
+    "keywords": [
+      "compromise",
+      "credentials",
+      "security",
+      "incident"
+    ]
+  },
+  {
+    "id": "KB066",
+    "title": "Ransomware warning",
+    "category": "Security",
+    "subcategory": "Ransomware",
+    "problem": "User observes suspicious file encryption or a ransomware warning.",
+    "symptoms": [
+      "Files encrypted",
+      "Ransom note",
+      "Unknown file extensions"
+    ],
+    "solution": [
+      "Disconnect the device from the network immediately if safe to do so.",
+      "Do not pay or interact with the attacker.",
+      "Contact the security incident-response team immediately.",
+      "Preserve relevant evidence as instructed."
+    ],
+    "severity": "Critical",
+    "keywords": [
+      "ransomware",
+      "encryption",
+      "security",
+      "incident"
+    ]
+  },
+  {
+    "id": "KB067",
+    "title": "Security policy violation",
+    "category": "Security",
+    "subcategory": "Compliance",
+    "problem": "A workstation or account may have violated corporate security policy.",
+    "symptoms": [
+      "Compliance warning",
+      "Policy violation",
+      "Security alert"
+    ],
+    "solution": [
+      "Stop the activity causing the alert.",
+      "Do not attempt to disable security controls.",
+      "Record the relevant details.",
+      "Notify the security or compliance team.",
+      "Follow remediation instructions."
+    ],
+    "severity": "High",
+    "keywords": [
+      "security policy",
+      "compliance",
+      "violation",
+      "security"
+    ]
+  },
+  {
+    "id": "KB068",
+    "title": "Cloud application unavailable",
+    "category": "Cloud",
+    "subcategory": "Cloud Application",
+    "problem": "User cannot access a company cloud application.",
+    "symptoms": [
+      "Cloud application unavailable",
+      "Login failure",
+      "Service timeout"
+    ],
+    "solution": [
+      "Check internet connectivity.",
+      "Verify account status.",
+      "Retry the application.",
+      "Check whether other users are affected.",
+      "Escalate suspected service outages."
+    ],
+    "severity": "High",
+    "keywords": [
+      "cloud",
+      "application",
+      "service",
+      "outage"
+    ]
+  },
+  {
+    "id": "KB069",
+    "title": "Cloud storage synchronization failure",
+    "category": "Cloud",
+    "subcategory": "Storage",
+    "problem": "Files are not synchronizing with corporate cloud storage.",
+    "symptoms": [
+      "Sync paused",
+      "Files missing",
+      "Sync errors"
+    ],
+    "solution": [
+      "Check internet connectivity.",
+      "Verify available local and cloud storage.",
+      "Restart the synchronization client.",
+      "Check account authentication.",
+      "Escalate persistent synchronization failures."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "cloud",
+      "storage",
+      "sync",
+      "files"
+    ]
+  },
+  {
+    "id": "KB070",
+    "title": "Cloud virtual machine unavailable",
+    "category": "Cloud",
+    "subcategory": "Virtual Machine",
+    "problem": "An assigned cloud virtual machine cannot be reached.",
+    "symptoms": [
+      "VM unavailable",
+      "Remote connection failure",
+      "Timeout"
+    ],
+    "solution": [
+      "Verify the VM status.",
+      "Check network connectivity.",
+      "Verify access permissions.",
+      "Restart the VM only through approved procedures.",
+      "Escalate infrastructure issues."
+    ],
+    "severity": "Critical",
+    "keywords": [
+      "cloud",
+      "VM",
+      "virtual machine",
+      "infrastructure"
+    ]
+  },
+  {
+    "id": "KB071",
+    "title": "Cloud storage quota exceeded",
+    "category": "Cloud",
+    "subcategory": "Storage",
+    "problem": "User cannot upload files because cloud storage capacity has been exceeded.",
+    "symptoms": [
+      "Storage full",
+      "Upload failed",
+      "Quota exceeded"
+    ],
+    "solution": [
+      "Review unnecessary files.",
+      "Delete or archive approved data.",
+      "Empty the recycle bin if appropriate.",
+      "Request additional storage when required."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "cloud",
+      "storage",
+      "quota",
+      "upload"
+    ]
+  },
+  {
+    "id": "KB072",
+    "title": "Cloud authentication failure",
+    "category": "Cloud",
+    "subcategory": "Authentication",
+    "problem": "User cannot authenticate to a cloud service.",
+    "symptoms": [
+      "Login failure",
+      "Authentication error",
+      "MFA failure"
+    ],
+    "solution": [
+      "Verify credentials.",
+      "Check MFA.",
+      "Confirm account status.",
+      "Retry after signing out.",
+      "Escalate persistent authentication problems."
+    ],
+    "severity": "High",
+    "keywords": [
+      "cloud",
+      "authentication",
+      "MFA",
+      "login"
+    ]
+  },
+  {
+    "id": "KB073",
+    "title": "Cloud service latency",
+    "category": "Cloud",
+    "subcategory": "Performance",
+    "problem": "Cloud application response times are unusually high.",
+    "symptoms": [
+      "Slow application",
+      "High latency",
+      "Timeouts"
+    ],
+    "solution": [
+      "Test local network connectivity.",
+      "Check whether other cloud services are affected.",
+      "Retry the application.",
+      "Collect timestamps and error messages.",
+      "Escalate widespread performance issues."
+    ],
+    "severity": "High",
+    "keywords": [
+      "cloud",
+      "latency",
+      "performance",
+      "timeout"
+    ]
+  },
+  {
+    "id": "KB074",
+    "title": "Cloud backup job failed",
+    "category": "Cloud",
+    "subcategory": "Backup",
+    "problem": "Scheduled cloud backup did not complete successfully.",
+    "symptoms": [
+      "Backup failed",
+      "Backup warning",
+      "Missing backup"
+    ],
+    "solution": [
+      "Check backup job logs.",
+      "Verify storage availability.",
+      "Check network connectivity.",
+      "Retry the approved backup job.",
+      "Escalate repeated failures to infrastructure support."
+    ],
+    "severity": "Critical",
+    "keywords": [
+      "backup",
+      "cloud",
+      "storage",
+      "failure"
+    ]
+  },
+  {
+    "id": "KB075",
+    "title": "Cloud resource access denied",
+    "category": "Cloud",
+    "subcategory": "Permissions",
+    "problem": "User receives an access-denied error when accessing a cloud resource.",
+    "symptoms": [
+      "Access denied",
+      "Permission error",
+      "Resource unavailable"
+    ],
+    "solution": [
+      "Verify the user's cloud role.",
+      "Confirm resource permissions.",
+      "Check group membership.",
+      "Request appropriate access through the approved process."
+    ],
+    "severity": "High",
+    "keywords": [
+      "cloud",
+      "permissions",
+      "access denied",
+      "role"
+    ]
+  },
+  {
+    "id": "KB076",
+    "title": "Cloud deployment failed",
+    "category": "Cloud",
+    "subcategory": "Deployment",
+    "problem": "An approved cloud deployment fails.",
+    "symptoms": [
+      "Deployment error",
+      "Resource creation failed",
+      "Pipeline failure"
+    ],
+    "solution": [
+      "Review deployment logs.",
+      "Check resource quotas.",
+      "Verify configuration.",
+      "Check required permissions.",
+      "Escalate infrastructure errors to the cloud engineering team."
+    ],
+    "severity": "High",
+    "keywords": [
+      "cloud",
+      "deployment",
+      "pipeline",
+      "configuration"
+    ]
+  },
+  {
+    "id": "KB077",
+    "title": "Cloud monitoring alert",
+    "category": "Cloud",
+    "subcategory": "Monitoring",
+    "problem": "Cloud monitoring reports abnormal resource usage.",
+    "symptoms": [
+      "CPU alert",
+      "Memory alert",
+      "Resource threshold exceeded"
+    ],
+    "solution": [
+      "Review monitoring metrics.",
+      "Identify the affected resource.",
+      "Check recent deployments.",
+      "Follow the incident-response procedure.",
+      "Escalate critical infrastructure alerts."
+    ],
+    "severity": "High",
+    "keywords": [
+      "cloud",
+      "monitoring",
+      "CPU",
+      "memory"
+    ]
+  },
+  {
+    "id": "KB078",
+    "title": "Database connection failure",
+    "category": "Database",
+    "subcategory": "Connectivity",
+    "problem": "Application cannot connect to the database.",
+    "symptoms": [
+      "Database unavailable",
+      "Connection refused",
+      "Timeout"
+    ],
+    "solution": [
+      "Check network connectivity.",
+      "Verify database service status.",
+      "Check approved connection configuration.",
+      "Review application logs.",
+      "Escalate database outages to the database team."
+    ],
+    "severity": "Critical",
+    "keywords": [
+      "database",
+      "connection",
+      "server",
+      "timeout"
+    ]
+  },
+  {
+    "id": "KB079",
+    "title": "Database query running slowly",
+    "category": "Database",
+    "subcategory": "Performance",
+    "problem": "Application database queries take unusually long to complete.",
+    "symptoms": [
+      "Slow queries",
+      "Application delay",
+      "Database timeout"
+    ],
+    "solution": [
+      "Check database performance metrics.",
+      "Identify long-running queries.",
+      "Review recent changes.",
+      "Check system resources.",
+      "Escalate persistent performance issues to database administrators."
+    ],
+    "severity": "High",
+    "keywords": [
+      "database",
+      "query",
+      "slow",
+      "performance"
+    ]
+  },
+  {
+    "id": "KB080",
+    "title": "Database authentication failure",
+    "category": "Database",
+    "subcategory": "Authentication",
+    "problem": "Application cannot authenticate to the database.",
+    "symptoms": [
+      "Authentication failed",
+      "Invalid credentials",
+      "Database login error"
+    ],
+    "solution": [
+      "Verify the configured database account.",
+      "Check account status.",
+      "Verify approved credentials configuration.",
+      "Check password expiration.",
+      "Escalate credential issues to database administration."
+    ],
+    "severity": "High",
+    "keywords": [
+      "database",
+      "authentication",
+      "credentials",
+      "login"
+    ]
+  },
+  {
+    "id": "KB081",
+    "title": "Database storage full",
+    "category": "Database",
+    "subcategory": "Storage",
+    "problem": "Database storage has reached its capacity.",
+    "symptoms": [
+      "Storage warning",
+      "Write failures",
+      "Database errors"
+    ],
+    "solution": [
+      "Check database storage usage.",
+      "Identify unnecessary temporary data.",
+      "Follow approved cleanup procedures.",
+      "Increase storage capacity if required.",
+      "Escalate critical storage alerts."
+    ],
+    "severity": "Critical",
+    "keywords": [
+      "database",
+      "storage",
+      "disk",
+      "capacity"
+    ]
+  },
+  {
+    "id": "KB082",
+    "title": "Database backup failure",
+    "category": "Database",
+    "subcategory": "Backup",
+    "problem": "Scheduled database backup failed.",
+    "symptoms": [
+      "Backup failure",
+      "Backup warning",
+      "Recovery risk"
+    ],
+    "solution": [
+      "Review backup logs.",
+      "Verify storage availability.",
+      "Check database connectivity.",
+      "Retry the backup through the approved process.",
+      "Escalate repeated failures immediately."
+    ],
+    "severity": "Critical",
+    "keywords": [
+      "database",
+      "backup",
+      "recovery",
+      "failure"
+    ]
+  },
+  {
+    "id": "KB083",
+    "title": "Email not sending",
+    "category": "Email",
+    "subcategory": "Sending",
+    "problem": "User cannot send email messages.",
+    "symptoms": [
+      "Send failure",
+      "Messages remain in outbox",
+      "Delivery error"
+    ],
+    "solution": [
+      "Check internet connectivity.",
+      "Verify mailbox storage.",
+      "Restart the email application.",
+      "Check the outbox for stuck messages.",
+      "Retry sending the message."
+    ],
+    "severity": "High",
+    "keywords": [
+      "email",
+      "send",
+      "outbox",
+      "mail"
+    ]
+  },
+  {
+    "id": "KB084",
+    "title": "Email not receiving",
+    "category": "Email",
+    "subcategory": "Receiving",
+    "problem": "User is not receiving expected emails.",
+    "symptoms": [
+      "Missing email",
+      "Inbox not updating",
+      "Messages delayed"
+    ],
+    "solution": [
+      "Refresh the mailbox.",
+      "Check internet connectivity.",
+      "Check junk or quarantine folders.",
+      "Verify mailbox storage.",
+      "Ask the sender to confirm delivery if necessary."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "email",
+      "inbox",
+      "receiving",
+      "mail"
+    ]
+  },
+  {
+    "id": "KB085",
+    "title": "Mailbox full",
+    "category": "Email",
+    "subcategory": "Storage",
+    "problem": "User's mailbox has reached its storage limit.",
+    "symptoms": [
+      "Mailbox full",
+      "Cannot send",
+      "Cannot receive"
+    ],
+    "solution": [
+      "Delete unnecessary emails.",
+      "Empty deleted items.",
+      "Archive old messages according to policy.",
+      "Remove unnecessary large attachments.",
+      "Request additional mailbox storage if required."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "mailbox",
+      "email",
+      "storage",
+      "full"
+    ]
+  },
+  {
+    "id": "KB086",
+    "title": "Email attachment blocked",
+    "category": "Email",
+    "subcategory": "Attachments",
+    "problem": "Email attachment is blocked by security controls.",
+    "symptoms": [
+      "Attachment blocked",
+      "Security warning",
+      "Message rejected"
+    ],
+    "solution": [
+      "Verify whether the attachment type is allowed.",
+      "Do not rename files to bypass security controls.",
+      "Use an approved secure file-sharing service.",
+      "Contact security support if the attachment is business-critical."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "email",
+      "attachment",
+      "blocked",
+      "security"
+    ]
+  },
+  {
+    "id": "KB087",
+    "title": "Email application keeps asking for password",
+    "category": "Email",
+    "subcategory": "Authentication",
+    "problem": "Email client repeatedly requests authentication.",
+    "symptoms": [
+      "Repeated password prompt",
+      "Email disconnected",
+      "Authentication loop"
+    ],
+    "solution": [
+      "Verify the account password.",
+      "Sign out and sign in again.",
+      "Check MFA.",
+      "Restart the email application.",
+      "Clear saved credentials only through approved procedures."
+    ],
+    "severity": "High",
+    "keywords": [
+      "email",
+      "password",
+      "authentication",
+      "MFA"
+    ]
+  },
+  {
+    "id": "KB088",
+    "title": "Calendar meeting invitation missing",
+    "category": "Email",
+    "subcategory": "Calendar",
+    "problem": "User does not see an expected meeting invitation.",
+    "symptoms": [
+      "Meeting missing",
+      "Calendar not updated",
+      "Invitation unavailable"
+    ],
+    "solution": [
+      "Check inbox and junk folders.",
+      "Search the mailbox for the meeting subject.",
+      "Refresh the calendar.",
+      "Ask the organizer to resend the invitation.",
+      "Check whether calendar synchronization is working."
+    ],
+    "severity": "Low",
+    "keywords": [
+      "calendar",
+      "meeting",
+      "invitation",
+      "email"
+    ]
+  },
+  {
+    "id": "KB089",
+    "title": "Video meeting audio unavailable",
+    "category": "Email",
+    "subcategory": "Collaboration",
+    "problem": "User cannot hear other participants in an online meeting.",
+    "symptoms": [
+      "No audio",
+      "Participants cannot be heard",
+      "Meeting sound unavailable"
+    ],
+    "solution": [
+      "Check system volume.",
+      "Select the correct speaker device.",
+      "Verify the meeting application's audio settings.",
+      "Reconnect the headset.",
+      "Restart the meeting application."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "meeting",
+      "audio",
+      "speaker",
+      "collaboration"
+    ]
+  },
+  {
+    "id": "KB090",
+    "title": "Video meeting camera unavailable",
+    "category": "Email",
+    "subcategory": "Collaboration",
+    "problem": "User cannot enable the camera during an online meeting.",
+    "symptoms": [
+      "Camera unavailable",
+      "Black video",
+      "Camera permission error"
+    ],
+    "solution": [
+      "Check camera permissions.",
+      "Close applications using the camera.",
+      "Select the correct camera.",
+      "Restart the meeting application.",
+      "Restart the computer if necessary."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "meeting",
+      "camera",
+      "video",
+      "collaboration"
+    ]
+  },
+  {
+    "id": "KB091",
+    "title": "Email messages going to spam",
+    "category": "Email",
+    "subcategory": "Spam",
+    "problem": "Legitimate emails are being delivered to the spam folder.",
+    "symptoms": [
+      "Messages in spam",
+      "Expected email missing",
+      "Incorrect filtering"
+    ],
+    "solution": [
+      "Check the spam or junk folder.",
+      "Mark legitimate messages as not spam.",
+      "Add approved senders to the safe-sender list if permitted.",
+      "Report recurring filtering problems to email support."
+    ],
+    "severity": "Low",
+    "keywords": [
+      "email",
+      "spam",
+      "junk",
+      "filter"
+    ]
+  },
+  {
+    "id": "KB092",
+    "title": "Shared mailbox access problem",
+    "category": "Email",
+    "subcategory": "Shared Mailbox",
+    "problem": "User cannot open an authorized shared mailbox.",
+    "symptoms": [
+      "Mailbox unavailable",
+      "Access denied",
+      "Shared mailbox missing"
+    ],
+    "solution": [
+      "Verify user permissions.",
+      "Restart the email client.",
+      "Refresh the mailbox list.",
+      "Confirm the shared mailbox still exists.",
+      "Request access through the approved process."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "shared mailbox",
+      "email",
+      "permissions",
+      "access"
+    ]
+  },
+  {
+    "id": "KB093",
+    "title": "Windows update failed",
+    "category": "Operating System",
+    "subcategory": "Windows Update",
+    "problem": "Operating system updates fail to install.",
+    "symptoms": [
+      "Update failure",
+      "Installation error",
+      "Restart loop"
+    ],
+    "solution": [
+      "Check internet connectivity.",
+      "Verify sufficient disk space.",
+      "Restart the computer.",
+      "Run the approved update troubleshooter.",
+      "Contact endpoint support if updates continue to fail."
+    ],
+    "severity": "High",
+    "keywords": [
+      "Windows",
+      "update",
+      "patch",
+      "operating system"
+    ]
+  },
+  {
+    "id": "KB094",
+    "title": "Computer running slowly",
+    "category": "Operating System",
+    "subcategory": "Performance",
+    "problem": "Computer performance is significantly slower than normal.",
+    "symptoms": [
+      "Slow startup",
+      "Applications freeze",
+      "High CPU usage"
+    ],
+    "solution": [
+      "Restart the computer.",
+      "Close unnecessary applications.",
+      "Check CPU and memory usage.",
+      "Remove unnecessary startup applications.",
+      "Run approved endpoint diagnostics."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "Windows",
+      "slow",
+      "performance",
+      "CPU",
+      "memory"
+    ]
+  },
+  {
+    "id": "KB095",
+    "title": "Disk space running low",
+    "category": "Operating System",
+    "subcategory": "Storage",
+    "problem": "System drive has very little free space.",
+    "symptoms": [
+      "Low disk warning",
+      "Applications fail",
+      "Slow performance"
+    ],
+    "solution": [
+      "Delete unnecessary temporary files.",
+      "Empty the recycle bin.",
+      "Remove unused approved applications.",
+      "Move approved large files to corporate storage.",
+      "Escalate if more storage is required."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "disk",
+      "storage",
+      "Windows",
+      "space"
+    ]
+  },
+  {
+    "id": "KB096",
+    "title": "Windows login takes too long",
+    "category": "Operating System",
+    "subcategory": "Login",
+    "problem": "Computer takes an unusually long time to complete login.",
+    "symptoms": [
+      "Slow login",
+      "Black screen",
+      "Long startup"
+    ],
+    "solution": [
+      "Restart the computer.",
+      "Check network connectivity.",
+      "Disconnect unnecessary peripherals.",
+      "Check startup applications.",
+      "Escalate if the issue continues."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "Windows",
+      "login",
+      "startup",
+      "slow"
+    ]
+  },
+  {
+    "id": "KB097",
+    "title": "Blue screen error",
+    "category": "Operating System",
+    "subcategory": "System Error",
+    "problem": "Windows displays a blue screen and restarts.",
+    "symptoms": [
+      "Blue screen",
+      "Automatic restart",
+      "System crash"
+    ],
+    "solution": [
+      "Record the displayed error code.",
+      "Allow the system to restart.",
+      "Disconnect recently added peripherals.",
+      "Install approved driver updates.",
+      "Escalate repeated blue-screen failures to endpoint support."
+    ],
+    "severity": "High",
+    "keywords": [
+      "Windows",
+      "blue screen",
+      "BSOD",
+      "crash"
+    ]
+  },
+  {
+    "id": "KB098",
+    "title": "Remote desktop connection failed",
+    "category": "Network",
+    "subcategory": "Remote Desktop",
+    "problem": "User cannot connect to a corporate remote desktop environment.",
+    "symptoms": [
+      "Remote desktop unavailable",
+      "Connection timeout",
+      "Login failure"
+    ],
+    "solution": [
+      "Verify internet connectivity.",
+      "Connect to the corporate VPN if required.",
+      "Verify the remote host name.",
+      "Check account permissions.",
+      "Escalate if the remote service is unavailable."
+    ],
+    "severity": "High",
+    "keywords": [
+      "RDP",
+      "remote desktop",
+      "VPN",
+      "connection"
+    ]
+  },
+  {
+    "id": "KB099",
+    "title": "Network drive unavailable",
+    "category": "Network",
+    "subcategory": "File Share",
+    "problem": "Mapped network drive cannot be accessed.",
+    "symptoms": [
+      "Drive missing",
+      "Access denied",
+      "Network path unavailable"
+    ],
+    "solution": [
+      "Verify network connectivity.",
+      "Connect to VPN if required.",
+      "Check the network path.",
+      "Reconnect the mapped drive.",
+      "Verify user permissions."
+    ],
+    "severity": "High",
+    "keywords": [
+      "network drive",
+      "file share",
+      "VPN",
+      "permissions"
+    ]
+  },
+  {
+    "id": "KB100",
+    "title": "Internal website unavailable",
+    "category": "Network",
+    "subcategory": "Internal Web",
+    "problem": "Corporate internal website cannot be opened.",
+    "symptoms": [
+      "Website unavailable",
+      "Timeout",
+      "DNS error"
+    ],
+    "solution": [
+      "Verify network connectivity.",
+      "Connect to VPN if required.",
+      "Check DNS resolution.",
+      "Try another internal website.",
+      "Escalate if multiple users are affected."
+    ],
+    "severity": "High",
+    "keywords": [
+      "internal website",
+      "VPN",
+      "DNS",
+      "network"
+    ]
+  },
+  {
+    "id": "KB101",
+    "title": "Network latency is high",
+    "category": "Network",
+    "subcategory": "Performance",
+    "problem": "Applications experience unusually high network latency.",
+    "symptoms": [
+      "Slow response",
+      "Timeout",
+      "High ping"
+    ],
+    "solution": [
+      "Test network connectivity.",
+      "Check whether the problem affects multiple applications.",
+      "Restart the network connection.",
+      "Disconnect unnecessary VPN sessions.",
+      "Escalate persistent latency."
+    ],
+    "severity": "High",
+    "keywords": [
+      "latency",
+      "ping",
+      "network",
+      "slow"
+    ]
+  },
+  {
+    "id": "KB102",
+    "title": "Network printer access denied",
+    "category": "Network",
+    "subcategory": "Printing",
+    "problem": "User cannot access a network printer because of permissions.",
+    "symptoms": [
+      "Access denied",
+      "Printer unavailable",
+      "Cannot add printer"
+    ],
+    "solution": [
+      "Verify printer name.",
+      "Check user permissions.",
+      "Verify network connectivity.",
+      "Remove and reconnect the printer.",
+      "Request printer access if necessary."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "printer",
+      "network",
+      "permissions",
+      "access"
+    ]
+  },
+  {
+    "id": "KB103",
+    "title": "Password manager access problem",
+    "category": "Authentication",
+    "subcategory": "Password Manager",
+    "problem": "User cannot access the corporate password manager.",
+    "symptoms": [
+      "Password manager unavailable",
+      "Login failure",
+      "MFA error"
+    ],
+    "solution": [
+      "Verify corporate credentials.",
+      "Check MFA.",
+      "Restart the browser.",
+      "Clear relevant browser data if approved.",
+      "Contact identity support if access remains unavailable."
+    ],
+    "severity": "High",
+    "keywords": [
+      "password manager",
+      "authentication",
+      "MFA",
+      "login"
+    ]
+  },
+  {
+    "id": "KB104",
+    "title": "User cannot change password",
+    "category": "Authentication",
+    "subcategory": "Password",
+    "problem": "User attempts to change the corporate password but receives an error.",
+    "symptoms": [
+      "Password change failed",
+      "Policy error",
+      "New password rejected"
+    ],
+    "solution": [
+      "Verify password complexity requirements.",
+      "Avoid recently used passwords.",
+      "Check account status.",
+      "Retry the password change.",
+      "Contact identity support if the error persists."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "password",
+      "change",
+      "policy",
+      "authentication"
+    ]
+  },
+  {
+    "id": "KB105",
+    "title": "MFA device replacement",
+    "category": "Authentication",
+    "subcategory": "MFA",
+    "problem": "User has a new phone and needs to reconfigure MFA.",
+    "symptoms": [
+      "MFA unavailable",
+      "Old device unavailable",
+      "Cannot authenticate"
+    ],
+    "solution": [
+      "Use the approved MFA re-registration process.",
+      "Verify identity.",
+      "Register the new approved device.",
+      "Test MFA authentication.",
+      "Contact identity support if the old device is required for verification."
+    ],
+    "severity": "High",
+    "keywords": [
+      "MFA",
+      "new phone",
+      "authentication",
+      "device"
+    ]
+  },
+  {
+    "id": "KB106",
+    "title": "Temporary access request",
+    "category": "Authentication",
+    "subcategory": "Access",
+    "problem": "User requires temporary access to a restricted corporate resource.",
+    "symptoms": [
+      "Access denied",
+      "Temporary project access required"
+    ],
+    "solution": [
+      "Submit an approved temporary-access request.",
+      "Provide business justification.",
+      "Obtain required manager or resource-owner approval.",
+      "Access should expire according to policy."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "temporary access",
+      "permissions",
+      "approval",
+      "security"
+    ]
+  },
+  {
+    "id": "KB107",
+    "title": "User account synchronization issue",
+    "category": "Authentication",
+    "subcategory": "Directory",
+    "problem": "Changes to a user's account are not reflected across corporate applications.",
+    "symptoms": [
+      "Old permissions",
+      "Account changes missing",
+      "Application access incorrect"
+    ],
+    "solution": [
+      "Verify the directory account changes.",
+      "Check synchronization status.",
+      "Allow the normal synchronization period.",
+      "Retry application access.",
+      "Escalate synchronization failures to identity administration."
+    ],
+    "severity": "High",
+    "keywords": [
+      "directory",
+      "synchronization",
+      "account",
+      "permissions"
+    ]
+  },
+  {
+    "id": "KB108",
+    "title": "Corporate application outage",
+    "category": "Application Support",
+    "subcategory": "Outage",
+    "problem": "Multiple users cannot access a business-critical application.",
+    "symptoms": [
+      "Application unavailable",
+      "Multiple users affected",
+      "Server error"
+    ],
+    "solution": [
+      "Confirm the scope of the outage.",
+      "Check approved service-status information.",
+      "Collect error messages and timestamps.",
+      "Create or update the incident record.",
+      "Escalate to the application support team."
+    ],
+    "severity": "Critical",
+    "keywords": [
+      "application",
+      "outage",
+      "incident",
+      "service"
+    ]
+  },
+  {
+    "id": "KB109",
+    "title": "Application data not updating",
+    "category": "Application Support",
+    "subcategory": "Data",
+    "problem": "Business application displays old or stale information.",
+    "symptoms": [
+      "Data not updated",
+      "Stale records",
+      "Incorrect information"
+    ],
+    "solution": [
+      "Refresh the application.",
+      "Sign out and sign in again.",
+      "Check whether other users see the same issue.",
+      "Record affected records and timestamps.",
+      "Escalate possible backend synchronization issues."
+    ],
+    "severity": "High",
+    "keywords": [
+      "application",
+      "data",
+      "refresh",
+      "synchronization"
+    ]
+  },
+  {
+    "id": "KB110",
+    "title": "Application report generation failed",
+    "category": "Application Support",
+    "subcategory": "Reporting",
+    "problem": "Business application cannot generate a required report.",
+    "symptoms": [
+      "Report error",
+      "Report timeout",
+      "Export failure"
+    ],
+    "solution": [
+      "Retry the report.",
+      "Reduce the report date range if appropriate.",
+      "Check application availability.",
+      "Record the error message.",
+      "Escalate repeated report failures."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "report",
+      "application",
+      "export",
+      "error"
+    ]
+  },
+  {
+    "id": "KB111",
+    "title": "Application integration failure",
+    "category": "Application Support",
+    "subcategory": "Integration",
+    "problem": "Data is not being transferred between two enterprise applications.",
+    "symptoms": [
+      "Integration failure",
+      "Missing data",
+      "Synchronization error"
+    ],
+    "solution": [
+      "Identify the affected integration.",
+      "Check integration logs.",
+      "Verify source and destination availability.",
+      "Record failed transaction details.",
+      "Escalate to the integration support team."
+    ],
+    "severity": "Critical",
+    "keywords": [
+      "integration",
+      "API",
+      "synchronization",
+      "application"
+    ]
+  },
+  {
+    "id": "KB112",
+    "title": "User receives application timeout",
+    "category": "Application Support",
+    "subcategory": "Performance",
+    "problem": "Business application repeatedly times out.",
+    "symptoms": [
+      "Timeout",
+      "Slow response",
+      "Request failure"
+    ],
+    "solution": [
+      "Check network connectivity.",
+      "Retry the request.",
+      "Check whether other users are affected.",
+      "Record timestamps and affected functions.",
+      "Escalate persistent timeouts."
+    ],
+    "severity": "High",
+    "keywords": [
+      "timeout",
+      "application",
+      "performance",
+      "network"
+    ]
+  },
+  {
+    "id": "KB113",
+    "title": "File accidentally deleted",
+    "category": "General IT",
+    "subcategory": "File Recovery",
+    "problem": "User accidentally deleted an important corporate file.",
+    "symptoms": [
+      "File missing",
+      "Deleted document",
+      "Folder content missing"
+    ],
+    "solution": [
+      "Check the recycle bin if applicable.",
+      "Check approved cloud-storage recovery options.",
+      "Do not overwrite the affected storage unnecessarily.",
+      "Contact IT support for backup recovery if required."
+    ],
+    "severity": "High",
+    "keywords": [
+      "deleted",
+      "file",
+      "recovery",
+      "backup"
+    ]
+  },
+  {
+    "id": "KB114",
+    "title": "Employee workstation replacement",
+    "category": "General IT",
+    "subcategory": "Hardware Lifecycle",
+    "problem": "Employee requires a replacement workstation because of hardware failure.",
+    "symptoms": [
+      "Hardware failure",
+      "Unusable workstation",
+      "Repeated crashes"
+    ],
+    "solution": [
+      "Create a hardware replacement request.",
+      "Back up approved user data.",
+      "Verify asset information.",
+      "Issue an approved replacement device.",
+      "Confirm required applications and access."
+    ],
+    "severity": "High",
+    "keywords": [
+      "laptop",
+      "replacement",
+      "hardware",
+      "asset"
+    ]
+  },
+  {
+    "id": "KB115",
+    "title": "IT service request status",
+    "category": "General IT",
+    "subcategory": "Service Desk",
+    "problem": "User wants to check the status of an existing IT service request.",
+    "symptoms": [
+      "Request pending",
+      "Status inquiry",
+      "Ticket update required"
+    ],
+    "solution": [
+      "Locate the service request number.",
+      "Check the service-management portal.",
+      "Review the current assignment and status.",
+      "Contact the assigned support group if additional information is required."
+    ],
+    "severity": "Low",
+    "keywords": [
+      "ticket",
+      "service request",
+      "status",
+      "IT support"
+    ]
+  },
+  {
+    "id": "KB116",
+    "title": "Employee onboarding IT checklist",
+    "category": "General IT",
+    "subcategory": "Onboarding",
+    "problem": "New employee requires standard IT setup.",
+    "symptoms": [
+      "Missing laptop",
+      "Missing account",
+      "Application access unavailable"
+    ],
+    "solution": [
+      "Provision the approved workstation.",
+      "Create the corporate account.",
+      "Configure MFA.",
+      "Assign required applications and groups.",
+      "Verify VPN, email, and collaboration access."
+    ],
+    "severity": "Medium",
+    "keywords": [
+      "onboarding",
+      "employee",
+      "account",
+      "laptop",
+      "access"
+    ]
+  },
+  {
+    "id": "KB117",
+    "title": "Employee offboarding IT checklist",
+    "category": "General IT",
+    "subcategory": "Offboarding",
+    "problem": "Employee departure requires corporate IT access to be removed.",
+    "symptoms": [
+      "Employee leaving",
+      "Access termination required",
+      "Asset return required"
+    ],
+    "solution": [
+      "Disable the corporate account according to the approved schedule.",
+      "Revoke application and VPN access.",
+      "Recover company hardware.",
+      "Transfer approved business data.",
+      "Confirm completion of the offboarding checklist."
+    ],
+    "severity": "Critical",
+    "keywords": [
+      "offboarding",
+      "account",
+      "access",
+      "VPN",
+      "asset"
+    ]
+  }
+]
