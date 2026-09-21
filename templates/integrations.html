@@ -1,142 +1,306 @@
-<!DOCTYPE html>
-<html lang="en" data-bs-theme="light">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SupportPilot - Integrations</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <style>
-        body { display: flex; min-height: 100vh; overflow-x: hidden; }
-        .sidebar { width: 250px; display: flex; flex-direction: column; flex-shrink: 0; z-index: 1040; height: 100vh; position: sticky; top: 0; border-right: 1px solid #dee2e6; }
-        .main-content { flex-grow: 1; padding: 2rem 3rem; overflow-y: auto; max-height: 100vh; }
-        .brand-logo { background-color: #6366f1; color: white; border-radius: 0.375rem; padding: 0.25rem 0.5rem; font-weight: bold; font-size: 14px; }
-        .mobile-toggle { display: none; }
-        @media (max-width: 991.98px) {
-            .sidebar { position: fixed; left: -250px; height: 100vh; transition: left 0.3s ease; background: white; }
-            .sidebar.show { left: 0; }
-            .mobile-toggle { display: block; }
-            .main-content { padding: 1rem; }
-        }
-    </style>
-</head>
-<body>
-<!-- Sidebar -->
-    <aside class="sidebar py-4" id="sidebarMenu">
-        <div class="px-4 mb-5 d-flex align-items-center">
-            <span class="brand-logo me-2">SP</span>
-            <span class="fw-bold text-dark fs-5">SupportPilot</span>
-            <button class="btn-close d-lg-none ms-auto" onclick="document.getElementById('sidebarMenu').classList.remove('show')"></button>
-        </div>
-        
-        <ul class="nav flex-column gap-1 px-3 mb-auto">
-            <li class="nav-item">
-                <a href="/" class="nav-link d-flex align-items-center rounded py-2 px-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-3"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                    Dashboard
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/my_tickets" class="nav-link d-flex align-items-center rounded py-2 px-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-3"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                    Add Tickets
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/all_tickets" class="nav-link d-flex align-items-center rounded py-2 px-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-3"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-                    My Tickets
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/agents" class="nav-link d-flex align-items-center rounded py-2 px-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-3"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                    AI Agent
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/integrations" class="nav-link active d-flex align-items-center rounded py-2 px-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-3"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-                    Integrations
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/analytics" class="nav-link d-flex align-items-center rounded py-2 px-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-3"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-                    Analytics
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/settings" class="nav-link d-flex align-items-center rounded py-2 px-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-3"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                    Settings
-                </a>
-            </li>
-        </ul>
-        
-        <div class="px-4 mt-auto">
-            <div class="border-top border-secondary pt-3 d-flex align-items-center justify-content-between">
-                <div class="text-truncate pe-2">
-                    <div class="small fw-semibold text-dark">{{ user.full_name }}</div>
-                    <div class="small text-muted" style="font-size: 0.75rem;">{{ user.department }}</div>
-                </div>
-                <a href="/logout" class="text-muted d-flex flex-shrink-0" title="Logout">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                </a>
-            </div>
-        </div>
-    </aside>
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="d-flex align-items-center justify-content-between mb-4 d-lg-none">
-            <a class="navbar-brand fw-bold d-flex align-items-center fs-5 text-decoration-none text-dark" href="/">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                SupportPilot
-            </a>
-            <button class="btn btn-outline-light btn-sm" onclick="document.getElementById('sidebarMenu').classList.add('show')">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-            </button>
-        </div>
+{% extends "base.html" %}
 
-        <div class="mb-4 pb-2">
-            <h2 class="fw-bold mb-1 text-dark">Integrations</h2>
-            <p class="text-muted mb-0">Live status of every service SupportPilot actually connects to. Nothing here is simulated.</p>
+{% block title %}SupportPilot Integrations{% endblock %}
+
+{% set active = 'integrations' %}
+{% set topbar_subtitle = '' %}
+{% set promo_title = 'System Configuration' %}
+{% set promo_text = 'Manage the services that power SupportPilot workflows.' %}
+{% set promo_icon = 'gear' %}
+{% block extra_head %}
+<style>
+  body { font-family: 'Inter', sans-serif; }
+  .integration-card { 
+    background: #fff; 
+    border: 1px solid #e6e9f0; 
+    border-radius: 0.9rem; 
+    padding: 1.5rem; 
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.25s ease;
+  }
+  .integration-card:hover {
+    border-color: #93c5fd; 
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08); 
+    transform: translateY(-2px);
+  }
+  [data-bs-theme="dark"] .integration-card { background: #1e293b; border-color: #334155; }
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%; display: inline-block;
+  }
+  .status-ready { background: #10b981; }
+  .status-none { background: #9ca3af; }
+  
+  .pipeline-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #475569;
+    transition: all 0.2s ease;
+  }
+  .pipeline-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+    background: #f1f5f9;
+  }
+  [data-bs-theme="dark"] .pipeline-box { background: #0f172a; border-color: #334155; color: #cbd5e1; }
+  
+  .pipeline-arrow {
+    display: flex; align-items: center; justify-content: center;
+    color: #94a3b8; padding: 0 0.5rem;
+  }
+  
+  @media (max-width: 992px) {
+    .pipeline-wrapper { flex-direction: column; }
+    .pipeline-arrow { transform: rotate(90deg); padding: 0.5rem 0; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
+  <div>
+    <div class="page-title" style="font-size:1.55rem;">Integrations & Connections</div>
+    <p class="page-subtitle mb-0">Manage the services and infrastructure that power SupportPilot's AI ticket resolution workflow.</p>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <!-- Section 1: OpenRouter -->
+  <div class="col-lg-6">
+    <div class="integration-card">
+      <div class="d-flex justify-content-between align-items-start mb-3">
+        <div>
+          <h5 class="fw-bold mb-1">OpenRouter</h5>
+          <div class="text-muted small">AI Resolution Engine</div>
         </div>
-
-        <div class="row g-4 mb-4">
-            {% for item in integrations_list %}
-            <div class="col-md-6">
-                <div class="light-card p-4 h-100">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h5 class="fw-bold mb-0 text-dark">{{ item.name }}</h5>
-                        <span class="badge {{ 'badge-soft-success' if item.connected else 'badge-soft-secondary' }} rounded-pill px-3 py-1 fw-medium">
-                            {{ item.status }}
-                        </span>
-                    </div>
-                    <p class="text-muted small mb-2">{{ item.description }}</p>
-                    <div class="small fw-semibold text-dark">{{ item.detail }}</div>
-                </div>
-            </div>
-            {% endfor %}
+        <div>
+          {% if openrouter.configured %}
+            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><span class="status-dot status-ready me-1"></span> Configured</span>
+          {% else %}
+            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1"><span class="status-dot status-none me-1"></span> Not configured</span>
+          {% endif %}
         </div>
-
-        <div class="light-card p-4 mb-5">
-            <h5 class="fw-bold mb-3 text-dark">Not Yet Implemented</h5>
-            <p class="text-muted small mb-3">These are common support-desk integrations that are not wired up in this build. Listed honestly instead of faked as connected.</p>
-            <div class="d-flex flex-wrap gap-2">
-                {% for name in coming_soon %}
-                <span class="badge badge-soft-secondary rounded-pill px-3 py-2">{{ name }} &mdash; Not Configured</span>
-                {% endfor %}
-            </div>
+      </div>
+      <p class="text-muted small mb-4">Generates grounded ticket resolutions using retrieved knowledge-base context.</p>
+      
+      <div class="mb-auto">
+        <div class="d-flex justify-content-between border-bottom py-2">
+          <span class="text-muted small">Provider</span>
+          <span class="fw-medium small">OpenRouter</span>
         </div>
+        <div class="d-flex justify-content-between border-bottom py-2">
+          <span class="text-muted small">Model</span>
+          <span class="fw-medium small">{{ openrouter.model }}</span>
+        </div>
+        <div class="d-flex justify-content-between py-2">
+          <span class="text-muted small">API Status</span>
+          <span class="fw-medium small">{{ "Configured" if openrouter.configured else "Not configured" }}</span>
+        </div>
+      </div>
+      
+      <div class="mt-4 pt-3 border-top">
+        <div class="d-flex justify-content-between align-items-center">
+          <div class="text-muted" style="font-size:0.75rem;">
+            API credentials are managed server-side.
+          </div>
+          <button class="btn btn-sm sp-btn-outline" onclick="testIntegration('openrouter', this)">Test Config</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    </main>
+  <!-- Section 2: Jira -->
+  <div class="col-lg-6">
+    <div class="integration-card">
+      <div class="d-flex justify-content-between align-items-start mb-3">
+        <div>
+          <h5 class="fw-bold mb-1">Jira</h5>
+          <div class="text-muted small">Ticket Escalation</div>
+        </div>
+        <div>
+          {% if jira.configured %}
+            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><span class="status-dot status-ready me-1"></span> Connected</span>
+          {% else %}
+            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1"><span class="status-dot status-none me-1"></span> Not connected</span>
+          {% endif %}
+        </div>
+      </div>
+      <p class="text-muted small mb-4">Creates Jira issues when the AI resolution workflow cannot safely auto-resolve a support ticket.</p>
+      
+      <div class="mb-auto">
+        <div class="d-flex justify-content-between border-bottom py-2">
+          <span class="text-muted small">Jira URL</span>
+          <span class="fw-medium small">{{ jira.url }}</span>
+        </div>
+        <div class="d-flex justify-content-between border-bottom py-2">
+          <span class="text-muted small">Project</span>
+          <span class="fw-medium small">{{ jira.project }}</span>
+        </div>
+        <div class="d-flex justify-content-between py-2">
+          <span class="text-muted small">Credentials</span>
+          <span class="fw-medium small">{{ "Secured" if jira.configured else "Not configured" }}</span>
+        </div>
+      </div>
+      
+      <div class="mt-4 pt-3 border-top">
+        <div class="d-flex justify-content-between align-items-center">
+          <div class="text-muted" style="font-size:0.75rem;">
+            Credentials remain server-side.
+          </div>
+          <button class="btn btn-sm sp-btn-outline" onclick="testIntegration('jira', this)">Test Connection</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    <script>
-        window.USER_EMAIL = "{{ user.email }}";
-        window.USER_DEPT = "{{ user.department }}";
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+  <!-- Section 3: Email / SMTP -->
+  <div class="col-lg-6">
+    <div class="integration-card">
+      <div class="d-flex justify-content-between align-items-start mb-3">
+        <div>
+          <h5 class="fw-bold mb-1">Email / SMTP</h5>
+          <div class="text-muted small">Notifications & Automation</div>
+        </div>
+        <div>
+          {% if smtp.configured %}
+            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><span class="status-dot status-ready me-1"></span> Configured</span>
+          {% else %}
+            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1"><span class="status-dot status-none me-1"></span> Not configured</span>
+          {% endif %}
+        </div>
+      </div>
+      <p class="text-muted small mb-4">Sends automated support responses and escalation notifications to ticket requesters.</p>
+      
+      <div class="mb-auto">
+        <div class="d-flex justify-content-between border-bottom py-2">
+          <span class="text-muted small">SMTP Server</span>
+          <span class="fw-medium small">{{ smtp.server }}</span>
+        </div>
+        <div class="d-flex justify-content-between border-bottom py-2">
+          <span class="text-muted small">SMTP Port</span>
+          <span class="fw-medium small">{{ smtp.port }}</span>
+        </div>
+        <div class="d-flex justify-content-between py-2">
+          <span class="text-muted small">Sender</span>
+          <span class="fw-medium small">{{ smtp.sender }}</span>
+        </div>
+      </div>
+      
+      <div class="mt-4 pt-3 border-top">
+        <div class="d-flex justify-content-between align-items-center">
+          <div class="text-muted" style="font-size:0.75rem;">
+            {% if not smtp.configured %} Email automation is unavailable until SMTP settings are configured. {% else %} Credentials Secured. {% endif %}
+          </div>
+          <button class="btn btn-sm sp-btn-outline" onclick="testIntegration('email', this)">Test Email</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 4: Knowledge Base & RAG -->
+  <div class="col-lg-6">
+    <div class="integration-card">
+      <div class="d-flex justify-content-between align-items-start mb-3">
+        <div>
+          <h5 class="fw-bold mb-1">Knowledge Base</h5>
+          <div class="text-muted small">Retrieval Infrastructure</div>
+        </div>
+        <div>
+          {% if kb.configured %}
+            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><span class="status-dot status-ready me-1"></span> Ready</span>
+          {% else %}
+            <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1"><span class="status-dot bg-danger me-1"></span> Unavailable</span>
+          {% endif %}
+        </div>
+      </div>
+      <p class="text-muted small mb-4">Provides the enterprise troubleshooting knowledge used by SupportPilot's retrieval-augmented resolution pipeline.</p>
+      
+      <div class="mb-auto">
+        <div class="d-flex justify-content-between border-bottom py-2">
+          <span class="text-muted small">Articles</span>
+          <span class="fw-medium small">{{ kb.articles }}</span>
+        </div>
+        <div class="d-flex justify-content-between border-bottom py-2">
+          <span class="text-muted small">Categories</span>
+          <span class="fw-medium small">{{ kb.categories }}</span>
+        </div>
+        <div class="d-flex justify-content-between border-bottom py-2">
+          <span class="text-muted small">Retrieval Method</span>
+          <span class="fw-medium small">{{ kb.method }}</span>
+        </div>
+        <div class="d-flex justify-content-between py-2">
+          <span class="text-muted small">Relevance Threshold</span>
+          <span class="fw-medium small">{{ kb.threshold }}</span>
+        </div>
+      </div>
+      
+      <div class="mt-4 pt-3 border-top">
+        <div class="text-muted" style="font-size:0.75rem;">
+          Data is sourced from internal Knowledge Base JSON.
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Pipeline Visualization -->
+<div class="mt-5 mb-4">
+  <h6 class="fw-bold mb-3 text-dark">SupportPilot Resolution Pipeline</h6>
+  <div class="integration-card p-4">
+    <div class="d-flex pipeline-wrapper justify-content-between">
+      <div class="pipeline-box flex-fill">Ticket</div>
+      <div class="pipeline-arrow"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+      <div class="pipeline-box flex-fill">Diagnosis</div>
+      <div class="pipeline-arrow"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+      <div class="pipeline-box flex-fill">Retrieval</div>
+      <div class="pipeline-arrow"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+      <div class="pipeline-box flex-fill">Resolution</div>
+      <div class="pipeline-arrow"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+      <div class="pipeline-box flex-fill">Validation</div>
+      <div class="pipeline-arrow"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+      <div class="pipeline-box flex-fill">Execution</div>
+      <div class="pipeline-arrow"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+      <div class="pipeline-box flex-fill" style="background:#dbeafe; color:#1e40af; border-color:#bfdbfe;">Email / Jira</div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function testIntegration(type, btn) {
+  const originalText = btn.innerText;
+  btn.innerText = 'Testing...';
+  btn.disabled = true;
+  
+  try {
+    const res = await fetch(`/api/integrations/test_${type}`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': '{{ csrf_token() }}' }
+    });
+    const data = await res.json();
+    
+    if (window.toast) {
+      if (data.status === 'success') {
+        window.toast.show('Success', data.message, 'success');
+      } else {
+        window.toast.show('Test Failed', data.message, 'danger');
+      }
+    } else {
+      alert(data.message);
+    }
+  } catch (err) {
+    if (window.toast) window.toast.show('Error', 'Connection test failed to run.', 'danger');
+    else alert('Error: Connection test failed to run.');
+  } finally {
+    btn.innerText = originalText;
+    btn.disabled = false;
+  }
+}
+</script>
+{% endblock %}

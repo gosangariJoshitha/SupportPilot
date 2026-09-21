@@ -1,52 +1,291 @@
-<!DOCTYPE html>
-<html lang="en" data-bs-theme="light">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - SupportPilot</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body class="d-flex align-items-center justify-content-center" style="min-height: 100vh;">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-5">
-                <div class="light-card p-5">
-                    <div class="text-center mb-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary mb-3"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                        <h3 class="fw-bold text-dark">SupportPilot</h3>
-                        <p class="text-muted">Sign in to your account</p>
+{% extends "base.html" %}
+{% set hide_sidebar = true %}
+{% set hide_topbar = true %}
+{% block title %}Login - SupportPilot{% endblock %}
+
+{% block extra_head %}
+<style>
+    body {
+        font-family: 'Inter', sans-serif;
+        min-height: 100vh;
+        background: linear-gradient(180deg, #f3f7ff 0%, #e9f0ff 60%, #dce8ff 100%);
+        position: relative;
+        overflow-x: hidden;
+    }
+    .auth-wave { position:absolute; bottom:0; left:0; width:100%; z-index:0; opacity:.6; }
+    .auth-wrap { position:relative; z-index:1; min-height:100vh; display:flex; align-items:center; padding: 3rem 5vw; width:100%; }
+    .brand-icon { width:34px;height:34px;background:#2563eb;color:#fff;border-radius:.5rem;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem; }
+    .feature-row { display:flex; align-items:center; gap:.75rem; margin-bottom:1.15rem; }
+    .feature-icon { width:36px;height:36px;border-radius:.6rem;background:#dbeafe;color:#2563eb;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+    .auth-card { background:#fff; border-radius:1.1rem; box-shadow: 0 20px 45px rgba(30,58,138,.12); padding: 2.5rem; }
+    .illus-person { width:100%; max-width:280px; }
+    .quote-text { font-style: italic; color:#475569; font-size:0.92rem; }
+    .input-icon-wrap { position:relative; }
+    .input-icon-wrap .form-control { padding-left:2.6rem; }
+    .input-icon { position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:#64748b; }
+    .input-icon-right { position:absolute; right:1rem; top:50%; transform:translateY(-50%); color:#64748b; cursor:pointer; }
+    .input-icon-wrap .form-control:focus + .input-icon { color:#2563eb; }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="auth-wrap">
+        <div class="container">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6">
+                    <div class="d-flex align-items-center gap-2 mb-4">
+                        <span class="brand-icon">SP</span>
+                        <div>
+                            <div class="fw-bold text-dark">SupportPilot</div>
+                            <div class="text-muted" style="font-size:.7rem;">Your AI-Powered IT Support Partner</div>
+                        </div>
                     </div>
 
-                    {% if error %}
-                    <div class="alert alert-danger" style="background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.3); color: #b91c1c;">
-                        <div class="d-flex align-items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    <h1 class="fw-800 text-dark mb-3" style="font-weight:800; font-size:2.6rem; line-height:1.15;">Smarter Support.<br>Faster Solutions.</h1>
+                    <p class="text-muted mb-4" style="max-width:420px;">Raise, track, and resolve your IT support tickets with the help of AI.</p>
+
+                    <div class="mb-4">
+                        <div class="feature-row">
+                            <span class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></span>
+                            <span class="fw-medium text-dark small">AI-powered ticket classification</span>
+                        </div>
+                        <div class="feature-row">
+                            <span class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></span>
+                            <span class="fw-medium text-dark small">Faster resolution</span>
+                        </div>
+                        <div class="feature-row">
+                            <span class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg></span>
+                            <span class="fw-medium text-dark small">Enterprise knowledge base</span>
+                        </div>
+                        <div class="feature-row">
+                            <span class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></span>
+                            <span class="fw-medium text-dark small">Secure &amp; reliable</span>
+                        </div>
+                    </div>
+
+                    <p class="quote-text mb-0">&ldquo;Technology works best when people do.&rdquo;<br><span class="fw-semibold">&mdash; SupportPilot</span></p>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="auth-card mx-auto" style="max-width: 440px; position: relative;">
+                        
+                        {% if message %}
+                        <div class="alert alert-success d-flex align-items-center mb-4" style="background: #f0fdf4; border-color:#bbf7d0; color:#15803d; font-size:0.88rem;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2 flex-shrink-0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                            {{ message }}
+                        </div>
+                        {% endif %}
+                        
+                        {% if error %}
+                        <div class="alert alert-danger d-flex align-items-center mb-4" style="background: #fef2f2; border-color:#fecaca; color:#b91c1c; font-size:0.88rem;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2 flex-shrink-0"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
                             {{ error }}
                         </div>
-                    </div>
-                    {% endif %}
+                        {% endif %}
 
-                    <form action="/login" method="POST">
-                        <div class="mb-3">
-                            <label class="form-label text-dark small fw-medium">Email Address</label>
-                            <input type="email" class="form-control" name="email" required placeholder="name@company.com">
+                        <!-- LOGIN VIEW -->
+                        <div id="login-view" style="display: {% if token or view == 'forgot' %}none{% else %}block{% endif %};">
+                            <div class="mb-4">
+                                <h3 class="fw-bold text-dark mb-1">Welcome Back 👋</h3>
+                                <p class="text-muted mb-0 small">Sign in to your SupportPilot account</p>
+                            </div>
+    
+                            <form action="/login" method="POST">
+                                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                                <div class="mb-3">
+                                    <label class="form-label-sp d-block">Email Address</label>
+                                    <div class="input-icon-wrap">
+                                        <input type="email" class="form-control" name="email" required placeholder="josh@example.com">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="input-icon"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label-sp d-block">Password</label>
+                                    <div class="input-icon-wrap">
+                                        <input type="password" class="form-control" name="password" required placeholder="Enter your password">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="input-icon"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="input-icon-right"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-4 mt-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="rememberMe" name="remember" checked>
+                                        <label class="form-check-label small text-muted" for="rememberMe">Remember me</label>
+                                    </div>
+                                    <a href="javascript:void(0);" onclick="showView('forgot-view')" class="small text-decoration-none" style="color:#2563eb; font-weight:600;">Forgot Password?</a>
+                                </div>
+                                <button type="submit" class="btn sp-btn-primary w-100 justify-content-center py-2 fw-semibold mb-3" style="font-size:0.95rem;">
+                                    Sign In
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                                </button>
+    
+                                {% if google_auth_enabled %}
+                                <div class="d-flex align-items-center gap-3 my-3">
+                                    <hr class="flex-grow-1"><span class="text-muted small">OR</span><hr class="flex-grow-1">
+                                </div>
+    
+                                <button type="button" class="btn sp-btn-outline w-100 justify-content-center py-2" style="background:#fff;">
+                                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" width="18" height="18" alt="" class="me-2">
+                                    <span class="fw-medium text-dark" style="font-size:0.9rem;">Continue with Google</span>
+                                </button>
+                                {% endif %}
+    
+                                <p class="text-center text-muted small mt-4 mb-0">
+                                    Don't have an account? <a href="/signup" style="color:#2563eb; text-decoration:none; font-weight:600;">Sign Up</a>
+                                </p>
+                            </form>
+                            <p class="text-center text-muted mt-3 mb-0" style="font-size:0.72rem;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                Your data is secure with us
+                            </p>
                         </div>
-                        <div class="mb-4">
-                            <label class="form-label text-dark small fw-medium">Password</label>
-                            <input type="password" class="form-control" name="password" required placeholder="Enter your password">
+
+                        <!-- FORGOT PASSWORD VIEW -->
+                        <div id="forgot-view" style="display: {% if view == 'forgot' %}block{% else %}none{% endif %};">
+                            <div class="text-center mb-4">
+                                <h3 class="fw-bold text-dark mb-1">Reset Password</h3>
+                                <p class="text-muted mb-0 small">Enter your email and we'll send you a reset link.</p>
+                            </div>
+                            
+                            <form action="/forgot-password" method="POST">
+                                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                                <div class="mb-4">
+                                    <label class="form-label-sp d-block">Email Address</label>
+                                    <div class="input-icon-wrap">
+                                        <input type="email" class="form-control" name="email" required placeholder="josh@example.com">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="input-icon"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="btn sp-btn-primary w-100 justify-content-center py-2 fw-semibold mb-3" style="font-size:0.95rem;">
+                                    Send Reset Link
+                                </button>
+                    
+                                <p class="text-center text-muted small mt-4 mb-0">
+                                    Remember your password? <a href="javascript:void(0);" onclick="showView('login-view')" style="color:#2563eb; text-decoration:none; font-weight:600;">Sign In</a>
+                                </p>
+                            </form>
                         </div>
-                        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold mb-3">
-                            Sign In
-                        </button>
-                        <div class="text-center text-muted small mt-4">
-                            Don't have an account? <a href="/signup" style="color: var(--primary); text-decoration: none; font-weight: 500;">Sign up</a>
+
+                        <!-- RESET PASSWORD VIEW -->
+                        <div id="reset-view" style="display: {% if token %}block{% else %}none{% endif %};">
+                            <div class="text-center mb-4">
+                                <h3 class="fw-bold text-dark mb-1">Create New Password</h3>
+                                <p class="text-muted mb-0 small">Please enter your new password below.</p>
+                            </div>
+                    
+                            <form action="/reset-password/{{ token }}" method="POST" id="resetForm">
+                                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                                <div class="mb-3">
+                                    <label class="form-label-sp d-block">New Password</label>
+                                    <div class="input-icon-wrap">
+                                        <input type="password" class="form-control" name="password" id="reset-password" required placeholder="Create a strong password">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="input-icon"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                    </div>
+                                    <div class="progress mt-2" style="height: 4px; background-color: #e5e7eb;">
+                                        <div class="progress-bar" id="pw-strength-bar" role="progressbar" style="width: 0%; background-color: #ef4444;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                    <div class="small text-muted mt-1" style="font-size: 0.7rem;" id="pw-strength-text">Minimum 6 characters</div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="form-label-sp d-block">Confirm Password</label>
+                                    <div class="input-icon-wrap">
+                                        <input type="password" class="form-control" name="confirm_password" id="reset-confirm-password" required placeholder="Confirm your password">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="input-icon"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                    </div>
+                                    <div class="small text-danger mt-1 d-none" style="font-size: 0.7rem;" id="pw-match-text">Passwords do not match</div>
+                                </div>
+                                
+                                <button type="submit" class="btn sp-btn-primary w-100 justify-content-center py-2 fw-semibold mb-3" style="font-size:0.95rem;">
+                                    Reset Password
+                                </button>
+                                <p class="text-center text-muted small mt-4 mb-0">
+                                    Back to <a href="javascript:void(0);" onclick="showView('login-view')" style="color:#2563eb; text-decoration:none; font-weight:600;">Sign In</a>
+                                </p>
+                            </form>
                         </div>
-                    </form>
+                    </div>
+
+                    <script>
+                        function showView(viewId) {
+                            document.getElementById('login-view').style.display = 'none';
+                            document.getElementById('forgot-view').style.display = 'none';
+                            document.getElementById('reset-view').style.display = 'none';
+                            
+                            document.getElementById(viewId).style.display = 'block';
+                            
+                            if(history.pushState) {
+                                let newurl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                                if (viewId === 'forgot-view') {
+                                    newurl += '?view=forgot';
+                                }
+                                window.history.pushState({path:newurl}, '', newurl);
+                            }
+                        }
+
+                        document.addEventListener('DOMContentLoaded', () => {
+                            const urlParams = new URLSearchParams(window.location.search);
+                            if (urlParams.get('view') === 'forgot') {
+                                showView('forgot-view');
+                            }
+
+                            const pwInput = document.getElementById('reset-password');
+                            const confirmInput = document.getElementById('reset-confirm-password');
+                            const matchText = document.getElementById('pw-match-text');
+                            const resetForm = document.getElementById('resetForm');
+                            const bar = document.getElementById('pw-strength-bar');
+                            const text = document.getElementById('pw-strength-text');
+                
+                            if (pwInput && confirmInput) {
+                                function checkStrength(pw) {
+                                    let s = 0;
+                                    if (pw.length >= 6) s += 25;
+                                    if (pw.length >= 10) s += 25;
+                                    if (/[A-Z]/.test(pw)) s += 25;
+                                    if (/[0-9]/.test(pw) || /[^A-Za-z0-9]/.test(pw)) s += 25;
+                                    return s;
+                                }
+                
+                                pwInput.addEventListener('input', () => {
+                                    const s = checkStrength(pwInput.value);
+                                    bar.style.width = s + '%';
+                                    if (s <= 25) { bar.style.backgroundColor = '#ef4444'; text.textContent = 'Weak'; }
+                                    else if (s <= 50) { bar.style.backgroundColor = '#f59e0b'; text.textContent = 'Fair'; }
+                                    else if (s <= 75) { bar.style.backgroundColor = '#3b82f6'; text.textContent = 'Good'; }
+                                    else { bar.style.backgroundColor = '#10b981'; text.textContent = 'Strong'; }
+                                    checkMatch();
+                                });
+                
+                                function checkMatch() {
+                                    if (confirmInput.value.length > 0) {
+                                        if (pwInput.value !== confirmInput.value) {
+                                            matchText.classList.remove('d-none');
+                                            confirmInput.classList.add('is-invalid');
+                                        } else {
+                                            matchText.classList.add('d-none');
+                                            confirmInput.classList.remove('is-invalid');
+                                        }
+                                    } else {
+                                        matchText.classList.add('d-none');
+                                        confirmInput.classList.remove('is-invalid');
+                                    }
+                                }
+                
+                                confirmInput.addEventListener('input', checkMatch);
+                
+                                resetForm.addEventListener('submit', (e) => {
+                                    if (pwInput.value !== confirmInput.value) {
+                                        e.preventDefault();
+                                        matchText.classList.remove('d-none');
+                                        confirmInput.classList.add('is-invalid');
+                                    }
+                                });
+                            }
+                        });
+                    </script>
                 </div>
             </div>
         </div>
     </div>
-</body>
-</html>
+{% endblock %}

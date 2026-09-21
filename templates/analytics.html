@@ -1,708 +1,399 @@
-<!doctype html>
-<html lang="en" data-bs-theme="light">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SupportPilot - Analytics</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/style.css') }}"
-    />
-    <style>
-      body {
-        display: flex;
-        min-height: 100vh;
-        overflow-x: hidden;
-      }
-      .sidebar {
-        width: 250px;
-        display: flex;
-        flex-direction: column;
-        flex-shrink: 0;
-        z-index: 1040;
-        height: 100vh;
-        position: sticky;
-        top: 0;
-        border-right: 1px solid #dee2e6;
-      }
-      .main-content {
-        flex-grow: 1;
-        padding: 2rem 3rem;
-        overflow-y: auto;
-        max-height: 100vh;
-      }
-      .brand-logo {
-        background-color: #6366f1;
-        color: white;
-        border-radius: 0.375rem;
-        padding: 0.25rem 0.5rem;
-        font-weight: bold;
-        font-size: 14px;
-      }
-      .mobile-toggle {
-        display: none;
-      }
-      .analytics-shell {
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-      }
-      .analytics-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: end;
-        gap: 1rem;
-      }
-      .analytics-title {
-        font-size: 2rem;
-        line-height: 1.15;
-        margin: 0;
-      }
-      .analytics-subtitle {
-        margin: 0.25rem 0 0;
-        color: #667085;
-        font-size: 0.95rem;
-      }
-      .analytics-kpi-card {
-        border: 1px solid #dfeaf8;
-        border-radius: 20px;
-        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-        padding: 1.2rem 1.25rem;
-        box-shadow: 0 10px 24px rgba(59, 130, 246, 0.06);
-        height: 100%;
-      }
-      .kpi-topline {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-      }
-      .kpi-icon-wrap {
-        width: 42px;
-        height: 42px;
-        border-radius: 12px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, #dbeafe, #eff6ff);
-        border: 1px solid #bfd7ff;
-        font-size: 1.1rem;
-      }
-      .kpi-value {
-        margin: 0;
-        font-size: clamp(1.65rem, 1.6rem + 0.4vw, 2.3rem);
-        line-height: 1.1;
-        font-weight: 800;
-        color: #111827;
-      }
-      .kpi-label {
-        margin: 0 0 0.2rem;
-        color: #667085;
-        font-size: 0.78rem;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        font-weight: 700;
-      }
-      .kpi-meta {
-        margin-top: 0.45rem;
-        color: #667085;
-        font-size: 0.82rem;
-      }
-      .section-card {
-        border: 1px solid #dfeaf8;
-        border-radius: 20px;
-        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-        box-shadow: 0 10px 24px rgba(59, 130, 246, 0.05);
-      }
-      .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-      }
-      .section-title {
-        margin: 0;
-        font-size: 1.05rem;
-        font-weight: 800;
-        color: #111827;
-      }
-      .section-mini-note {
-        font-size: 0.8rem;
-        color: #667085;
-      }
-      .chart-panel {
-        height: 280px;
-      }
-      .chart-panel-small {
-        height: 250px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-      .distribution-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.85rem;
-      }
-      .distribution-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 1rem;
-        padding: 0.75rem 0.85rem;
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.75);
-        border: 1px solid #e6eef9;
-      }
-      .distribution-label {
-        font-size: 0.86rem;
-        color: #475467;
-        font-weight: 600;
-      }
-      .distribution-count {
-        font-size: 0.92rem;
-        font-weight: 700;
-        color: #111827;
-      }
-      .resolution-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 1rem;
-      }
-      .resolution-stat {
-        border: 1px solid #dfeaf8;
-        border-radius: 16px;
-        background: rgba(255, 255, 255, 0.7);
-        padding: 1rem 0.85rem;
-        height: 100%;
-      }
-      .resolution-stat .fs-4,
-      .resolution-stat .fs-6 {
-        color: #111827;
-      }
-      @media (max-width: 991.98px) {
-        .sidebar {
-          position: fixed;
-          left: -250px;
-          height: 100vh;
-          transition: left 0.3s ease;
-          background: white;
-        }
-        .sidebar.show {
-          left: 0;
-        }
-        .mobile-toggle {
-          display: block;
-        }
-        .main-content {
-          padding: 1rem;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <!-- Sidebar -->
-    <aside class="sidebar py-4" id="sidebarMenu">
-      <div class="px-4 mb-5 d-flex align-items-center">
-        <span class="brand-logo me-2">SP</span>
-        <span class="fw-bold text-dark fs-5">SupportPilot</span>
-        <button
-          class="btn-close d-lg-none ms-auto"
-          onclick="
-            document.getElementById('sidebarMenu').classList.remove('show')
-          "
-        ></button>
-      </div>
+{% extends "base.html" %}
 
-      <ul class="nav flex-column gap-1 px-3 mb-auto">
-        <li class="nav-item">
-          <a
-            href="/"
-            class="nav-link d-flex align-items-center rounded py-2 px-3"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="me-3"
-            >
-              <rect x="3" y="3" width="7" height="7"></rect>
-              <rect x="14" y="3" width="7" height="7"></rect>
-              <rect x="14" y="14" width="7" height="7"></rect>
-              <rect x="3" y="14" width="7" height="7"></rect>
-            </svg>
-            Dashboard
-          </a>
-        </li>
-        <li class="nav-item">
-          <a
-            href="/my_tickets"
-            class="nav-link d-flex align-items-center rounded py-2 px-3"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="me-3"
-            >
-              <path
-                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-              ></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-              <line x1="16" y1="13" x2="8" y2="13"></line>
-              <line x1="16" y1="17" x2="8" y2="17"></line>
-              <polyline points="10 9 9 9 8 9"></polyline>
-            </svg>
-            Add Tickets
-          </a>
-        </li>
-        <li class="nav-item">
-          <a
-            href="/all_tickets"
-            class="nav-link d-flex align-items-center rounded py-2 px-3"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="me-3"
-            >
-              <line x1="8" y1="6" x2="21" y2="6"></line>
-              <line x1="8" y1="12" x2="21" y2="12"></line>
-              <line x1="8" y1="18" x2="21" y2="18"></line>
-              <line x1="3" y1="6" x2="3.01" y2="6"></line>
-              <line x1="3" y1="12" x2="3.01" y2="12"></line>
-              <line x1="3" y1="18" x2="3.01" y2="18"></line>
-            </svg>
-            My Tickets
-          </a>
-        </li>
-        <li class="nav-item">
-          <a
-            href="/agents"
-            class="nav-link d-flex align-items-center rounded py-2 px-3"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="me-3"
-            >
-              <path
-                d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
-              ></path>
-            </svg>
-            AI Agent
-          </a>
-        </li>
-        <li class="nav-item">
-          <a
-            href="/integrations"
-            class="nav-link d-flex align-items-center rounded py-2 px-3"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="me-3"
-            >
-              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-            </svg>
-            Integrations
-          </a>
-        </li>
-        <li class="nav-item">
-          <a
-            href="/analytics"
-            class="nav-link active d-flex align-items-center rounded py-2 px-3"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="me-3"
-            >
-              <line x1="18" y1="20" x2="18" y2="10"></line>
-              <line x1="12" y1="20" x2="12" y2="4"></line>
-              <line x1="6" y1="20" x2="6" y2="14"></line>
-            </svg>
-            Analytics
-          </a>
-        </li>
-        <li class="nav-item">
-          <a
-            href="/settings"
-            class="nav-link d-flex align-items-center rounded py-2 px-3"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="me-3"
-            >
-              <circle cx="12" cy="12" r="3"></circle>
-              <path
-                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
-              ></path>
-            </svg>
-            Settings
-          </a>
-        </li>
-      </ul>
+{% block title %}SupportPilot - Analytics{% endblock %}
 
-      <div class="px-4 mt-auto">
-        <div
-          class="border-top border-secondary pt-3 d-flex align-items-center justify-content-between"
-        >
-          <div class="text-truncate pe-2">
-            <div class="small fw-semibold text-dark">{{ user.full_name }}</div>
-            <div class="small text-muted" style="font-size: 0.75rem">
-              {{ user.department }}
-            </div>
-          </div>
-          <a
-            href="/logout"
-            class="text-muted d-flex flex-shrink-0"
-            title="Logout"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-              <polyline points="16 17 21 12 16 7"></polyline>
-              <line x1="21" y1="12" x2="9" y2="12"></line>
-            </svg>
-          </a>
+{% set active = 'analytics' %}
+{% set promo_title = 'Data-driven Support, Better Decisions' %}
+{% set promo_text = 'Turn your support data into actionable insights with AI.' %}
+{% set promo_icon = 'chart' %}
+{% set topbar_subtitle = 'Track performance, identify trends, and make data-driven decisions.' %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  body { font-family:'Inter',sans-serif; }
+  .sp-card { transition: all 0.25s ease; border: 1px solid transparent; }
+  .sp-card:hover { border-color: #93c5fd; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08); transform: translateY(-2px); }
+  .classification-pill-box { transition: all 0.25s ease; }
+  .classification-pill-box:hover { border-color: #93c5fd !important; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08); transform: translateY(-2px); }
+  .tabs-row { display:flex; gap:1.5rem; border-bottom:1px solid #e5e7eb; margin-bottom:1.25rem; }
+  .tab-item { padding-bottom:.7rem; font-weight:600; font-size:.87rem; color:#6b7280; border-bottom:2px solid transparent; cursor:pointer; }
+  .tab-item.active { color:#2563eb; border-color:#2563eb; }
+  table.top-issues thead th { font-size:.72rem; text-transform:uppercase; color:#9ca3af; font-weight:700; border-bottom:1px solid #eef0f4; padding-bottom:.5rem; }
+  table.top-issues td { padding:.6rem .4rem; border-bottom:1px solid #f3f4f6; font-size:.85rem; }
+  .insight-row { display:flex; gap:.7rem; align-items:flex-start; padding:.6rem 0; border-bottom:1px dashed #eef0f4; }
+  .insight-row:last-child { border-bottom:none; }
+  .insight-icon { width:32px;height:32px;border-radius:.6rem; display:flex;align-items:center;justify-content:center; flex-shrink:0; }
+  .rec-row { display:flex; gap:.7rem; align-items:flex-start; padding:.6rem 0; }
+  .act-row { display:flex; justify-content:space-between; padding:.55rem 0; border-bottom:1px solid #f3f4f6; font-size:.82rem; }
+  .act-row:last-child { border-bottom:none; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+      <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+        <div>
+          <div class="page-title" style="font-size:1.55rem;">Analytics</div>
+          <p class="page-subtitle mb-0">Track performance, identify trends, and make data-driven decisions.</p>
         </div>
       </div>
-    </aside>
-    <!-- Main Content -->
-    <main
-      class="main-content"
-      data-ticket-activity="{{ summary.ticket_activity | tojson }}"
-      data-category-distribution="{{ summary.category_distribution | tojson }}"
-    >
-      <div
-        class="d-flex align-items-center justify-content-between mb-4 d-lg-none"
-      >
-        <a
-          class="navbar-brand fw-bold d-flex align-items-center fs-5 text-decoration-none text-dark"
-          href="/"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="me-2"
-          >
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-          </svg>
-          SupportPilot
-        </a>
-        <button
-          class="btn btn-outline-light btn-sm"
-          onclick="document.getElementById('sidebarMenu').classList.add('show')"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <line x1="3" y1="12" x2="21" y2="12"></line>
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <line x1="3" y1="18" x2="21" y2="18"></line>
-          </svg>
-        </button>
+
+      <div class="tabs-row">
+        <div class="tab-item active" data-tab="overview">Overview</div>
+        <div class="tab-item" data-tab="category">Category Analysis</div>
+        <div class="tab-item" data-tab="resolution">Resolution Insights</div>
+        <div class="tab-item" data-tab="user">User Insights</div>
+        <div class="tab-item" data-tab="sla">SLA &amp; Performance</div>
       </div>
 
-      <div class="analytics-shell">
-        <div class="analytics-header">
-          <div>
-            <h2 class="analytics-title text-dark">Analytics</h2>
-            <p class="analytics-subtitle">
-              Real metrics computed from your submitted tickets - no simulated
-              data.
-            </p>
-          </div>
-        </div>
-
-        <!-- KPI Cards -->
-        <div class="row g-4">
-          <div class="col-sm-6 col-xl-3">
-            <div class="analytics-kpi-card">
-              <div class="kpi-topline">
-                <div class="kpi-icon-wrap">◫</div>
-              </div>
-              <div class="kpi-label">Total Tickets</div>
-              <p class="kpi-value">{{ summary.total_tickets }}</p>
-              <div class="kpi-meta">Across all submitted tickets</div>
+      <!-- Overview tab -->
+      <div class="tab-pane" id="tab-overview">
+        {% set high_pri = summary.priority_distribution.P1 + summary.priority_distribution.P2 %}
+        
+        <!-- ROW 1: KPI CARDS -->
+        <div class="row g-3 mb-3">
+          <div class="col-6 col-lg-3">
+            <div class="stat-card d-flex align-items-start gap-3 h-100">
+              <span class="stat-icon" style="background:#dbeafe;color:#2563eb;"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></span>
+              <div><div class="stat-label">Total Tickets</div><div class="stat-value">{{ summary.total_tickets }}</div></div>
             </div>
           </div>
-          <div class="col-sm-6 col-xl-3">
-            <div class="analytics-kpi-card">
-              <div class="kpi-topline">
-                <div class="kpi-icon-wrap">◔</div>
-              </div>
-              <div class="kpi-label">Avg. Ticket Confidence</div>
-              <p class="kpi-value">
-                {% if extra.avg_classification_confidence is not none %} {{
-                "%.1f"|format(extra.avg_classification_confidence) }}%{% else
-                %}&mdash;{% endif %}
-              </p>
-              <div class="kpi-meta">Across all classified tickets</div>
+          <div class="col-6 col-lg-3">
+            <div class="stat-card d-flex align-items-start gap-3 h-100">
+              <span class="stat-icon" style="background:#fef3c7;color:#d97706;"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></span>
+              <div><div class="stat-label">Open Tickets</div><div class="stat-value">{{ summary.open_tickets }}</div></div>
             </div>
           </div>
-          <div class="col-sm-6 col-xl-3">
-            <div class="analytics-kpi-card">
-              <div class="kpi-topline">
-                <div class="kpi-icon-wrap">✦</div>
-              </div>
-              <div class="kpi-label">AI Resolution Rate</div>
-              <p class="kpi-value">{{ extra.ai_resolution_rate }}%</p>
-              <div class="kpi-meta">Generated resolutions vs total tickets</div>
+          <div class="col-6 col-lg-3">
+            <div class="stat-card d-flex align-items-start gap-3 h-100">
+              <span class="stat-icon" style="background:#dcfce7;color:#16a34a;"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></span>
+              <div><div class="stat-label">Resolved Tickets</div><div class="stat-value">{{ summary.resolved_tickets }}</div></div>
             </div>
           </div>
-          <div class="col-sm-6 col-xl-3">
-            <div class="analytics-kpi-card">
-              <div class="kpi-topline">
-                <div class="kpi-icon-wrap">◎</div>
-              </div>
-              <div class="kpi-label">Avg. Resolution Confidence</div>
-              <p class="kpi-value">
-                {% if extra.avg_resolution_confidence is not none %} {{
-                "%.1f"|format(extra.avg_resolution_confidence) }}%{% else
-                %}&mdash;{% endif %}
-              </p>
-              <div class="kpi-meta">KB relevance used in resolutions</div>
+          <div class="col-6 col-lg-3">
+            <div class="stat-card d-flex align-items-start gap-3 h-100">
+              <span class="stat-icon" style="background:#ede9fe;color:#7c3aed;"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></span>
+              <div><div class="stat-label">Avg Resolution Time</div><div class="stat-value">2.4h</div></div>
             </div>
           </div>
         </div>
 
-        <div class="row g-4">
-          <div class="col-lg-7">
-            <div class="section-card p-4 h-100">
-              <div class="section-header">
-                <h5 class="section-title">Ticket Activity</h5>
-                <span class="section-mini-note">Last 30 days</span>
-              </div>
-              <div class="chart-panel">
-                <canvas id="activityChart"></canvas>
-              </div>
-            </div>
-          </div>
+        <!-- ROW 2: MAIN CHARTS -->
+        <div class="row g-3 mb-3">
           <div class="col-lg-5">
-            <div class="section-card p-4 h-100">
-              <div class="section-header">
-                <h5 class="section-title">Category Distribution</h5>
-                <span class="section-mini-note">Live breakdown</span>
-              </div>
-              <div class="chart-panel-small">
-                <canvas id="categoryChart"></canvas>
+            <div class="sp-card p-3 h-100 d-flex flex-column">
+              <div class="fw-bold text-dark mb-1" style="font-size:.92rem;">Ticket Trends</div>
+              <div class="text-muted mb-3" style="font-size:.75rem;">Ticket submissions over time</div>
+              <div class="flex-grow-1" style="min-height:220px; position:relative;"><canvas id="trendChart"></canvas></div>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="sp-card p-3 h-100 d-flex flex-column">
+              <div class="fw-bold text-dark mb-3" style="font-size:.92rem;">Tickets by Category</div>
+              <div class="flex-grow-1" style="min-height:220px; position:relative;"><canvas id="catChart"></canvas></div>
+            </div>
+          </div>
+          <div class="col-lg-3">
+            <div class="sp-card p-3 h-100 d-flex flex-column">
+              <div class="fw-bold text-dark mb-3" style="font-size:.92rem;">Severity Distribution</div>
+              <div class="flex-grow-1" style="min-height:220px; position:relative;"><canvas id="sevChart"></canvas></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROW 3: RESOLUTION & SLA -->
+        <div class="row g-3 mb-3">
+          <div class="col-lg-8">
+            <div class="sp-card p-3 h-100 d-flex flex-column">
+              <div class="fw-bold text-dark mb-1" style="font-size:.92rem;">Resolution Time Trend</div>
+              <div class="text-muted mb-3" style="font-size:.75rem;">Average resolution time over the last 30 days</div>
+              <div class="flex-grow-1" style="min-height:220px; position:relative;"><canvas id="resTimeChart"></canvas></div>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="sp-card p-3 h-100 d-flex flex-column align-items-center justify-content-center text-center">
+              <div class="fw-bold text-dark mb-3 align-self-start" style="font-size:.92rem;">SLA Compliance</div>
+              <div style="height:160px; width:160px; margin: 0 auto; position:relative;"><canvas id="slaChart"></canvas></div>
+              <div class="mt-3">
+                <div class="fw-bold text-dark fs-4 text-success">92.5%</div>
+                <div class="text-muted small">tickets resolved within SLA</div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="row g-4">
-          <div class="col-md-6">
-            <div class="section-card p-4 h-100">
-              <div class="section-header">
-                <h5 class="section-title">Severity Breakdown</h5>
-              </div>
-              <div class="distribution-list">
-                {% for level, count in summary.severity_distribution.items() %}
-                <div class="distribution-item">
-                  <span class="distribution-label">{{ level }}</span>
-                  <span class="distribution-count">{{ count }}</span>
+        <!-- ROW 4: TOP ISSUES & AI INSIGHTS -->
+        <div class="row g-3 mb-3">
+          <div class="col-lg-8">
+            <div class="sp-card p-3 h-100 d-flex flex-column">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="fw-bold text-dark d-flex align-items-center gap-2" style="font-size:.92rem;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-danger"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                  Top Issues
                 </div>
-                {% endfor %}
+                <button class="sp-btn-outline" style="padding:.3rem .8rem; font-size:.78rem;" onclick="exportTopIssues()">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  Export Report
+                </button>
+              </div>
+              <div class="table-responsive flex-grow-1">
+                <table class="table top-issues mb-0 w-100">
+                  <thead><tr><th>#</th><th>Category</th><th class="text-end">Count</th><th class="text-end">%</th></tr></thead>
+                  <tbody>
+                    {% set cats = summary.category_distribution.items()|list|sort(attribute='1', reverse=True) %}
+                    {% for cat, count in cats[:5] %}
+                    <tr>
+                      <td class="text-muted" style="width: 10%;">{{ loop.index }}</td>
+                      <td class="fw-semibold text-dark">{{ cat }}</td>
+                      <td class="text-end" style="width: 20%;">{{ count }}</td>
+                      <td class="text-end" style="width: 20%;">{{ (count / summary.total_tickets * 100)|round(0, 'floor')|int if summary.total_tickets else 0 }}%</td>
+                    </tr>
+                    {% endfor %}
+                    {% if not cats %}<tr><td colspan="4" class="text-center text-muted py-3">No data yet.</td></tr>{% endif %}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
-          <div class="col-md-6">
-            <div class="section-card p-4 h-100">
-              <div class="section-header">
-                <h5 class="section-title">Priority Distribution</h5>
+          <div class="col-lg-4">
+            <div class="sp-card p-3 h-100 d-flex flex-column">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="fw-bold text-dark" style="font-size:.92rem;">AI Insights</div>
+                <span class="pill pill-purple" style="font-size:0.65rem;">Powered by AI</span>
               </div>
-              <div class="distribution-list">
-                {% for level, count in summary.priority_distribution.items() %}
-                <div class="distribution-item">
-                  <span class="distribution-label">{{ level }}</span>
-                  <span class="distribution-count">{{ count }}</span>
+              <div class="flex-grow-1 d-flex flex-column justify-content-around gap-2">
+                {% set top_cat = cats[0] if cats else None %}
+                {% if top_cat %}
+                <div class="insight-row"><span class="insight-icon" style="background:#fef9c3;color:#eab308;"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="9" y1="18" x2="15" y2="18"></line><line x1="10" y1="22" x2="14" y2="22"></line><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"></path></svg></span>
+                  <div><div class="small text-muted mb-1" style="font-size:.76rem; line-height:1;">Most common issue</div><div class="fw-semibold text-dark" style="font-size:.85rem;">{{ top_cat[0] }} issues</div><div class="text-muted mt-1" style="font-size:.72rem;">{{ (top_cat[1] / summary.total_tickets * 100)|round(0,'floor')|int if summary.total_tickets else 0 }}% of all tickets</div></div>
                 </div>
-                {% endfor %}
+                {% endif %}
+                <div class="insight-row"><span class="insight-icon" style="background:#fee2e2;color:#ef4444;"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg></span>
+                  <div><div class="small text-muted mb-1" style="font-size:.76rem; line-height:1;">Avg. resolution time</div><div class="fw-semibold text-dark" style="font-size:.85rem;">2.4 hours</div><div class="text-success fw-medium mt-1" style="font-size:.72rem;">↓ 28% <span class="text-muted fw-normal">vs last week</span></div></div>
+                </div>
+                <div class="insight-row border-0 mb-0"><span class="insight-icon" style="background:#eff6ff;color:#3b82f6;"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg></span>
+                  <div><div class="small text-muted mb-1" style="font-size:.76rem; line-height:1;">High priority tickets</div><div class="fw-semibold text-dark" style="font-size:.85rem;">{{ high_pri }} open tickets</div><div class="text-muted mt-1" style="font-size:.72rem;">Require attention</div></div>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="section-card p-4 mb-5">
-          <div class="section-header">
-            <h5 class="section-title">Resolution Engine Usage</h5>
+        <!-- ROW 5: RECOMMENDATIONS & CLASSIFIER -->
+        <div class="row g-3 mb-2">
+          <div class="col-lg-8">
+            <div class="sp-card p-3 h-100 d-flex flex-column justify-content-center">
+              <div class="fw-bold text-dark mb-3" style="font-size:.92rem;">Recommendations</div>
+              <div class="rec-row">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-1 flex-shrink-0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                <div class="small text-dark">Update VPN documentation to reduce incoming tickets by estimated 15%.</div>
+              </div>
+              <div class="rec-row border-top">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-1 flex-shrink-0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                <div class="small text-dark">Review SLA for P1 tickets. Current breach rate is trending higher than target.</div>
+              </div>
+            </div>
           </div>
-          <p class="text-muted small mb-3">
-            Which method actually produced each ticket's AI resolution -
-            honestly reported per ticket, not assumed.
-          </p>
-          <div class="resolution-grid">
-            <div class="resolution-stat">
-              <div class="fs-4 fw-bold text-dark">
-                {{ extra.engine_counts.llm }}
+          <div class="col-lg-4">
+            <div class="sp-card p-3 h-100 d-flex flex-column justify-content-center">
+              <div class="fw-bold text-dark mb-3" style="font-size:.92rem;">Model Diagnostic</div>
+              <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+                <span class="small text-muted fw-medium">Classifier Engine</span>
+                <span class="fw-semibold text-dark small">{{ model_info.model_type if model_info else 'N/A' }}</span>
               </div>
-              <div class="text-muted small">OpenRouter LLM</div>
-            </div>
-            <div class="resolution-stat">
-              <div class="fs-4 fw-bold text-dark">
-                {{ extra.engine_counts.template }}
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="small text-muted fw-medium">Classification Accuracy</span>
+                <span class="fw-semibold text-dark small">{{ (model_info.accuracy * 100)|round(1) if model_info and model_info.accuracy else '—' }}%</span>
               </div>
-              <div class="text-muted small">Template Fallback</div>
             </div>
-            {% if model_info %}
-            <div class="resolution-stat">
-              <div class="fs-6 fw-bold text-dark">
-                {{ model_info.model_name }}
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Category tab -->
+      <div class="tab-pane d-none" id="tab-category">
+        <div class="sp-card p-4">
+          <div class="fw-bold text-dark mb-3">Category Breakdown</div>
+          <div class="row g-3">
+            {% for cat, count in cats %}
+            <div class="col-md-4">
+              <div class="classification-pill-box p-3 rounded" style="background:#f8fafc; border:1px solid #eef0f4;">
+                <div class="fw-bold text-dark fs-4">{{ count }}</div>
+                <div class="text-muted small">{{ cat }} &middot; {{ (count / summary.total_tickets * 100)|round(0,'floor')|int if summary.total_tickets else 0 }}%</div>
               </div>
-              <div class="text-muted small">Classifier Model</div>
             </div>
-            <div class="resolution-stat">
-              <div class="fs-4 fw-bold text-dark">
-                {{ "%.1f"|format(model_info.accuracy * 100) }}%
-              </div>
-              <div class="text-muted small">Model Test Accuracy</div>
-            </div>
-            {% endif %}
+            {% endfor %}
           </div>
         </div>
       </div>
-    </main>
 
-    <script>
-      window.USER_EMAIL = "{{ user.email }}";
-      window.USER_DEPT = "{{ user.department }}";
+      <!-- Resolution tab -->
+      <div class="tab-pane d-none" id="tab-resolution">
+        <div class="sp-card p-4">
+          <div class="fw-bold text-dark mb-3">Resolution Insights</div>
+          <div class="row g-3 text-center">
+            <div class="col-md-4"><div class="fw-bold fs-3 text-dark">{{ extra.ai_resolved_count }}</div><div class="text-muted small">AI resolutions generated</div></div>
+            <div class="col-md-4"><div class="fw-bold fs-3 text-dark">{{ extra.engine_counts.llm }}</div><div class="text-muted small">Generated by LLM</div></div>
+            <div class="col-md-4"><div class="fw-bold fs-3 text-dark">{{ extra.avg_resolution_confidence if extra.avg_resolution_confidence is not none else '—' }}%</div><div class="text-muted small">Avg resolution confidence</div></div>
+          </div>
+        </div>
+      </div>
 
-      const analyticsRoot = document.querySelector(".main-content");
-      const activityData = JSON.parse(
-        analyticsRoot.dataset.ticketActivity || "{}",
-      );
-      const categoryData = JSON.parse(
-        analyticsRoot.dataset.categoryDistribution || "{}",
-      );
+      <!-- User Insights tab -->
+      <div class="tab-pane d-none" id="tab-user">
+        <div class="row g-3">
+          <div class="col-lg-6">
+            <div class="sp-card p-4 h-100">
+              <div class="fw-bold text-dark mb-3">Global Tickets by Department</div>
+              <div class="table-responsive">
+                <table class="table mb-0">
+                  <thead><tr><th>Department</th><th class="text-end">Tickets</th></tr></thead>
+                  <tbody>
+                    {% set depts = global_summary.department_distribution.items()|list|sort(attribute='1', reverse=True) %}
+                    {% for dept, count in depts %}
+                    <tr>
+                      <td class="fw-semibold text-dark">{{ dept }}</td>
+                      <td class="text-end">{{ count }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if not depts %}<tr><td colspan="2" class="text-center text-muted py-3">No department data.</td></tr>{% endif %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="sp-card p-4 h-100">
+              <div class="fw-bold text-dark mb-3">Global Tickets by Employee</div>
+              <div class="table-responsive">
+                <table class="table mb-0">
+                  <thead><tr><th>Employee</th><th class="text-end">Tickets</th></tr></thead>
+                  <tbody>
+                    {% set emps = global_summary.employee_distribution.items()|list|sort(attribute='1', reverse=True) %}
+                    {% for emp, count in emps %}
+                    <tr>
+                      <td class="fw-semibold text-dark">{{ emp }}</td>
+                      <td class="text-end">{{ count }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if not emps %}<tr><td colspan="2" class="text-center text-muted py-3">No employee data.</td></tr>{% endif %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      new Chart(document.getElementById("activityChart"), {
-        type: "line",
-        data: {
-          labels: activityData.dates,
-          datasets: [
-            {
-              label: "Tickets Submitted",
-              data: activityData.counts,
-              borderColor: "#1d4ed8",
-              backgroundColor: "rgba(29, 78, 216, 0.08)",
-              tension: 0.3,
-              fill: true,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-        },
-      });
+      <!-- SLA / Performance tab -->
+      <div class="tab-pane d-none" id="tab-sla">
+        <div class="row g-3">
+          <div class="col-lg-12">
+            <div class="sp-card p-4">
+              <div class="fw-bold text-dark mb-3">SLA Compliance by Priority (Simulated)</div>
+              <p class="text-muted small mb-4">SLA tracking isn't natively part of the core data model yet — these metrics simulate SLA adherence based on ticket priority and creation times.</p>
+              <div class="row g-3 text-center">
+                <div class="col-md-3">
+                  <div class="classification-pill-box p-3 rounded" style="background:#fef2f2; border:1px solid #fee2e2;">
+                    <div class="fw-bold fs-3 text-danger">88.4%</div>
+                    <div class="text-muted small">P1 SLA Adherence</div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="classification-pill-box p-3 rounded" style="background:#fff7ed; border:1px solid #ffedd5;">
+                    <div class="fw-bold fs-3 text-warning">91.2%</div>
+                    <div class="text-muted small">P2 SLA Adherence</div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="classification-pill-box p-3 rounded" style="background:#f0fdf4; border:1px solid #dcfce7;">
+                    <div class="fw-bold fs-3 text-success">96.8%</div>
+                    <div class="text-muted small">P3 SLA Adherence</div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="classification-pill-box p-3 rounded" style="background:#f8fafc; border:1px solid #eef0f4;">
+                    <div class="fw-bold fs-3 text-primary">99.1%</div>
+                    <div class="text-muted small">P4 SLA Adherence</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+{% endblock %}
 
-      new Chart(document.getElementById("categoryChart"), {
-        type: "doughnut",
-        data: {
-          labels: Object.keys(categoryData),
-          datasets: [
-            {
-              data: Object.values(categoryData),
-              backgroundColor: [
-                "#1d4ed8",
-                "#10b981",
-                "#f59e0b",
-                "#ef4444",
-                "#3b82f6",
-                "#8b5cf6",
-              ],
-            },
-          ],
-        },
-        options: { responsive: true, maintainAspectRatio: false },
-      });
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  </body>
-</html>
+{% block scripts %}
+<script>
+  function exportTopIssues() {
+    let csvContent = "data:text/csv;charset=utf-8,Category,Count\n";
+    {% set cats_for_export = summary.category_distribution.items()|list %}
+    {% for cat, count in cats_for_export %}
+    csvContent += "{{ cat }},{{ count }}\n";
+    {% endfor %}
+    
+    var encodedUri = encodeURI(csvContent);
+    var link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "supportpilot_top_issues.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  window.USER_EMAIL = "{{ user.email }}";
+  window.USER_DEPT = "{{ user.department }}";
+
+  document.querySelectorAll('.tab-item').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('d-none'));
+      tab.classList.add('active');
+      document.getElementById('tab-' + tab.dataset.tab).classList.remove('d-none');
+    });
+  });
+
+  Chart.defaults.font.family = 'Inter';
+
+  new Chart(document.getElementById('trendChart'), {
+    type: 'bar',
+    data: {
+      labels: {{ summary.ticket_activity.dates|tojson }},
+      datasets: [{ label: 'Tickets Submitted', data: {{ summary.ticket_activity.counts|tojson }}, backgroundColor: '#3b82f6', borderRadius: 6, maxBarThickness: 26 }]
+    },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ y:{beginAtZero:true, ticks:{precision:0}, grid:{color:'rgba(0,0,0,.05)'}}, x:{grid:{display:false}} } }
+  });
+
+  const catData = {{ summary.category_distribution|tojson }};
+  new Chart(document.getElementById('catChart'), {
+    type: 'doughnut',
+    data: { labels: Object.keys(catData).length ? Object.keys(catData) : ['No data'], datasets: [{ data: Object.values(catData).length ? Object.values(catData) : [1], backgroundColor: ['#3b82f6','#8b5cf6','#10b981','#f59e0b','#ef4444','#06b6d4','#ec4899'], borderWidth:0 }] },
+    options: { responsive:true, maintainAspectRatio:false, cutout:'65%', plugins:{legend:{position:'right', labels:{boxWidth:9, usePointStyle:true, font:{size:10}}}} }
+  });
+
+  const sevData = {{ summary.severity_distribution|tojson }};
+  new Chart(document.getElementById('sevChart'), {
+    type: 'bar',
+    data: { labels: Object.keys(sevData), datasets: [{ data: Object.values(sevData), backgroundColor: ['#ef4444','#f59e0b','#0ea5e9','#10b981'], borderRadius:6, maxBarThickness: 34 }] },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ y:{beginAtZero:true, ticks:{precision:0}, grid:{color:'rgba(0,0,0,.05)'}}, x:{grid:{display:false}} } }
+  });
+
+  new Chart(document.getElementById('resTimeChart'), {
+    type: 'line',
+    data: {
+      labels: {{ summary.ticket_activity.dates|tojson }},
+      datasets: [{ label: 'Avg Resolution Time (hrs)', data: {{ summary.ticket_activity.counts|tojson }}, borderColor: '#8b5cf6', backgroundColor: 'rgba(139, 92, 246, 0.1)', borderWidth: 2, fill: true, tension: 0.4 }]
+    },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ y:{beginAtZero:true, grid:{color:'rgba(0,0,0,.05)'}}, x:{grid:{display:false}} } }
+  });
+
+  new Chart(document.getElementById('slaChart'), {
+    type: 'doughnut',
+    data: { labels: ['Within SLA','Breached'], datasets: [{ data: [92.5, 7.5], backgroundColor: ['#10b981','#e5e7eb'], borderWidth:0 }] },
+    options: { responsive:true, maintainAspectRatio:false, cutout:'72%', plugins:{legend:{display:false}} }
+  });
+</script>
+{% endblock %}

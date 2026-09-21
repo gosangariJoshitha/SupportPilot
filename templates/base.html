@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en" data-bs-theme="{{ prefs.theme if prefs and prefs.theme else 'light' }}">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}SupportPilot{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    {% block extra_head %}{% endblock %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <style>
+  * { box-sizing: border-box; }
+  body {
+    display: flex;
+    min-height: 100vh;
+    overflow-x: hidden;
+    background: #eef1f7;
+  }
+  .sidebar {
+    width: 250px;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    z-index: 1040;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    background: #ffffff;
+    border-right: 1px solid #e5e7eb;
+  }
+  .sidebar-brand-icon {
+    width: 34px; height: 34px;
+    background: #2563eb;
+    color: #fff;
+    border-radius: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+  .sidebar .nav-link {
+    color: #4b5563;
+    font-weight: 500;
+    font-size: 0.88rem;
+    border-radius: 0.5rem;
+    padding: 0.55rem 0.75rem;
+  }
+  .sidebar .nav-link:hover { background: #f3f4f6; color: #111827; }
+  .sidebar .nav-link.active { background: #eff6ff; color: #2563eb !important; font-weight: 600; }
+  .sidebar .nav-link svg { opacity: .85; flex-shrink:0; }
+  .sidebar-promo {
+    margin: 0.75rem 1rem;
+    border-radius: 1rem;
+    padding: 1.1rem;
+    background: linear-gradient(160deg,#eef4ff 0%, #e3ecff 100%);
+    border: 1px solid #dbe6fc;
+    position: relative;
+    overflow: hidden;
+  }
+  .sidebar-promo h6 { font-weight: 800; color: #1e293b; font-size: 0.95rem; margin-bottom:0.35rem; line-height:1.25; }
+  .sidebar-promo p { font-size: 0.76rem; color: #64748b; margin-bottom: 0; }
+  .sidebar-promo .promo-icon { width:38px;height:38px;border-radius:0.65rem;background:#2563eb;color:#fff;display:flex;align-items:center;justify-content:center;margin-bottom:0.6rem; }
+  .sidebar-user-avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: #2563eb; color: #fff; font-weight: 700; font-size: 0.82rem;
+    display: inline-flex; align-items: center; justify-content: center; flex-shrink:0;
+  }
+  .main-content { flex-grow: 1; padding: 1.75rem 2.25rem 3rem; overflow-y: auto; max-height: 100vh; }
+
+  /* Topbar */
+  .topbar { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom: 1.5rem; gap: 1rem; flex-wrap: wrap; }
+  .topbar-greeting { font-size: 1rem; color:#111827; font-weight:600; margin:0; }
+  .topbar-sub { font-size:0.85rem; color:#6b7280; margin:0.1rem 0 0; }
+  .topbar-search {
+    background:#fff; border:1px solid #e5e7eb; border-radius:0.6rem;
+    padding: 0.5rem 0.9rem; display:flex; align-items:center; gap:0.5rem;
+    width: 320px; color:#9ca3af; font-size:0.85rem;
+  }
+  .topbar-search input { border:none; outline:none; flex:1; font-size:0.85rem; background:transparent; }
+  .topbar-icon-btn {
+    width:38px;height:38px;border-radius:0.6rem;background:#fff;border:1px solid #e5e7eb;
+    display:flex;align-items:center;justify-content:center; position:relative; color:#4b5563; flex-shrink:0;
+  }
+  .topbar-badge {
+    position:absolute; top:-5px; right:-5px; background:#ef4444; color:#fff; font-size:0.62rem;
+    width:16px;height:16px;border-radius:50%; display:flex;align-items:center;justify-content:center; font-weight:700;
+  }
+  .topbar-badge.hidden { display: none !important; }
+  .topbar-user { display:flex; align-items:center; gap:0.5rem; background:#fff; border:1px solid #e5e7eb; border-radius:0.6rem; padding:0.35rem 0.7rem; }
+
+  .page-title { font-size: 1.7rem; font-weight: 800; color:#0f172a; margin-bottom:0.15rem; }
+  .page-subtitle { color:#6b7280; font-size:0.9rem; }
+
+  /* Cards */
+  .sp-card { background:#fff; border:1px solid #e6e9f0; border-radius:0.9rem; }
+  .stat-card { background:#fff; border:1px solid #e6e9f0; border-radius:0.9rem; padding:1.1rem 1.25rem; transition: all 0.25s ease; }
+  .stat-card:hover { border-color: #93c5fd; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08); transform: translateY(-2px); }
+  .stat-icon { width:44px;height:44px;border-radius:0.7rem;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+  .stat-value { font-size:1.6rem; font-weight:800; color:#0f172a; line-height:1; }
+  .stat-label { font-size:0.82rem; color:#6b7280; font-weight:500; }
+  .stat-delta-up { color:#16a34a; font-size:0.76rem; font-weight:600; }
+  .stat-delta-down { color:#16a34a; font-size:0.76rem; font-weight:600; }
+
+  /* Badges */
+  .pill { display:inline-flex; align-items:center; border-radius:999px; padding:0.22rem 0.65rem; font-size:0.74rem; font-weight:700; white-space:nowrap; }
+  .pill-red { background:#fee2e2; color:#dc2626; }
+  .pill-orange { background:#ffedd5; color:#c2410c; }
+  .pill-yellow { background:#fef9c3; color:#a16207; }
+  .pill-blue { background:#dbeafe; color:#2563eb; }
+  .pill-green { background:#dcfce7; color:#16a34a; }
+  .pill-gray { background:#f1f5f9; color:#475569; }
+  .pill-purple { background:#ede9fe; color:#7c3aed; }
+
+  .icon-btn { width:34px;height:34px;border-radius:0.5rem;display:inline-flex;align-items:center;justify-content:center;border:1px solid #e5e7eb;background:#fff;color:#6b7280; }
+  .icon-btn:hover { background:#f8fafc; }
+
+  .sp-btn-primary {
+    background:#2563eb; color:#fff; border:none; border-radius:0.55rem; font-weight:600; font-size:0.87rem;
+    padding:0.55rem 1.1rem; display:inline-flex; align-items:center; gap:0.45rem; text-decoration:none;
+  }
+  .sp-btn-primary:hover { background:#1d4ed8; color:#fff; }
+  .sp-btn-outline {
+    background:#fff; color:#374151; border:1px solid #d1d5db; border-radius:0.55rem; font-weight:600; font-size:0.85rem;
+    padding:0.5rem 1rem; display:inline-flex; align-items:center; gap:0.4rem; text-decoration:none;
+  }
+  .sp-btn-outline:hover { background:#f9fafb; color:#111827; }
+
+  .form-label-sp { font-size:0.82rem; font-weight:600; color:#111827; margin-bottom:0.35rem; }
+  .form-control, .form-select {
+    border:1px solid #d1d5db; border-radius:0.55rem; font-size:0.88rem; padding:0.55rem 0.8rem; color:#111827;
+  }
+  .form-control:focus, .form-select:focus { border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,.12); }
+
+  ::-webkit-scrollbar { width:8px; height:8px; }
+  ::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:4px; }
+
+  @media (max-width: 991.98px) {
+    .sidebar { position: fixed; left: -260px; transition: left 0.25s ease; box-shadow: 0 0 0 9999px rgba(0,0,0,0); }
+    .sidebar.show { left: 0; box-shadow: 10px 0 30px rgba(0,0,0,.15); }
+    .main-content { padding: 1.25rem; }
+    .topbar-search { width: 100%; order: 3; }
+  }
+
+  /* Dropdown Styles */
+  .dropdown-menu-custom {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 0.5rem;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    z-index: 1050;
+    min-width: 200px;
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .dropdown-menu-custom.hidden {
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+  }
+  .dropdown-item {
+    display: block;
+    padding: 0.5rem 1rem;
+    color: #374151;
+    text-decoration: none;
+    font-size: 0.85rem;
+  }
+  .dropdown-item:hover {
+    background: #f3f4f6;
+    color: #111827;
+  }
+  .dropdown-divider {
+    border-top: 1px solid #e5e7eb;
+    margin: 0.5rem 0;
+  }
+  .dropdown-user-info {
+    padding: 0.75rem 1rem;
+  }
+  .notifications-dropdown {
+    width: 320px;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+  .notifications-dropdown .dropdown-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .notifications-dropdown .dropdown-body {
+    padding: 0;
+  }
+  .notif-item {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f3f4f6;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    cursor: pointer;
+  }
+  .notif-item:hover {
+    background: #f9fafb;
+  }
+  .notif-item.unread {
+    background: #f0fdf4;
+  }
+  .notif-item.unread:hover {
+    background: #dcfce7;
+  }
+  .notif-title { font-weight: 600; font-size: 0.85rem; margin: 0; }
+  .notif-msg { font-size: 0.8rem; color: #6b7280; margin: 0; }
+  .notif-empty { padding: 1rem; text-align: center; color: #9ca3af; font-size: 0.85rem; }
+  .btn-link-small { background: none; border: none; color: #2563eb; font-size: 0.75rem; padding: 0; cursor: pointer; }
+  .btn-link-small:hover { text-decoration: underline; }
+  
+  #search-dropdown {
+    left: 0;
+    right: auto;
+    width: 100%;
+    min-width: 320px;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  .search-result-item {
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid #f3f4f6;
+    cursor: pointer;
+    text-decoration: none;
+    display: block;
+    color: #111827;
+  }
+  .search-result-item:hover {
+    background: #f9fafb;
+  }
+  .search-result-title { font-weight: 600; font-size: 0.85rem; }
+  .search-result-sub { font-size: 0.75rem; color: #6b7280; }
+
+  /* --- Dark Mode Overrides --- */
+  [data-bs-theme="dark"] body { background: #0f172a; color: #f8fafc; }
+  [data-bs-theme="dark"] .sidebar { background: #1e293b; border-color: #334155; }
+  [data-bs-theme="dark"] .sidebar .nav-link { color: #cbd5e1; }
+  [data-bs-theme="dark"] .sidebar .nav-link:hover { background: #334155; color: #f8fafc; }
+  [data-bs-theme="dark"] .sidebar .nav-link.active { background: #2563eb; color: #ffffff !important; }
+  [data-bs-theme="dark"] .sidebar-promo { background: #1e293b; border-color: #334155; }
+  [data-bs-theme="dark"] .sidebar-promo h6 { color: #f8fafc; }
+  [data-bs-theme="dark"] .sidebar-promo p { color: #94a3b8; }
+  
+  [data-bs-theme="dark"] .topbar-greeting { color: #f8fafc; }
+  [data-bs-theme="dark"] .topbar-sub { color: #94a3b8; }
+  [data-bs-theme="dark"] .topbar-search { background: #1e293b; border-color: #334155; color: #cbd5e1; }
+  [data-bs-theme="dark"] .topbar-search input { color: #f8fafc; }
+  [data-bs-theme="dark"] .topbar-search input::placeholder { color: #64748b; }
+  [data-bs-theme="dark"] .topbar-icon-btn { background: #1e293b; border-color: #334155; color: #cbd5e1; }
+  [data-bs-theme="dark"] .topbar-user { background: #1e293b; border-color: #334155; }
+  [data-bs-theme="dark"] .topbar-user .text-dark { color: #f8fafc !important; }
+  
+  [data-bs-theme="dark"] .page-title { color: #f8fafc; }
+  [data-bs-theme="dark"] .page-subtitle { color: #94a3b8; }
+  
+  [data-bs-theme="dark"] .sp-card, [data-bs-theme="dark"] .stat-card { background: #1e293b; border-color: #334155; }
+  [data-bs-theme="dark"] .stat-value { color: #f8fafc; }
+  [data-bs-theme="dark"] .stat-label { color: #94a3b8; }
+  
+  [data-bs-theme="dark"] .dropdown-menu-custom { background: #1e293b; border-color: #334155; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5); }
+  [data-bs-theme="dark"] .dropdown-item { color: #cbd5e1; }
+  [data-bs-theme="dark"] .dropdown-item:hover { background: #334155; color: #f8fafc; }
+  [data-bs-theme="dark"] .dropdown-divider { border-color: #334155; }
+  [data-bs-theme="dark"] .notifications-dropdown .dropdown-header { border-color: #334155; color: #f8fafc; }
+  [data-bs-theme="dark"] .notif-item { border-color: #334155; }
+  [data-bs-theme="dark"] .notif-item:hover { background: #0f172a; }
+  [data-bs-theme="dark"] .notif-item.unread { background: #1e293b; }
+  [data-bs-theme="dark"] .notif-item.unread:hover { background: #0f172a; }
+  [data-bs-theme="dark"] .notif-title { color: #f8fafc; }
+  [data-bs-theme="dark"] .notif-msg { color: #94a3b8; }
+  
+  [data-bs-theme="dark"] .text-dark { color: #f8fafc !important; }
+  [data-bs-theme="dark"] .text-muted { color: #94a3b8 !important; }
+  [data-bs-theme="dark"] .form-control, [data-bs-theme="dark"] .form-select { background: #1e293b; border-color: #334155; color: #f8fafc; }
+  [data-bs-theme="dark"] .form-control:focus, [data-bs-theme="dark"] .form-select:focus { background: #1e293b; color: #f8fafc; }
+  [data-bs-theme="dark"] .form-control::placeholder { color: #64748b; }
+  
+  [data-bs-theme="dark"] .sp-btn-outline { background: #1e293b; color: #f8fafc; border-color: #334155; }
+  [data-bs-theme="dark"] .sp-btn-outline:hover { background: #334155; color: #ffffff; }
+  
+  [data-bs-theme="dark"] .pill-gray { background: #334155; color: #cbd5e1; }
+  [data-bs-theme="dark"] table.dash-table th { color: #94a3b8; border-color: #334155; }
+  [data-bs-theme="dark"] table.dash-table td { border-color: #334155; color: #cbd5e1; }
+  
+  [data-bs-theme="dark"] .qa-btn { background: #1e293b; border-color: #334155; color: #f8fafc; }
+  [data-bs-theme="dark"] .qa-btn:hover { background: #334155; border-color: #2563eb; }
+  [data-bs-theme="dark"] .insight-row { border-color: #334155; }
+</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/toast.css') }}" />
+<script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+<script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+<script>
+  (function() {
+    var dbTheme = "{{ prefs.theme if prefs and prefs.theme else 'system' }}";
+    var t = dbTheme;
+    if (t === 'system') {
+      t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    document.documentElement.dataset.bsTheme = t;
+  })();
+</script>
+
+  </head>
+  <body>
+    {% if not hide_sidebar %}
+    <aside class="sidebar py-3" id="sidebarMenu">
+  <div class="px-4 mb-4 d-flex align-items-center gap-2">
+    <span class="sidebar-brand-icon">SP</span>
+    <div class="lh-1">
+      <div class="fw-bold text-dark" style="font-size:1.02rem;">SupportPilot</div>
+      <div class="text-muted" style="font-size:0.66rem;">Your AI-Powered IT Support Partner</div>
+    </div>
+    <button class="btn-close d-lg-none ms-auto" onclick="document.getElementById('sidebarMenu').classList.remove('show')"></button>
+  </div>
+
+  <ul class="nav flex-column gap-1 px-3">
+    <li class="nav-item">
+      <a href="/" class="nav-link d-flex align-items-center {{ 'active' if active=='dashboard' else '' }}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-3"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        Dashboard
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="/add_tickets" class="nav-link d-flex align-items-center {{ 'active' if active=='add_tickets' else '' }}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-3"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        Add Tickets
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="/my_tickets" class="nav-link d-flex align-items-center {{ 'active' if active=='my_tickets' else '' }}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-3"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+        My Tickets
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="/agents" class="nav-link d-flex align-items-center {{ 'active' if active=='agents' else '' }}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-3"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>
+        AI Agent
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="/integrations" class="nav-link d-flex align-items-center {{ 'active' if active=='integrations' else '' }}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-3"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+        Integrations
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="/analytics" class="nav-link d-flex align-items-center {{ 'active' if active=='analytics' else '' }}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-3"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+        Analytics
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="/settings" class="nav-link d-flex align-items-center {{ 'active' if active=='settings' else '' }}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-3"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        Settings
+      </a>
+    </li>
+  </ul>
+
+  {% if promo_title %}
+  <div class="sidebar-promo mt-4">
+    <div class="promo-icon">
+      {% if promo_icon == 'gear' %}
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      {% elif promo_icon == 'chart' %}
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+      {% elif promo_icon == 'puzzle' %}
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.439 7.85c-.049.322.059.648.289.878l1.568 1.568c.47.47.706 1.087.706 1.704s-.235 1.233-.706 1.704l-1.611 1.611a.98.98 0 0 1-.837.276c-.47-.07-.802-.48-.968-.925a2.501 2.501 0 1 0-3.214 3.214c.446.166.855.497.925.968a.979.979 0 0 1-.276.837l-1.61 1.61a2.404 2.404 0 0 1-1.705.707 2.402 2.402 0 0 1-1.704-.706l-1.568-1.568a1.026 1.026 0 0 0-.877-.29c-.493.074-.84.504-1.02.968a2.5 2.5 0 1 1-3.237-3.237c.464-.18.894-.527.967-1.02a1.026 1.026 0 0 0-.289-.877l-1.568-1.568A2.402 2.402 0 0 1 1.998 12c0-.617.236-1.234.706-1.704L4.23 8.77c.24-.24.581-.353.917-.303.515.077.877.528 1.073 1.01a2.5 2.5 0 1 0 3.259-3.259c-.482-.196-.933-.558-1.01-1.073-.05-.336.062-.676.303-.917l1.525-1.525A2.402 2.402 0 0 1 12 1.998c.617 0 1.234.236 1.704.706l1.568 1.568c.23.23.556.338.877.29.493-.074.84-.504 1.02-.968a2.5 2.5 0 1 1 3.237 3.237c-.464.18-.894.527-.967 1.02Z"></path></svg>
+      {% elif promo_icon == 'laptop' %}
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+      {% else %}
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+      {% endif %}
+    </div>
+    <h6>{{ promo_title }}</h6>
+    <p>{{ promo_text }}</p>
+  </div>
+  {% endif %}
+
+  {% if user %}
+  <div class="px-4 mt-auto pt-3">
+    <div class="border-top pt-3 d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-2 text-truncate">
+        {% if user.avatar_path %}
+        <img src="{{ url_for('static', filename='avatars/' + user.avatar_path) }}" class="sidebar-user-avatar" style="object-fit: cover;" alt="Avatar">
+        {% else %}
+        <span class="sidebar-user-avatar">{{ (user.full_name or "U")[0]|upper }}</span>
+        {% endif %}
+        <div class="text-truncate">
+          <div class="small fw-semibold text-dark text-truncate">{{ user.full_name }}</div>
+          <div class="small text-muted text-truncate" style="font-size: 0.72rem;">{{ user.department }}</div>
+        </div>
+      </div>
+      <a href="/logout" class="text-muted d-flex flex-shrink-0 ms-2" title="Logout">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+      </a>
+    </div>
+  </div>
+  {% endif %}
+</aside>
+    {% endif %}
+
+
+    <main class="main-content">
+      {% if not hide_topbar %}
+      <div class="topbar">
+  <div>
+    <p class="topbar-greeting"><span id="greeting-text">Good evening</span>, {{ user.full_name if user else 'Guest' }} <span>👋</span></p>
+    {% if topbar_subtitle != "" %}
+    <p class="topbar-sub">{{ topbar_subtitle or "Here's what's happening with your support tickets today." }}</p>
+    {% endif %}
+  </div>
+  <div class="d-flex align-items-center gap-2 flex-wrap position-relative">
+    <div class="topbar-search-container position-relative">
+      <label class="topbar-search mb-0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="global-search-input" placeholder="{{ topbar_search_placeholder or 'Search tickets...' }}">
+      </label>
+      <div id="search-dropdown" class="dropdown-menu-custom hidden"></div>
+    </div>
+    
+    <div class="position-relative">
+      <button class="topbar-icon-btn" type="button" id="notif-btn" title="Notifications">
+        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        <span class="topbar-badge hidden" id="notif-badge">0</span>
+      </button>
+      <div id="notif-dropdown" class="dropdown-menu-custom notifications-dropdown hidden">
+        <div class="dropdown-header">
+            <strong>Notifications</strong>
+            <div>
+                <button id="mark-all-read-btn" class="btn-link-small me-2">Mark all as read</button>
+                <button id="clear-all-notif-btn" class="btn-link-small text-danger">Clear all</button>
+            </div>
+        </div>
+        <div class="dropdown-body" id="notif-list">
+            <div class="notif-empty">No new notifications</div>
+        </div>
+      </div>
+    </div>
+    
+    {% if user %}
+    <div class="position-relative">
+      <div class="topbar-user" id="user-dropdown-btn" style="cursor: pointer;">
+        {% if user.avatar_path %}
+        <img src="{{ url_for('static', filename='avatars/' + user.avatar_path) }}" class="sidebar-user-avatar" style="width:28px;height:28px;object-fit: cover;" alt="Avatar">
+        {% else %}
+        <span class="sidebar-user-avatar" style="width:28px;height:28px;font-size:0.72rem;">{{ (user.full_name or "U")[0]|upper }}</span>
+        {% endif %}
+        <span class="small fw-medium text-dark">{{ user.full_name }}</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </div>
+      <div id="user-dropdown" class="dropdown-menu-custom user-dropdown hidden">
+        <div class="dropdown-user-info">
+            <strong>{{ user.full_name }}</strong><br>
+            <small class="text-muted">{{ user.email }}</small><br>
+            <small class="text-muted">{{ user.department }}</small>
+        </div>
+        <hr class="dropdown-divider">
+        <a href="{{ url_for('my_tickets') }}" class="dropdown-item">My Tickets</a>
+        <a href="{{ url_for('settings') }}" class="dropdown-item">Settings</a>
+        <hr class="dropdown-divider">
+        <a href="{{ url_for('logout') }}" class="dropdown-item text-danger">Logout</a>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+      {% endif %}
+<script>
+  (function(){
+    var h = new Date().getHours();
+    var g = h < 12 ? "Good morning" : (h < 18 ? "Good afternoon" : "Good evening");
+    var el = document.getElementById("greeting-text");
+    if (el) el.textContent = g;
+  })();
+  
+  window.CSRF_TOKEN = "{{ csrf_token() }}";
+</script>
+
+
+      {% block content %}{% endblock %}
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

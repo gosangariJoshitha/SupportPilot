@@ -1,746 +1,569 @@
-<!doctype html>
-<html lang="en" data-bs-theme="light">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tickets - SupportPilot</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/style.css') }}"
-    />
-    <style>
-      body {
-        display: flex;
-        min-height: 100vh;
-        overflow-x: hidden;
-      }
-      .sidebar {
-        width: 250px;
-        display: flex;
-        flex-direction: column;
-        flex-shrink: 0;
-        z-index: 1040;
-        height: 100vh;
-        position: sticky;
-        top: 0;
-      }
-      .main-content {
-        flex-grow: 1;
-        padding: 2rem 3rem;
-        overflow-y: auto;
-        max-height: 100vh;
-      }
-      .brand-logo {
-        background-color: #6366f1;
-        color: white;
-        border-radius: 0.375rem;
-        padding: 0.25rem 0.5rem;
-        font-weight: bold;
-        font-size: 14px;
-      }
-      /* Mobile toggle */
-      @media (max-width: 991.98px) {
-        .sidebar {
-          position: fixed;
-          left: -250px;
-          transition: left 0.3s ease;
-        }
-        .sidebar.show {
-          left: 0;
-        }
-        .main-content {
-          padding: 1.5rem;
-        }
-      }
-      .ticket-list-item {
-        border: 1px solid var(--border);
-        border-radius: 0.5rem;
-        padding: 1rem;
-        margin-bottom: 0.75rem;
-        display: flex;
-        align-items: center;
-        background: white;
-        transition: all 0.2s;
-      }
-      .ticket-list-item:hover {
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        border-color: #cbd5e1;
-      }
-      .icon-box {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: 1rem;
-      }
-    </style>
-  </head>
-  <body>
-    <!-- Sidebar -->
-    <aside class="sidebar py-4" id="sidebarMenu">
-      <div class="px-4 mb-5 d-flex align-items-center">
-        <span class="brand-logo me-2">SP</span>
-        <span class="fw-bold text-dark fs-5">SupportPilot</span>
-        <button
-          class="btn-close d-lg-none ms-auto"
-          onclick="
-            document.getElementById('sidebarMenu').classList.remove('show')
-          "
-        ></button>
-      </div>
+{% extends "base.html" %}
 
-      <ul class="nav flex-column gap-1 px-3 mb-auto">
-        <li class="nav-item">
-          <a
-            href="/"
-            class="nav-link d-flex align-items-center rounded py-2 px-3"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="me-3"
-            >
-              <rect x="3" y="3" width="7" height="7"></rect>
-              <rect x="14" y="3" width="7" height="7"></rect>
-              <rect x="14" y="14" width="7" height="7"></rect>
-              <rect x="3" y="14" width="7" height="7"></rect>
-            </svg>
-            Dashboard
-          </a>
-        </li>
-        <li class="nav-item">
-          <a
-            href="/my_tickets"
-            class="nav-link active d-flex align-items-center rounded py-2 px-3"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="me-3"
-            >
-              <path
-                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-              ></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-              <line x1="16" y1="13" x2="8" y2="13"></line>
-              <line x1="16" y1="17" x2="8" y2="17"></line>
-              <polyline points="10 9 9 9 8 9"></polyline>
-            </svg>
-            Add Tickets
-          </a>
-        </li>
-        <li class="nav-item">
-          <a
-            href="/all_tickets"
-            class="nav-link d-flex align-items-center rounded py-2 px-3"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="me-3"
-            >
-              <line x1="8" y1="6" x2="21" y2="6"></line>
-              <line x1="8" y1="12" x2="21" y2="12"></line>
-              <line x1="8" y1="18" x2="21" y2="18"></line>
-              <line x1="3" y1="6" x2="3.01" y2="6"></line>
-              <line x1="3" y1="12" x2="3.01" y2="12"></line>
-              <line x1="3" y1="18" x2="3.01" y2="18"></line>
-            </svg>
-            My Tickets
-          </a>
-        </li>
-        <li class="nav-item">
-          <a
-            href="/agents"
-            class="nav-link d-flex align-items-center rounded py-2 px-3"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="me-3"
-            >
-              <path
-                d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
-              ></path>
-            </svg>
-            AI Agent
-          </a>
-        </li>
-        <li class="nav-item">
-          <a
-            href="/integrations"
-            class="nav-link d-flex align-items-center rounded py-2 px-3"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="me-3"
-            >
-              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-            </svg>
-            Integrations
-          </a>
-        </li>
-        <li class="nav-item">
-          <a
-            href="/analytics"
-            class="nav-link d-flex align-items-center rounded py-2 px-3"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="me-3"
-            >
-              <line x1="18" y1="20" x2="18" y2="10"></line>
-              <line x1="12" y1="20" x2="12" y2="4"></line>
-              <line x1="6" y1="20" x2="6" y2="14"></line>
-            </svg>
-            Analytics
-          </a>
-        </li>
-        <li class="nav-item">
-          <a
-            href="/settings"
-            class="nav-link d-flex align-items-center rounded py-2 px-3"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="me-3"
-            >
-              <circle cx="12" cy="12" r="3"></circle>
-              <path
-                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
-              ></path>
-            </svg>
-            Settings
-          </a>
-        </li>
-      </ul>
+{% block title %}SupportPilot - Add Ticket{% endblock %}
 
-      <div class="px-4 mt-auto">
-        <div
-          class="border-top border-secondary pt-3 d-flex align-items-center justify-content-between"
-        >
-          <div class="text-truncate pe-2">
-            <div class="small fw-semibold text-dark">{{ user.full_name }}</div>
-            <div class="small text-muted" style="font-size: 0.75rem">
-              {{ user.department }}
-            </div>
+{% set active = 'add_tickets' %}
+{% set promo_title = 'Let AI handle the first step' %}
+{% set promo_text = 'Submit your issue and let our AI analyze, classify, and help resolve it.' %}
+{% set promo_icon = 'robot' %}
+{% set topbar_subtitle = 'Submit a new ticket and let our AI analyze, classify, and help resolve it.' %}
+
+{% block extra_head %}
+<style>
+  body { font-family: 'Inter', sans-serif; background: #f8fafc; }
+  .page-title { font-size: 1.55rem; font-weight: 800; color: #0f172a; margin-bottom: 0.2rem; }
+  .page-subtitle { font-size: 0.95rem; color: #64748b; margin-bottom: 1.5rem; }
+  
+  /* Horizontal Main Stepper */
+  .stepper-container { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 1.25rem; margin-bottom: 1.5rem; }
+  .step { display: flex; align-items: center; gap: 0.75rem; color: #94a3b8; font-weight: 600; flex: 1; }
+  .step-num { width: 28px; height: 28px; border-radius: 50%; background: #e2e8f0; color: #64748b; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; flex-shrink: 0; }
+  .step-text { display: flex; flex-direction: column; line-height: 1.2; }
+  .step-text .main { font-size: 0.85rem; color: inherit; }
+  .step-text .sub { font-size: 0.7rem; font-weight: 400; color: #94a3b8; margin-top: 2px; }
+  
+  .step.active { color: #2563eb; }
+  .step.active .step-num { background: #2563eb; color: #fff; }
+  
+  .step.complete { color: #16a34a; }
+  .step.complete .step-num { background: #16a34a; color: #fff; }
+  
+  .step-divider { flex: 0.5; height: 2px; background: #e2e8f0; margin: 0 1rem; }
+  
+  /* Views */
+  .view-section { display: none; animation: fadeIn 0.3s ease; }
+  .view-section.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+  
+  /* Form Elements */
+  .form-label-sp { font-size: 0.85rem; font-weight: 600; color: #1e293b; margin-bottom: 0.4rem; }
+  .form-control, .form-select { border: 1px solid #cbd5e1; border-radius: 0.5rem; font-size: 0.9rem; padding: 0.6rem 0.8rem; color: #0f172a; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+  .form-control:focus, .form-select:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); outline: none; }
+  
+  /* Right Panel AI Preview */
+  .preview-box { border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1rem; background: #fff; }
+  .preview-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
+  .preview-title { font-weight: 700; font-size: 0.95rem; color: #0f172a; }
+  .live-badge { background: #eff6ff; color: #2563eb; font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 4px; border: 1px solid #bfdbfe; }
+  .preview-subtitle { font-size: 0.8rem; color: #64748b; margin-bottom: 1.25rem; }
+  
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .stat-item { background: #f8fafc; border: 1px solid #f1f5f9; padding: 0.75rem; border-radius: 0.5rem; }
+  .stat-label { display: flex; align-items: center; gap: 0.4rem; font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase; margin-bottom: 0.25rem; }
+  .stat-val { font-size: 0.9rem; font-weight: 700; color: #94a3b8; }
+  .stat-val.active-val { color: #0f172a; }
+  
+  /* Compact M2 RAG Workflow Stepper */
+  .rag-workflow { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 1rem; margin-bottom: 1.5rem; }
+  .rag-step { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; color: #94a3b8; }
+  .rag-icon { display: flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; border: 2px solid #cbd5e1; flex-shrink: 0; }
+  .rag-icon.done { border-color: #10b981; background: #10b981; color: #fff; }
+  .rag-icon.running { border-color: #3b82f6; border-top-color: transparent; animation: spin 1s linear infinite; }
+  .rag-divider { flex: 1; height: 1px; background: #e2e8f0; margin: 0 0.5rem; }
+  @keyframes spin { 100% { transform: rotate(360deg); } }
+  
+  /* Success State */
+  .success-banner { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 0.75rem; padding: 2rem; text-align: center; }
+  .success-icon { width: 56px; height: 56px; background: #16a34a; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; }
+  
+  .sp-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.02); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-2">
+  <div class="page-title">Add a New Ticket</div>
+  <p class="page-subtitle">Describe your issue and let AI analyze, classify, and generate a resolution.</p>
+</div>
+
+<div class="row g-4">
+  <!-- Left Column: Main Form & Workflow -->
+  <div class="col-lg-8">
+    <div class="sp-card p-4">
+      
+      <!-- Stepper -->
+      <div class="stepper-container">
+        <div class="step active" id="step1">
+          <div class="step-num" id="step1-num">1</div>
+          <div class="step-text">
+            <span class="main">Ticket Details</span>
+            <span class="sub">Enter your issue</span>
           </div>
-          <a
-            href="/logout"
-            class="text-muted d-flex flex-shrink-0"
-            title="Logout"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-              <polyline points="16 17 21 12 16 7"></polyline>
-              <line x1="21" y1="12" x2="9" y2="12"></line>
-            </svg>
-          </a>
+        </div>
+        <div class="step-divider"></div>
+        <div class="step" id="step2">
+          <div class="step-num" id="step2-num">2</div>
+          <div class="step-text">
+            <span class="main">AI Classification</span>
+            <span class="sub">Review prediction</span>
+          </div>
+        </div>
+        <div class="step-divider"></div>
+        <div class="step" id="step3">
+          <div class="step-num" id="step3-num">3</div>
+          <div class="step-text">
+            <span class="main">AI Resolution</span>
+            <span class="sub">Generate solution</span>
+          </div>
         </div>
       </div>
-    </aside>
 
-    <main class="main-content">
-      <!-- Header -->
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <div class="d-flex align-items-center d-lg-none">
-          <button
-            class="btn btn-light border btn-sm me-3"
-            onclick="
-              document.getElementById('sidebarMenu').classList.add('show')
-            "
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <line x1="3" y1="12" x2="21" y2="12"></line>
-              <line x1="3" y1="6" x2="21" y2="6"></line>
-              <line x1="3" y1="18" x2="21" y2="18"></line>
-            </svg>
+      <!-- View 1: Ticket Form -->
+      <div id="view-step-1" class="view-section active">
+        <h6 class="fw-bold mb-3">Ticket Details</h6>
+        <form id="ticketForm">
+          <div class="mb-3">
+            <label class="form-label-sp">Ticket Title *</label>
+            <input type="text" class="form-control" id="title" required placeholder="e.g., VPN connection failing">
+          </div>
+          <div class="mb-3">
+            <label class="form-label-sp">Description *</label>
+            <textarea class="form-control" id="description" rows="4" required maxlength="1000" placeholder="unable to connect to vpn since this morning. Getting authentication error even with correct credentials."></textarea>
+            <div class="text-end mt-1 text-muted" style="font-size:0.75rem;"><span id="charCount">0</span>/1000</div>
+          </div>
+          <div class="mb-4">
+            <label class="form-label-sp">Department *</label>
+            <select class="form-select" id="department" disabled>
+              <option value="{{ user.department }}" selected>{{ user.department }}</option>
+            </select>
+          </div>
+          
+          <div class="d-flex gap-3">
+            <button type="button" class="sp-btn-outline" style="width: 140px; justify-content: center;" onclick="clearForm()">Clear Form</button>
+            <button type="submit" id="analyzeBtn" class="sp-btn-primary flex-grow-1" style="justify-content: center;">
+              Analyze with AI &rarr;
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- View 2: Analyzing (Transition State) -->
+      <div id="view-step-analyzing" class="view-section">
+        <div class="text-center py-5">
+          <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
+          <h5 class="fw-bold">Analyzing your ticket...</h5>
+          <div class="text-muted small mx-auto" style="max-width: 300px;">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <span>Processing your request</span> <span class="text-success">✓</span>
+            </div>
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <span>Running AI classification (M1)</span> <span class="text-success">✓</span>
+            </div>
+            <div class="d-flex align-items-center justify-content-between">
+              <span>Identifying category, severity and priority...</span> 
+              <span class="spinner-grow spinner-grow-sm text-primary" role="status"></span>
+            </div>
+          </div>
+          <div class="mt-4 p-2 bg-light rounded text-muted small mx-auto" style="max-width: 400px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            This usually takes a few seconds. Please don't refresh the page.
+          </div>
+        </div>
+      </div>
+
+      <!-- View 3: AI Classification Review -->
+      <div id="view-step-2" class="view-section">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 24px; height: 24px;">✓</div>
+          <h5 class="fw-bold m-0">AI Classification Complete</h5>
+        </div>
+        
+        <div class="p-3 bg-light border rounded mb-4">
+          <h6 class="fw-bold mb-1 text-dark" id="preview-title"></h6>
+          <p class="text-muted small mb-0" id="preview-desc" style="white-space: pre-wrap;"></p>
+        </div>
+        
+        <div class="d-flex gap-3 mt-4">
+          <button type="button" class="sp-btn-outline" style="width: 140px; justify-content: center;" id="editTicketBtn">Edit Ticket</button>
+          <button type="button" class="sp-btn-primary flex-grow-1" style="justify-content: center;" id="generateBtn">
+            Generate AI Resolution &rarr;
           </button>
         </div>
-        <div>
-          <h3 class="fw-bold mb-1">Ticket Processing & Classification</h3>
-          <p class="text-muted mb-0 small">
-            Submit and classify IT support tickets
-          </p>
+      </div>
+
+      <!-- View 4: AI Resolution Generating / Result -->
+      <div id="view-step-3" class="view-section">
+        <div class="d-flex align-items-center gap-2 mb-4">
+          <div style="background:#2563eb; color:white; width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center;">✦</div>
+          <h5 class="fw-bold text-dark m-0">AI Resolution</h5>
+          <span class="live-badge ms-auto bg-success bg-opacity-10 text-success border-success" id="gen-badge" style="display:none;">Generated</span>
+        </div>
+        
+        <!-- Compact Horizontal RAG Stepper -->
+        <div class="rag-workflow" id="rag-stepper">
+          <div class="rag-step" id="rag-1"><div class="rag-icon"></div> Diagnosis</div>
+          <div class="rag-divider"></div>
+          <div class="rag-step" id="rag-2"><div class="rag-icon"></div> Retrieval</div>
+          <div class="rag-divider"></div>
+          <div class="rag-step" id="rag-3"><div class="rag-icon"></div> Resolution</div>
+          <div class="rag-divider"></div>
+          <div class="rag-step" id="rag-4"><div class="rag-icon"></div> Validation</div>
+          <div class="rag-divider"></div>
+          <div class="rag-step" id="rag-5"><div class="rag-icon"></div> Execution</div>
+        </div>
+
+        <div id="rag-content-area">
+          <div class="text-center py-5 text-muted" id="rag-loading-text">
+            <h6 class="fw-bold text-dark mb-2">Executing multi-agent workflow...</h6>
+            <p class="small mb-0">Running Orchestrator...</p>
+          </div>
+        </div>
+        
+        <div class="d-flex gap-3 mt-4" id="final-actions" style="display:none !important;">
+          <button type="button" class="sp-btn-outline" style="width: 140px; justify-content: center;" id="editTicketBtn2">Edit Ticket</button>
+          <button type="button" class="sp-btn-primary flex-grow-1" style="justify-content: center;" onclick="showSuccess()">
+            Create Ticket &rarr;
+          </button>
         </div>
       </div>
 
-      <div class="row g-4">
-        <!-- Left Column: Form -->
-        <div class="col-lg-5">
-          <div class="light-card p-4 h-100">
-            <h5 class="fw-bold mb-4 d-flex align-items-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                class="me-2"
-              >
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="16"></line>
-                <line x1="8" y1="12" x2="16" y2="12"></line>
-              </svg>
-              Submit New Ticket
-            </h5>
-
-            <form id="inlineTicketForm">
-              <div class="mb-3">
-                <label class="form-label text-dark small fw-medium"
-                  >Ticket Title</label
-                >
-                <input
-                  type="text"
-                  class="form-control"
-                  id="title"
-                  required
-                  placeholder="VPN Connection Failing on Corporate Network"
-                />
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label text-dark small fw-medium"
-                  >Description</label
-                >
-                <textarea
-                  class="form-control"
-                  id="description"
-                  rows="5"
-                  required
-                  placeholder="Unable to connect to VPN since this morning..."
-                ></textarea>
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label text-dark small fw-medium"
-                  >Requester Email</label
-                >
-                <input
-                  type="email"
-                  class="form-control"
-                  id="email"
-                  value="{{ user.email }}"
-                  readonly
-                />
-              </div>
-
-              <!-- Hidden Business Impact for backend compat -->
-              <input type="hidden" id="business_impact" value="Medium" />
-
-              <div class="mb-4">
-                <label class="form-label text-dark small fw-medium"
-                  >Department</label
-                >
-                <select class="form-select" id="department" disabled>
-                  <option value="{{ user.department }}" selected>
-                    {{ user.department }}
-                  </option>
-                </select>
-              </div>
-
-              <button
-                type="submit"
-                id="inlineSubmitBtn"
-                class="btn btn-primary px-4 fw-medium d-inline-flex align-items-center"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  class="me-2"
-                >
-                  <line x1="22" y1="2" x2="11" y2="13"></line>
-                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                </svg>
-                Submit Ticket
-              </button>
-            </form>
+      <!-- View 5: Success State -->
+      <div id="view-success" class="view-section">
+        <div class="success-banner">
+          <div class="success-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
           </div>
-        </div>
-
-        <!-- Right Column: Results & History -->
-        <div class="col-lg-7">
-          <!-- Result Card -->
-          <div
-            class="light-card p-4 mb-4"
-            id="resultCard"
-            style="display: none"
-          >
-            <div
-              class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3"
-            >
-              <h5 class="fw-bold mb-0 d-flex align-items-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  class="me-2"
-                >
-                  <path
-                    d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
-                  ></path>
-                </svg>
-                AI Classification Results
-              </h5>
-              <button
-                type="button"
-                class="btn btn-sm btn-outline-secondary"
-                onclick="window.location.reload()"
-              >
-                Done
-              </button>
-            </div>
-
-            <div class="d-flex justify-content-between align-items-start mb-3">
-              <div class="fw-bold fs-5 text-dark" id="res-ticket-id">-</div>
-              <span
-                class="badge badge-soft-secondary px-3 py-1 fw-medium"
-                id="res-priority-badge"
-                >-</span
-              >
-            </div>
-
-            <div class="row g-4 mb-4 text-dark">
-              <div class="col-sm-6">
-                <div class="text-muted small mb-1">Category</div>
-                <div class="fw-medium" id="res-category">-</div>
-              </div>
-              <div class="col-sm-6">
-                <div class="text-muted small mb-1">Sub-Category</div>
-                <div class="fw-medium" id="res-subcategory">-</div>
-              </div>
-              <div class="col-sm-6">
-                <div class="text-muted small mb-1">Severity</div>
-                <div class="fw-medium" id="res-severity">-</div>
-              </div>
-              <div class="col-sm-6">
-                <div class="text-muted small mb-1">Priority</div>
-                <div class="fw-medium" id="res-priority">-</div>
-              </div>
-              <div class="col-sm-6">
-                <div class="text-muted small mb-1">Ticket Confidence</div>
-                <div class="fw-medium" id="res-confidence">-</div>
-              </div>
-            </div>
-
-            <div
-              class="d-flex justify-content-between align-items-center pt-3 border-top mt-2"
-            >
-              <div class="text-muted small">Ticket submitted successfully.</div>
-              <a
-                id="res-generate-btn"
-                href="#"
-                class="btn btn-primary btn-gradient px-4 fw-medium d-inline-flex align-items-center gap-2"
-                style="display: none"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path d="M5 12h14"></path>
-                  <path d="M12 5l7 7-7 7"></path>
-                </svg>
-                Open Ticket &amp; Generate AI Resolution
-              </a>
-            </div>
+          <h4 class="fw-bold text-dark mb-2">Ticket Created Successfully!</h4>
+          <p class="text-muted mb-4">Your ticket has been submitted and saved.</p>
+          
+          <div class="d-inline-block bg-white border rounded px-4 py-2 mb-4 shadow-sm">
+            <div class="text-muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:700;">Ticket ID</div>
+            <div class="fw-bold text-dark fs-5" id="final-ticket-id">#T-XX</div>
           </div>
-
-          <!-- Tickets List -->
-          <div
-            class="d-flex justify-content-between align-items-center mb-3 mt-2"
-          >
-            <h5 class="fw-bold mb-0 text-dark">Recent Tickets</h5>
-            <a href="/all_tickets" class="btn btn-sm btn-outline-primary"
-              >View All</a
-            >
-          </div>
-          <div id="ticket-list">
-            {% if tickets %} {% for t in tickets %}
-            <div
-              class="ticket-list-item"
-              onclick="window.location.href='/ticket/{{ t.ticket_id }}'"
-            >
-              <div
-                class="icon-box {% if t.category == 'Network' %}bg-primary bg-opacity-10 text-primary{% elif t.category == 'Hardware' %}bg-danger bg-opacity-10 text-danger{% elif t.category == 'Software' %}bg-info bg-opacity-10 text-info{% else %}bg-warning bg-opacity-10 text-warning{% endif %}"
-              >
-                {% if t.category == 'Network' %}
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
-                  <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
-                  <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
-                  <line x1="12" y1="20" x2="12.01" y2="20"></line>
-                </svg>
-                {% elif t.category == 'Hardware' %}
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <polyline points="6 9 6 2 18 2 18 9"></polyline>
-                  <path
-                    d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"
-                  ></path>
-                  <rect x="6" y="14" width="12" height="8"></rect>
-                </svg>
-                {% elif t.category == 'Software' %}
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                  <line x1="8" y1="21" x2="16" y2="21"></line>
-                  <line x1="12" y1="17" x2="12" y2="21"></line>
-                </svg>
-                {% else %}
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <rect
-                    x="3"
-                    y="11"
-                    width="18"
-                    height="11"
-                    rx="2"
-                    ry="2"
-                  ></rect>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                </svg>
-                {% endif %}
-              </div>
-              <div class="flex-grow-1">
-                <div class="fw-semibold text-dark">{{ t.title }}</div>
-                <div class="text-muted small">
-                  {{ t.category }} • {{ t.severity }} • {{ t.created_at[:10] }}
-                </div>
-              </div>
-              <div>
-                <span
-                  class="small fw-medium {% if t.status == 'Open' %}text-warning{% else %}text-primary{% endif %}"
-                >
-                  {% if t.status == 'Open' %}Pending{% else %}Classified{% endif
-                  %}
-                </span>
-              </div>
-            </div>
-            {% endfor %} {% else %}
-            <div class="text-center text-muted p-4">No tickets found.</div>
-            {% endif %}
+          
+          <p class="text-muted small mb-4">You can view the ticket details or create another ticket.</p>
+          
+          <div class="d-flex gap-3 justify-content-center mx-auto" style="max-width: 400px;">
+            <a href="#" class="sp-btn-outline flex-grow-1 justify-content-center" id="viewDetailsLink">View Ticket Details</a>
+            <button type="button" class="sp-btn-primary flex-grow-1 justify-content-center" onclick="resetFlow()">Create Another Ticket</button>
           </div>
         </div>
       </div>
-    </main>
 
-    <!-- User context for JS -->
-    <script>
-      window.USER_EMAIL = "{{ user.email }}";
-      window.USER_DEPT = "{{ user.department }}";
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    </div>
+  </div>
 
-    <script>
-      document
-        .getElementById("inlineTicketForm")
-        .addEventListener("submit", async function (e) {
-          e.preventDefault();
-          const btn = document.getElementById("inlineSubmitBtn");
-          const originalText = btn.innerHTML;
-          btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Submitting...`;
-          btn.disabled = true;
+  <!-- Right Column: AI Preview & Tips -->
+  <div class="col-lg-4">
+    <div class="preview-box mb-3">
+      <div class="preview-header">
+        <div class="preview-title" id="side-panel-title">AI Classification Preview</div>
+        <div class="live-badge" id="side-panel-badge">Live Analysis</div>
+      </div>
+      <div class="preview-subtitle" id="side-panel-sub">Classification will be shown after analysis is complete.</div>
+      
+      <div class="stat-grid">
+        <!-- Category -->
+        <div class="stat-item">
+          <div class="stat-label">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg> Category
+          </div>
+          <div class="stat-val" id="cat-val">-</div>
+        </div>
+        <!-- Severity -->
+        <div class="stat-item">
+          <div class="stat-label">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Severity
+          </div>
+          <div class="stat-val" id="sev-val">-</div>
+        </div>
+        <!-- Priority -->
+        <div class="stat-item">
+          <div class="stat-label">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Priority
+          </div>
+          <div class="stat-val" id="pri-val">-</div>
+        </div>
+        <!-- Confidence -->
+        <div class="stat-item">
+          <div class="stat-label">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg> Confidence
+          </div>
+          <div class="stat-val" id="con-val">-</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="sp-card p-4">
+      <div class="fw-bold text-dark mb-3 d-flex align-items-center gap-2" style="font-size: 0.9rem;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5.71.71 1.23 1.5 1.41 2.5"></path></svg>
+        Tips for a Better Resolution
+      </div>
+      <div class="d-flex align-items-start gap-2 mb-2"><span class="text-primary mt-1">✓</span><span class="small text-muted">Be clear and specific in your description</span></div>
+      <div class="d-flex align-items-start gap-2 mb-2"><span class="text-primary mt-1">✓</span><span class="small text-muted">Include error messages you were seeing</span></div>
+      <div class="d-flex align-items-start gap-2 mb-2"><span class="text-primary mt-1">✓</span><span class="small text-muted">Mention what you were doing when it occurred</span></div>
+      <div class="d-flex align-items-start gap-2"><span class="text-primary mt-1">✓</span><span class="small text-muted">Provide any troubleshooting steps already tried</span></div>
+    </div>
+  </div>
+</div>
 
-          const formData = {
-            title: document.getElementById("title").value,
-            description: document.getElementById("description").value,
-            business_impact: document.getElementById("business_impact").value,
-          };
+{% endblock %}
 
-          try {
-            const res = await fetch("/api/tickets", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(formData),
-            });
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+  let currentTicketId = null;
+  let isResolving = false;
+  
+  // Character counter
+  const descEl = document.getElementById('description');
+  descEl.addEventListener('input', () => { 
+    document.getElementById('charCount').textContent = descEl.value.length; 
+  });
 
-            if (res.ok) {
-              const ticket = await res.json();
+  // UI Flow Logic
+  function setStep(stepNum) {
+    // Hide all views
+    document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+    
+    // Reset stepper UI
+    [1, 2, 3].forEach(i => {
+      const step = document.getElementById(`step${i}`);
+      const num = document.getElementById(`step${i}-num`);
+      
+      if (i < stepNum) {
+        step.className = 'step complete';
+        num.innerHTML = '✓';
+      } else if (i === stepNum) {
+        step.className = 'step active';
+        num.innerHTML = i;
+      } else {
+        step.className = 'step';
+        num.innerHTML = i;
+      }
+    });
 
-              // Show result card
-              document.getElementById("resultCard").style.display = "block";
-              const generateBtn = document.getElementById("res-generate-btn");
-              generateBtn.href =
-                "/ticket/" + ticket.ticket_id + "?generate=true";
-              generateBtn.style.display = "inline-flex";
-              document.getElementById("res-ticket-id").textContent =
-                "Ticket #T-" + ticket.ticket_id;
-              document.getElementById("res-category").textContent =
-                ticket.category;
-              document.getElementById("res-severity").textContent =
-                ticket.severity;
-              document.getElementById("res-confidence").textContent =
-                (ticket.confidence * 100).toFixed(0) + "%";
-              document.getElementById("res-priority").textContent =
-                ticket.priority;
+    if (stepNum === 1) {
+      document.getElementById('view-step-1').classList.add('active');
+      resetSidePanel();
+    } else if (stepNum === 1.5) { // Analyzing
+      document.getElementById('view-step-analyzing').classList.add('active');
+      document.getElementById('step1').className = 'step complete';
+      document.getElementById('step1-num').innerHTML = '✓';
+      document.getElementById('step2').className = 'step active';
+    } else if (stepNum === 2) {
+      document.getElementById('view-step-2').classList.add('active');
+    } else if (stepNum === 3) {
+      document.getElementById('view-step-3').classList.add('active');
+      const genBadge = document.getElementById('gen-badge');
+      if (genBadge) genBadge.style.display = 'none';
+      const finalActions = document.getElementById('final-actions');
+      if (finalActions) finalActions.style.setProperty('display', 'none', 'important');
+      const ragStepper = document.getElementById('rag-stepper');
+      if (ragStepper) ragStepper.style.display = 'flex';
+      const rlt = document.getElementById('rag-loading-text');
+      if (rlt) rlt.style.display = 'block';
+      resetRagStepper();
+    } else if (stepNum === 4) { // Resolution ready
+      document.getElementById('view-step-3').classList.add('active');
+      document.getElementById('step3').className = 'step complete';
+      document.getElementById('step3-num').innerHTML = '✓';
+      
+      const genBadge = document.getElementById('gen-badge');
+      if (genBadge) genBadge.style.display = 'block';
+      
+      const finalActions = document.getElementById('final-actions');
+      if (finalActions) finalActions.style.setProperty('display', 'flex', 'important');
+      
+      const ragStepper = document.getElementById('rag-stepper');
+      if (ragStepper) ragStepper.style.display = 'none';
+      
+      const rlt = document.getElementById('rag-loading-text');
+      if (rlt) rlt.style.display = 'none';
+    } else if (stepNum === 5) { // Success
+      document.getElementById('view-success').classList.add('active');
+      document.querySelector('.stepper-container').style.display = 'none';
+    }
+  }
 
-              let badge = document.getElementById("res-priority-badge");
-              if (ticket.priority === "P1" || ticket.priority === "P2") {
-                badge.className = "badge badge-soft-danger px-3 py-1 fw-medium";
-                badge.textContent = "High Priority";
-              } else {
-                badge.className = "badge badge-soft-info px-3 py-1 fw-medium";
-                badge.textContent = "Standard Priority";
-              }
+  function resetSidePanel() {
+    document.getElementById('side-panel-title').textContent = 'AI Classification Preview';
+    document.getElementById('side-panel-sub').textContent = 'Classification will be shown after analysis is complete.';
+    ['cat', 'sev', 'pri', 'con'].forEach(prefix => {
+      const el = document.getElementById(`${prefix}-val`);
+      el.textContent = '-';
+      el.classList.remove('active-val');
+    });
+  }
 
-              // Form reset
-              document.getElementById("inlineTicketForm").reset();
-            } else {
-              alert("Failed to submit ticket.");
+  function updateSidePanel(ticket) {
+    document.getElementById('side-panel-title').textContent = 'AI Classification Result';
+    document.getElementById('side-panel-sub').textContent = 'Based on the retrieved knowledge base articles, here is the recommended resolution.';
+    
+    document.getElementById('cat-val').textContent = ticket.category;
+    document.getElementById('cat-val').classList.add('active-val');
+    
+    document.getElementById('sev-val').textContent = ticket.severity;
+    document.getElementById('sev-val').classList.add('active-val');
+    
+    document.getElementById('pri-val').textContent = ticket.priority;
+    document.getElementById('pri-val').classList.add('active-val');
+    
+    document.getElementById('con-val').textContent = (ticket.confidence * 100).toFixed(1) + '%';
+    document.getElementById('con-val').classList.add('active-val');
+  }
+  
+  function clearForm() {
+    document.getElementById('ticketForm').reset();
+    document.getElementById('charCount').textContent = '0';
+    currentTicketId = null;
+    setStep(1);
+  }
+  
+  function resetFlow() {
+    document.querySelector('.stepper-container').style.display = 'flex';
+    clearForm();
+  }
+  
+  function showSuccess() {
+    document.getElementById('final-ticket-id').textContent = '#T-' + currentTicketId;
+    document.getElementById('viewDetailsLink').href = '/ticket/' + currentTicketId;
+    setStep(5);
+  }
+
+  // Handle Form Submission (Step 1 -> Step 2)
+  document.getElementById('ticketForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    setStep(1.5); // Analyzing view
+    
+    // Set status to analyzing
+    ['cat', 'sev', 'pri', 'con'].forEach(prefix => {
+      document.getElementById(`${prefix}-val`).textContent = 'Analyzing...';
+    });
+    
+    const formData = {
+      title: document.getElementById('title').value,
+      description: descEl.value,
+      business_impact: 'Medium'
+    };
+
+    try {
+      const endpoint = currentTicketId ? `/api/tickets/${currentTicketId}` : '/api/tickets';
+      const method = currentTicketId ? 'PATCH' : 'POST';
+      
+      const res = await fetch(endpoint, {
+        method: method,
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+        body: JSON.stringify(formData)
+      });
+
+      if (res.ok) {
+        const ticket = await res.json();
+        currentTicketId = ticket.ticket_id;
+        
+        // Update Step 2 preview
+        document.getElementById('preview-title').textContent = ticket.title;
+        document.getElementById('preview-desc').textContent = ticket.description;
+        
+        // Update Right Panel
+        updateSidePanel(ticket);
+        
+        setStep(2);
+      } else {
+        alert('Failed to analyze ticket.');
+        setStep(1);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('An error occurred during submission.');
+      setStep(1);
+    }
+  });
+
+  // Edit Ticket buttons
+  document.getElementById('editTicketBtn').addEventListener('click', () => setStep(1));
+  document.getElementById('editTicketBtn2').addEventListener('click', () => setStep(1));
+
+  // Generate Resolution (Step 2 -> Step 3)
+  document.getElementById('generateBtn').addEventListener('click', async () => {
+    if(isResolving) return;
+    isResolving = true;
+    setStep(3);
+    
+    // UI show loading
+    document.getElementById('rag-stepper').style.display = 'none';
+    
+    // Call real API
+    try {
+      const res = await fetch(`/api/tickets/${currentTicketId}/generate-resolution`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' }
+      });
+      
+      const resultArea = document.getElementById('rag-content-area');
+      
+      if(res.ok) {
+        const data = await res.json();
+        
+        let decisionHtml = '';
+        if(data.resolution_decision === 'AUTO_RESOLVE') {
+            decisionHtml = `<div class="alert alert-success mt-3 py-2 px-3 small fw-bold">✓ Decision: AUTO_RESOLVE (Email sent)</div>`;
+        } else {
+            decisionHtml = `<div class="alert alert-warning mt-3 py-2 px-3 small fw-bold text-dark">⚠ Decision: ESCALATE (${data.jira_issue_key || 'Pending Jira'})</div>`;
+        }
+
+        // Handle Insufficient Knowledge natively
+        if(data.resolution_decision === 'ESCALATE' && data.escalation_reason && (data.escalation_reason.includes('Insufficient') || data.escalation_reason.includes('threshold'))) {
+            resultArea.innerHTML = `
+              <div class="bg-warning bg-opacity-10 border border-warning rounded p-4 mb-4">
+                <h6 class="fw-bold text-dark d-flex align-items-center gap-2 mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                  Insufficient Knowledge
+                </h6>
+                <p class="text-muted small m-0">No sufficiently relevant knowledge-base articles were found for this issue. More investigation is required before a reliable resolution can be provided.</p>
+                ${decisionHtml}
+              </div>
+            `;
+        } else {
+            const rawRes = data.structured_resolution ? (data.structured_resolution.recommended_resolution || data.structured_resolution.resolution || data.ai_resolution || '') : (data.ai_resolution || '');
+            const cleanMarkdown = String(rawRes).replace(/(^|\n)(\d+)\.\s+(?:\d+\.\s+)+/g, '$1$2. ');
+            const htmlRes = marked.parse(cleanMarkdown);
+            
+            // Build Sources List
+            let sourcesHtml = '';
+            if(data.structured_sources && data.structured_sources.length > 0) {
+                sourcesHtml = data.structured_sources.map(s => `<span class="badge bg-light text-dark border px-2 py-1">${s}</span>`).join(' ');
             }
-          } catch (err) {
-            console.error(err);
-            alert("An error occurred.");
-          } finally {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-          }
-        });
-    </script>
-  </body>
-</html>
+            
+            resultArea.innerHTML = `
+              <div class="bg-white p-2">
+                <div class="markdown-content text-dark" style="font-size: 0.9rem;">
+                  ${htmlRes}
+                </div>
+                ${sourcesHtml ? `<div class="mt-4 pt-3 border-top"><div class="fw-bold text-dark mb-2" style="font-size:0.85rem;">Knowledge Sources</div><div>${sourcesHtml}</div></div>` : ''}
+                ${decisionHtml}
+              </div>
+            `;
+        }
+        setStep(4); // Shows resolution result and "Create Ticket" button
+      } else {
+        alert('Failed to generate resolution.');
+        setStep(2);
+      }
+    } catch(err) {
+      console.error(err);
+      alert('An error occurred while generating the resolution. Details: ' + err.message);
+      setStep(2);
+    } finally {
+      isResolving = false;
+      const generateBtn = document.getElementById('generateBtn');
+      if (generateBtn) {
+        generateBtn.disabled = false;
+        generateBtn.innerHTML = 'Generate AI Resolution &rarr;';
+      }
+      const ragStepper = document.getElementById('rag-stepper');
+      if (ragStepper) ragStepper.style.display = 'none';
+      const rlt = document.getElementById('rag-loading-text');
+      if (rlt) rlt.style.display = 'none';
+    }
+  });
+  
+  function resetRagStepper() {
+    // Stepper is hidden
+  }
+  
+  async function simulateRagUI() {
+    // Removed to prevent fake delays.
+  }
+</script>
+{% endblock %}

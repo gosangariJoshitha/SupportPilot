@@ -1,724 +1,717 @@
-<!doctype html>
-<html lang="en" data-bs-theme="light">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SupportPilot - AI Agent</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/style.css') }}"
-    />
-    <style>
-      body {
-        display: flex;
-        min-height: 100vh;
-        overflow-x: hidden;
-      }
-      .sidebar {
-        width: 250px;
-        display: flex;
-        flex-direction: column;
-        flex-shrink: 0;
-        z-index: 1040;
-        height: 100vh;
-        position: sticky;
-        top: 0;
-        border-right: 1px solid #dee2e6;
-      }
-      .main-content {
-        flex-grow: 1;
-        padding: 2rem 3rem;
-        overflow-y: auto;
-        max-height: 100vh;
-      }
-      .brand-logo {
-        background-color: #6366f1;
-        color: white;
-        border-radius: 0.375rem;
-        padding: 0.25rem 0.5rem;
-        font-weight: bold;
-        font-size: 14px;
-      }
-      .mobile-toggle {
-        display: none;
-      }
-      .pipeline-panel {
-        border: 1px solid #dbeafe;
-        border-radius: 1rem;
-        background: linear-gradient(180deg, #f8fbff 0%, #eef6ff 100%);
-        padding: 1rem;
-      }
-      .pipeline-step {
-        border: 1px solid #dfe7f5;
-        border-radius: 0.9rem;
-        background: rgba(255, 255, 255, 0.7);
-        padding: 0.85rem 0.9rem;
-        min-height: 72px;
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        transition: all 0.2s ease;
-        color: #495057;
-      }
-      .pipeline-step .step-index {
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.8rem;
-        font-weight: 700;
-        background: #e9ecef;
-        color: #495057;
-      }
-      .pipeline-step.active {
-        border-color: #4f8ef7;
-        background: #edf5ff;
-        box-shadow: 0 0 0 0.15rem rgba(79, 142, 247, 0.12);
-      }
-      .pipeline-step.active .step-index {
-        background: #4f8ef7;
-        color: white;
-      }
-      .pipeline-step.completed {
-        border-color: #34c759;
-        background: #ecfdf5;
-      }
-      .pipeline-step.completed .step-index {
-        background: #34c759;
-        color: white;
-      }
-      .pipeline-step.skipped {
-        border-style: dashed;
-        opacity: 0.7;
-      }
-      .pipeline-step.skipped .step-index {
-        background: #f1f3f5;
-        color: #6c757d;
-      }
-      .pipeline-title {
-        font-size: 0.85rem;
-        font-weight: 700;
-        color: #1f2937;
-      }
-      .pipeline-subtitle {
-        font-size: 0.72rem;
-        color: #6b7280;
-      }
-      @media (max-width: 991.98px) {
-        .sidebar {
-          position: fixed;
-          left: -250px;
-          height: 100vh;
-          transition: left 0.3s ease;
-          background: white;
-        }
-        .sidebar.show {
-          left: 0;
-        }
-        .mobile-toggle {
-          display: block;
-        }
-        .main-content {
-          padding: 1rem;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <!-- Sidebar -->
-    <aside class="sidebar py-4" id="sidebarMenu">
-      <div class="px-4 mb-5 d-flex align-items-center">
-        <span class="brand-logo me-2">SP</span>
-        <span class="fw-bold text-dark fs-5">SupportPilot</span>
-        <button
-          class="btn-close d-lg-none ms-auto"
-          onclick="
-            document.getElementById('sidebarMenu').classList.remove('show')
-          "
-        ></button>
-      </div>
+{% extends "base.html" %}
 
-      <ul class="nav flex-column gap-1 px-3 mb-auto">
-        <li class="nav-item">
-          <a
-            href="/"
-            class="nav-link d-flex align-items-center rounded py-2 px-3"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="me-3"
-            >
-              <rect x="3" y="3" width="7" height="7"></rect>
-              <rect x="14" y="3" width="7" height="7"></rect>
-              <rect x="14" y="14" width="7" height="7"></rect>
-              <rect x="3" y="14" width="7" height="7"></rect>
-            </svg>
-            Dashboard
-          </a>
-        </li>
-        <li class="nav-item">
-          <a
-            href="/my_tickets"
-            class="nav-link d-flex align-items-center rounded py-2 px-3"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="me-3"
-            >
-              <path
-                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-              ></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-              <line x1="16" y1="13" x2="8" y2="13"></line>
-              <line x1="16" y1="17" x2="8" y2="17"></line>
-              <polyline points="10 9 9 9 8 9"></polyline>
-            </svg>
-            Add Tickets
-          </a>
-        </li>
-        <li class="nav-item">
-          <a
-            href="/all_tickets"
-            class="nav-link d-flex align-items-center rounded py-2 px-3"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="me-3"
-            >
-              <line x1="8" y1="6" x2="21" y2="6"></line>
-              <line x1="8" y1="12" x2="21" y2="12"></line>
-              <line x1="8" y1="18" x2="21" y2="18"></line>
-              <line x1="3" y1="6" x2="3.01" y2="6"></line>
-              <line x1="3" y1="12" x2="3.01" y2="12"></line>
-              <line x1="3" y1="18" x2="3.01" y2="18"></line>
-            </svg>
-            My Tickets
-          </a>
-        </li>
-        <li class="nav-item">
-          <a
-            href="/agents"
-            class="nav-link active d-flex align-items-center rounded py-2 px-3"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="me-3"
-            >
-              <path
-                d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
-              ></path>
-            </svg>
-            AI Agent
-          </a>
-        </li>
-        <li class="nav-item">
-          <a
-            href="/integrations"
-            class="nav-link d-flex align-items-center rounded py-2 px-3"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="me-3"
-            >
-              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-            </svg>
-            Integrations
-          </a>
-        </li>
-        <li class="nav-item">
-          <a
-            href="/analytics"
-            class="nav-link d-flex align-items-center rounded py-2 px-3"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="me-3"
-            >
-              <line x1="18" y1="20" x2="18" y2="10"></line>
-              <line x1="12" y1="20" x2="12" y2="4"></line>
-              <line x1="6" y1="20" x2="6" y2="14"></line>
-            </svg>
-            Analytics
-          </a>
-        </li>
-        <li class="nav-item">
-          <a
-            href="/settings"
-            class="nav-link d-flex align-items-center rounded py-2 px-3"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="me-3"
-            >
-              <circle cx="12" cy="12" r="3"></circle>
-              <path
-                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
-              ></path>
-            </svg>
-            Settings
-          </a>
-        </li>
-      </ul>
+{% block title %}AI Support Workspace{% endblock %}
 
-      <div class="px-4 mt-auto">
-        <div
-          class="border-top border-secondary pt-3 d-flex align-items-center justify-content-between"
-        >
-          <div class="text-truncate pe-2">
-            <div class="small fw-semibold text-dark">{{ user.full_name }}</div>
-            <div class="small text-muted" style="font-size: 0.75rem">
-              {{ user.department }}
-            </div>
-          </div>
-          <a
-            href="/logout"
-            class="text-muted d-flex flex-shrink-0"
-            title="Logout"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-              <polyline points="16 17 21 12 16 7"></polyline>
-              <line x1="21" y1="12" x2="9" y2="12"></line>
-            </svg>
-          </a>
-        </div>
-      </div>
-    </aside>
-    <!-- Main Content -->
-    <main class="main-content">
-      <div
-        class="d-flex align-items-center justify-content-between mb-4 d-lg-none"
-      >
-        <a
-          class="navbar-brand fw-bold d-flex align-items-center fs-5 text-decoration-none text-dark"
-          href="/"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="me-2"
-          >
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-          </svg>
-          SupportPilot
-        </a>
-        <button
-          class="btn btn-outline-light btn-sm"
-          onclick="document.getElementById('sidebarMenu').classList.add('show')"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <line x1="3" y1="12" x2="21" y2="12"></line>
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <line x1="3" y1="18" x2="21" y2="18"></line>
-          </svg>
+{% set active = 'agents' %}
+{% set topbar_subtitle = '' %}
+{% set promo_title = 'AI Assistance' %}
+{% set promo_text = 'Ask questions, retrieve knowledge, and generate resolutions.' %}
+{% set promo_icon = 'puzzle' %}
+
+{% block extra_head %}
+<style>
+  body { font-family: 'Inter', sans-serif; }
+  
+  .workspace-layout {
+    display: flex;
+    gap: 1.5rem;
+    height: 75vh;
+    min-height: 500px;
+  }
+  
+  /* Left Panel: Conversation History */
+  .history-panel-old {
+    flex: 0 0 250px;
+    background: #fff;
+    border: 1px solid #e6e9f0;
+    border-radius: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  [data-bs-theme="dark"] .history-panel-old { background: #1e293b; border-color: #334155; }
+  
+  .history-header {
+    padding: 1rem;
+    border-bottom: 1px solid #e6e9f0;
+  }
+  [data-bs-theme="dark"] .history-header { border-color: #334155; }
+  
+  .history-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 0.5rem;
+  }
+  
+  .conv-item {
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    margin-bottom: 0.25rem;
+    transition: background 0.2s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .conv-item:hover { background: #f8fafc; }
+  .conv-item.active { background: #eff6ff; border: 1px solid #bfdbfe; }
+  [data-bs-theme="dark"] .conv-item:hover { background: #0f172a; }
+  [data-bs-theme="dark"] .conv-item.active { background: #1e3a8a; border-color: #1e40af; }
+  
+  .conv-title { font-size: 0.85rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .conv-time { font-size: 0.7rem; color: #94a3b8; }
+  
+  /* Center Panel: Chat Container */
+  .chat-container {
+    flex: 1;
+    background: #fff;
+    border: 1px solid #e6e9f0;
+    border-radius: 0.9rem;
+    display: flex;
+    flex-direction: column;
+  }
+  [data-bs-theme="dark"] .chat-container { background: #1e293b; border-color: #334155; }
+  
+  .chat-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #e6e9f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  [data-bs-theme="dark"] .chat-header { border-color: #334155; }
+  
+  .chat-messages {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .chat-input-area {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #e6e9f0;
+    background: #f8fafc;
+    border-bottom-left-radius: 0.9rem;
+    border-bottom-right-radius: 0.9rem;
+  }
+  [data-bs-theme="dark"] .chat-input-area { background: #0f172a; border-color: #334155; }
+  
+  .message {
+    display: flex;
+    flex-direction: column;
+    max-width: 85%;
+  }
+  .message.user { align-self: flex-end; }
+  .message.ai { align-self: flex-start; }
+  
+  .bubble {
+    padding: 1rem 1.25rem;
+    border-radius: 1rem;
+    line-height: 1.5;
+    font-size: 0.95rem;
+    word-wrap: break-word;
+  }
+  .message.user .bubble {
+    background: #2563eb;
+    color: #fff;
+    border-bottom-right-radius: 0.25rem;
+  }
+  .message.ai .bubble {
+    background: #f1f5f9;
+    color: #1e293b;
+    border-bottom-left-radius: 0.25rem;
+    border: 1px solid #e2e8f0;
+  }
+  [data-bs-theme="dark"] .message.ai .bubble { background: #0f172a; color: #f8fafc; border-color: #334155; }
+  
+  /* Right Panel: Context Panel */
+  .right-panel {
+    flex: 0 0 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .context-panel {
+    background: #fff;
+    border: 1px solid #e6e9f0;
+    border-radius: 0.9rem;
+    padding: 1.5rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  [data-bs-theme="dark"] .context-panel { background: #1e293b; border-color: #334155; }
+  
+  .context-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  [data-bs-theme="dark"] .context-card { background: #0f172a; border-color: #334155; }
+  
+  .workflow-step {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    color: #64748b;
+    font-size: 0.9rem;
+  }
+  .workflow-step.active { color: #2563eb; font-weight: 500; }
+  .workflow-step.completed { color: #10b981; }
+  .workflow-icon { width: 1.25rem; height: 1.25rem; margin-right: 0.5rem; }
+  
+  .suggested-prompt {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background: #eff6ff;
+    color: #1e40af;
+    border: 1px solid #bfdbfe;
+    border-radius: 2rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+    transition: all 0.2s;
+  }
+  .suggested-prompt:hover { background: #dbeafe; transform: translateY(-1px); }
+  [data-bs-theme="dark"] .suggested-prompt { background: #1e3a8a; color: #bfdbfe; border-color: #1e40af; }
+  [data-bs-theme="dark"] .suggested-prompt:hover { background: #2563eb; }
+  
+  .typing-indicator span {
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: #64748b;
+    border-radius: 50%;
+    margin-right: 3px;
+    animation: typing 1s infinite;
+  }
+  .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-indicator span:nth-child(3) { animation-delay: 0.4s; margin-right: 0; }
+  @keyframes typing {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+  
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: #10b981; }
+  
+  .btn-send {
+    background: #2563eb; color: #fff;
+    border: none; border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    transition: all 0.2s;
+  }
+  .btn-send:hover:not(:disabled) { background: #1d4ed8; }
+  .btn-send:disabled { background: #94a3b8; cursor: not-allowed; }
+
+  @media (max-width: 992px) {
+    .workspace-layout { flex-direction: column; height: auto; }
+    .history-panel-old { flex: none; height: 250px; }
+    .chat-container { height: 60vh; }
+    .right-panel { flex: none; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+  <div class="page-title" style="font-size:1.55rem;">SupportPilot AI Agent</div>
+  <p class="page-subtitle mb-0">Your AI support workspace for troubleshooting and grounded resolution.</p>
+</div>
+
+<div class="workspace-layout">
+  <!-- Collapsible: Conversation History -->
+  <div class="collapse collapse-horizontal" id="historyCollapse">
+    <div class="bg-white border d-flex flex-column" style="width: 250px; height: 100%; border-radius: 0.9rem; overflow: hidden; border-color: #e6e9f0 !important;">
+      <div class="p-3 border-bottom">
+        <h6 class="fw-bold mb-3">Recent Chats</h6>
+        <button class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2" onclick="startNewChat();">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          New Chat
         </button>
       </div>
+      <div class="history-list flex-grow-1 p-2" id="historyList" style="overflow-y: auto; overflow-x: hidden;">
+        <div class="text-center text-muted small mt-4">Loading conversations...</div>
+      </div>
+    </div>
+  </div>
 
-      <div class="d-flex justify-content-between align-items-end mb-4 pb-2">
+  <!-- Center Panel: Chat Interface -->
+  <div class="chat-container">
+    <div class="chat-header">
+      <div class="d-flex align-items-center gap-3">
+        <button class="btn btn-light border d-flex align-items-center justify-content-center p-2" type="button" data-bs-toggle="collapse" data-bs-target="#historyCollapse" aria-expanded="false" aria-controls="historyCollapse" title="Toggle Recent Chats">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
         <div>
-          <h2 class="fw-bold mb-1 text-dark">AI Agent</h2>
-          <p class="text-muted mb-0">
-            The Milestone 2 RAG pipeline: ticket analysis &rarr; knowledge
-            retrieval &rarr; context augmentation &rarr; resolution generation.
-          </p>
-        </div>
-        <span
-          class="badge {{ 'badge-soft-success' if llm_configured else 'badge-soft-warning' }} rounded-pill px-3 py-2 fw-medium"
-        >
-          {{ 'LLM-Enhanced (OpenRouter)' if llm_configured else 'Template
-          Fallback Mode' }}
-        </span>
-      </div>
-
-      <!-- Stats -->
-      <div class="row g-4 mb-4">
-        <div class="col-sm-6 col-xl-3">
-          <div class="light-card p-4 h-100">
-            <div class="text-muted small fw-semibold text-uppercase mb-2">
-              Resolutions Generated
-            </div>
-            <div class="fs-2 fw-bold text-dark">
-              {{ stats.resolutions_generated }}
-            </div>
-            <div class="text-muted small mt-2">
-              out of {{ stats.total_tickets }} tickets
-            </div>
-          </div>
-        </div>
-        <div class="col-sm-6 col-xl-3">
-          <div class="light-card p-4 h-100">
-            <div class="text-muted small fw-semibold text-uppercase mb-2">
-              Avg. Resolution Confidence
-            </div>
-            <div class="fs-2 fw-bold text-dark">
-              {% if stats.avg_resolution_confidence is not none %}{{
-              "%.1f"|format(stats.avg_resolution_confidence) }}%{% else
-              %}&mdash;{% endif %}
-            </div>
-          </div>
-        </div>
-        <div class="col-sm-6 col-xl-3">
-          <div class="light-card p-4 h-100">
-            <div class="text-muted small fw-semibold text-uppercase mb-2">
-              Via LLM
-            </div>
-            <div class="fs-2 fw-bold text-dark">{{ stats.llm_generated }}</div>
-          </div>
-        </div>
-        <div class="col-sm-6 col-xl-3">
-          <div class="light-card p-4 h-100">
-            <div class="text-muted small fw-semibold text-uppercase mb-2">
-              Via Template Fallback
-            </div>
-            <div class="fs-2 fw-bold text-dark">
-              {{ stats.template_generated }}
-            </div>
-          </div>
+          <h6 class="fw-bold mb-0" id="chatTitle">AI Resolution Assistant</h6>
+          <div class="text-muted" style="font-size:0.8rem;">Grounded in SupportPilot KB</div>
         </div>
       </div>
-
-      <!-- Live test panel -->
-      <div class="light-card p-4 mb-4">
-        <h5 class="fw-bold mb-1 text-dark">Test the Pipeline Live</h5>
-        <p class="text-muted small mb-4">
-          This runs the real pipeline (classification &rarr; retrieval &rarr;
-          generation) against whatever you type below - not a canned demo.
-        </p>
-        <div class="row g-3">
-          <div class="col-md-4">
-            <label class="form-label small fw-semibold text-dark">Title</label>
-            <input
-              type="text"
-              class="form-control"
-              id="agent-title"
-              placeholder="e.g. VPN not connecting"
-            />
-          </div>
-          <div class="col-md-8">
-            <label class="form-label small fw-semibold text-dark"
-              >Description</label
-            >
-            <input
-              type="text"
-              class="form-control"
-              id="agent-desc"
-              placeholder="Describe the issue in detail..."
-            />
-          </div>
+      <div class="d-flex align-items-center gap-2">
+        <div class="badge bg-success-subtle text-success border border-success-subtle">
+          <span class="status-dot me-1"></span> Online
         </div>
-        <button
-          class="btn btn-primary mt-3"
-          id="agent-run-btn"
-          onclick="runAgentTest()"
-        >
-          Run Pipeline
+        <div class="dropdown">
+          <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="dropdown" id="chatMenuBtn" style="display:none;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+            <li><a class="dropdown-item small" href="javascript:void(0);" onclick="renameChat()">Rename</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item small text-danger" href="javascript:void(0);" onclick="deleteChat()">Delete</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <div class="chat-messages" id="chatMessages">
+      <!-- Empty State -->
+      <div id="emptyState" class="text-center my-auto px-4">
+        <div class="mb-3">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.5">
+            <path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/>
+            <path d="M12 8v4l3 3"/>
+          </svg>
+        </div>
+        <h5 class="fw-bold mb-2">How can I help you today?</h5>
+        <p class="text-muted small mb-4">Describe an IT issue and SupportPilot will search its knowledge base and help you work through it.</p>
+        
+        <div class="d-flex flex-wrap justify-content-center" id="suggestedPromptsContainer">
+          <!-- Dynamic suggestions will be loaded here -->
+        </div>
+      </div>
+    </div>
+    
+    <div class="chat-input-area">
+      <div class="input-group bg-white rounded shadow-sm border p-1" style="border-color: #e2e8f0 !important;">
+        <textarea id="chatInput" class="form-control border-0 shadow-none" 
+          placeholder="Type your IT support question... (Shift+Enter for newline)" 
+          rows="1" style="resize: none; background: transparent; padding-top: 0.6rem;"></textarea>
+        <button id="sendBtn" class="btn btn-send" disabled>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+          </svg>
         </button>
-
-        <div
-          id="agent-pipeline"
-          class="pipeline-panel mt-4"
-          style="display: none"
-        >
-          <div class="fw-bold text-dark mb-3">Pipeline Progress</div>
-          <div class="row g-2">
-            <div class="col-md-3">
-              <div class="pipeline-step pending" data-step="ticket_analysis">
-                <span class="step-index">1</span>
-                <div>
-                  <div class="pipeline-title">Analyzed</div>
-                  <div class="pipeline-subtitle">Ticket analysis</div>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div
-                class="pipeline-step pending"
-                data-step="knowledge_retrieval"
-              >
-                <span class="step-index">2</span>
-                <div>
-                  <div class="pipeline-title">Retrieved</div>
-                  <div class="pipeline-subtitle">KB retrieval</div>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div
-                class="pipeline-step pending"
-                data-step="context_augmentation"
-              >
-                <span class="step-index">3</span>
-                <div>
-                  <div class="pipeline-title">Context</div>
-                  <div class="pipeline-subtitle">Augmentation</div>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div
-                class="pipeline-step pending"
-                data-step="response_generation"
-              >
-                <span class="step-index">4</span>
-                <div>
-                  <div class="pipeline-title">Generated</div>
-                  <div class="pipeline-subtitle">Resolution</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div id="agent-result" class="mt-4" style="display: none">
-          <div class="row g-3 mb-3">
-            <div class="col-6 col-md-3">
-              <div class="stat-box">
-                <div class="fw-bold text-dark" id="res-category">-</div>
-                <div class="text-muted small">Category</div>
-              </div>
-            </div>
-            <div class="col-6 col-md-3">
-              <div class="stat-box">
-                <div class="fw-bold text-dark" id="res-severity">-</div>
-                <div class="text-muted small">Severity</div>
-              </div>
-            </div>
-            <div class="col-6 col-md-3">
-              <div class="stat-box">
-                <div class="fw-bold text-dark" id="res-priority">-</div>
-                <div class="text-muted small">Priority</div>
-              </div>
-            </div>
-            <div class="col-6 col-md-3">
-              <div class="stat-box">
-                <div class="fw-bold text-dark" id="res-engine">-</div>
-                <div class="text-muted small">Engine Used</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="mb-3">
-            <h6 class="fw-bold text-dark mb-2">
-              Retrieved Knowledge Base Articles
-            </h6>
-            <div id="res-docs" class="d-flex flex-column gap-2"></div>
-          </div>
-
-          <div>
-            <h6 class="fw-bold text-dark mb-2">Generated Resolution</h6>
-            <pre
-              class="bg-light p-3 rounded border text-dark"
-              style="white-space: pre-wrap; font-family: inherit"
-              id="res-resolution"
-            ></pre>
-          </div>
-        </div>
-        <div
-          id="agent-error"
-          class="alert alert-danger mt-3"
-          style="display: none"
-        ></div>
       </div>
-    </main>
+    </div>
+  </div>
+  
+  <!-- Right Panel: Context & Workflow -->
+  <div class="right-panel">
+    <!-- Knowledge Context -->
+    <div class="context-panel" style="flex: 1;">
+      <h6 class="fw-bold mb-3 border-bottom pb-2">Knowledge Context</h6>
+      <div id="kbContextContent" style="overflow-y:auto; flex-grow:1;">
+        <div class="text-muted text-center py-4" style="font-size: 0.9rem;">
+          No context yet.<br>Ask a question to retrieve relevant support articles.
+        </div>
+      </div>
+    </div>
+    
+    
+    </div>
+  </div>
+</div>
 
-    <script>
-      window.USER_EMAIL = "{{ user.email }}";
-      window.USER_DEPT = "{{ user.department }}";
+<script>
+let currentConversationId = null;
 
-      function renderPipelineStages(statusMap) {
-        const steps = document.querySelectorAll(".pipeline-step");
+const input = document.getElementById('chatInput');
+const sendBtn = document.getElementById('sendBtn');
+const messages = document.getElementById('chatMessages');
+const emptyState = document.getElementById('emptyState');
+const kbContext = document.getElementById('kbContextContent');
+const historyList = document.getElementById('historyList');
+const chatTitle = document.getElementById('chatTitle');
+const chatMenuBtn = document.getElementById('chatMenuBtn');
 
-        steps.forEach((step) => {
-          const stepName = step.dataset.step;
-          step.classList.remove("active", "completed", "skipped", "pending");
+// Auto-resize textarea
+input.addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = (this.scrollHeight < 120 ? this.scrollHeight : 120) + 'px';
+  sendBtn.disabled = this.value.trim().length === 0;
+});
 
-          if (!statusMap || !statusMap[stepName]) {
-            step.classList.add("pending");
-            return;
-          }
+// Handle enter key
+input.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    if (!sendBtn.disabled) sendMsg();
+  }
+});
 
-          const state = statusMap[stepName];
-          if (state === "completed") {
-            step.classList.add("completed");
-          } else if (state === "active") {
-            step.classList.add("active");
-          } else if (state === "skipped") {
-            step.classList.add("skipped");
-          } else {
-            step.classList.add("pending");
-          }
-        });
-      }
+sendBtn.addEventListener('click', sendMsg);
 
-      async function runAgentTest() {
-        const title =
-          document.getElementById("agent-title").value || "Test Ticket";
-        const description = document.getElementById("agent-desc").value;
-        const btn = document.getElementById("agent-run-btn");
-        const errBox = document.getElementById("agent-error");
-        const resultBox = document.getElementById("agent-result");
-        const pipelinePanel = document.getElementById("agent-pipeline");
-        errBox.style.display = "none";
+function sendSuggested(text) {
+  input.value = text;
+  sendBtn.disabled = false;
+  sendMsg();
+}
 
-        if (!description.trim()) {
-          errBox.textContent = "Please enter a description.";
-          errBox.style.display = "block";
-          return;
-        }
+function updateWorkflow(step, state) {
+  const el = document.getElementById(`wf-${step}`);
+  if (!el) return;
+  
+  if (state === 'pending') {
+    el.className = 'workflow-step text-muted';
+    el.innerHTML = '<span class="workflow-icon">○</span> ' + el.innerText.substring(2);
+  } else if (state === 'active') {
+    el.className = 'workflow-step active';
+    el.innerHTML = '<span class="workflow-icon">●</span> ' + el.innerText.substring(2);
+  } else if (state === 'completed') {
+    el.className = 'workflow-step completed';
+    el.innerHTML = '<span class="workflow-icon">✓</span> ' + el.innerText.substring(2);
+  } else if (state === 'skipped') {
+    el.className = 'workflow-step text-muted';
+    el.innerHTML = '<span class="workflow-icon">-</span> ' + el.innerText.substring(2) + ' (Skipped)';
+  }
+}
 
-        btn.disabled = true;
-        btn.textContent = "Running...";
-        pipelinePanel.style.display = "block";
-        renderPipelineStages({
-          ticket_analysis: "active",
-          knowledge_retrieval: "pending",
-          context_augmentation: "pending",
-          response_generation: "pending",
-        });
+function resetWorkflow() {
+  ['analyze', 'retrieve', 'context', 'generate'].forEach(s => updateWorkflow(s, 'pending'));
+}
 
+async function loadConversations() {
+  try {
+    const res = await fetch('/api/ai/conversations');
+    const data = await res.json();
+    historyList.innerHTML = '';
+    
+    if (data.conversations && data.conversations.length > 0) {
+      data.conversations.forEach(c => {
+        const div = document.createElement('div');
+        div.className = `conv-item ${c.conversation_id === currentConversationId ? 'active' : ''}`;
+        div.onclick = () => loadConversation(c.conversation_id);
+        
+        const date = new Date(c.updated_at).toLocaleDateString();
+        
+        div.innerHTML = `
+          <div style="min-width:0; flex:1;">
+            <div class="conv-title" title="${c.title}">${c.title}</div>
+            <div class="conv-time">${date}</div>
+          </div>
+        `;
+        historyList.appendChild(div);
+      });
+    } else {
+      historyList.innerHTML = '<div class="text-center text-muted small mt-4">No conversations yet</div>';
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+
+async function fetchSuggestions() {
+  const container = document.getElementById('suggestedPromptsContainer');
+  if (!container) return;
+  
+  try {
+    const res = await fetch('/api/ai/suggestions');
+    const data = await res.json();
+    
+    if (data.status === 'success' && data.suggestions) {
+      container.innerHTML = '';
+      data.suggestions.forEach(sug => {
+        const div = document.createElement('div');
+        div.className = 'suggested-prompt';
+        div.innerText = sug;
+        div.onclick = () => sendSuggested(sug);
+        container.appendChild(div);
+      });
+    }
+  } catch (err) {
+    console.error("Failed to load suggestions", err);
+  }
+}
+
+function startNewChat() {
+  currentConversationId = null;
+  chatTitle.innerText = "AI Resolution Assistant";
+  chatMenuBtn.style.display = 'none';
+  messages.innerHTML = '';
+  messages.appendChild(emptyState);
+  emptyState.style.display = 'block';
+  
+  kbContext.innerHTML = '<div class="text-muted text-center py-4" style="font-size: 0.9rem;">No context yet.<br>Ask a question to retrieve relevant support articles.</div>';
+  resetWorkflow();
+  loadConversations(); // to reset active state
+  fetchSuggestions();
+}
+
+async function loadConversation(id) {
+  try {
+    const bsCollapse = bootstrap.Collapse.getInstance(document.getElementById('historyCollapse'));
+    if (bsCollapse) bsCollapse.hide();
+  } catch (e) {}
+
+  try {
+    const res = await fetch(`/api/ai/conversations/${id}`);
+    if (!res.ok) return;
+    const data = await res.json();
+    
+    currentConversationId = id;
+    chatTitle.innerText = data.conversation.title;
+    chatMenuBtn.style.display = 'block';
+    
+    emptyState.style.display = 'none';
+    messages.innerHTML = '';
+    
+    let lastSources = null;
+    let lastWorkflow = null;
+    
+    data.messages.forEach(m => {
+      if (m.role === 'user') {
+        appendMessage('user', m.content);
+      } else {
+        // AI message, content might be JSON string
+        let contentHtml = m.content;
         try {
-          const resp = await fetch("/api/agent/test", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ title, description }),
-          });
-          const data = await resp.json();
-          if (!resp.ok) {
-            throw new Error(data.error || "Request failed");
-          }
-
-          renderPipelineStages(data.workflow_status || {});
-
-          document.getElementById("res-category").textContent = data.category;
-          document.getElementById("res-severity").textContent = data.severity;
-          document.getElementById("res-priority").textContent = data.priority;
-          document.getElementById("res-engine").textContent =
-            data.engine === "llm"
-              ? "OpenRouter LLM"
-              : data.engine === "template"
-                ? "Template Fallback"
-                : "None";
-          document.getElementById("res-resolution").textContent =
-            data.resolution;
-
-          const docsContainer = document.getElementById("res-docs");
-          docsContainer.innerHTML = "";
-          if (data.retrieved_documents.length === 0) {
-            docsContainer.innerHTML =
-              '<div class="text-muted small">No relevant knowledge-base articles found above the relevance threshold.</div>';
+          const parsed = JSON.parse(m.content);
+          if (parsed.status === "INSUFFICIENT_KNOWLEDGE") {
+            contentHtml = `<div class="fw-bold text-danger mb-2">Insufficient Knowledge</div>
+              <p>No sufficiently relevant knowledge-base articles were found for this issue.</p>
+              <p class="mb-0 text-muted small">Knowledge coverage is insufficient. More investigation is required before a reliable resolution can be provided.</p>`;
           } else {
-            data.retrieved_documents.forEach((doc) => {
-              const div = document.createElement("div");
-              div.className = "stat-box text-start";
-              div.innerHTML = `<div class="fw-semibold text-dark">${doc.title}</div><div class="text-muted small">${doc.id} &middot; relevance ${(doc.score * 100).toFixed(0)}%</div>`;
-              docsContainer.appendChild(div);
-            });
+            let resContent = '';
+            if (parsed.likely_cause) {
+              resContent += `<div class="fw-bold mb-1">Likely Cause</div><p class="small text-muted mb-3">${parsed.likely_cause}</p>`;
+            }
+            if (parsed.troubleshooting_steps && parsed.troubleshooting_steps.length > 0) {
+              resContent += `<div class="fw-bold mb-1">Recommended Steps</div><ol class="small mb-3 ps-3">`;
+              parsed.troubleshooting_steps.forEach(s => {
+                if (typeof s === 'string') {
+                  resContent += `<li class="mb-1">${s}</li>`;
+                } else if (typeof s === 'object') {
+                  resContent += `<li class="mb-1"><strong>${s.heading || ''}</strong> ${s.description || ''}</li>`;
+                }
+              });
+              resContent += `</ol>`;
+            }
+            if (parsed.recommended_resolution) {
+              resContent += `<div class="fw-bold mb-1">Resolution</div><p class="small text-muted mb-0">${parsed.recommended_resolution}</p>`;
+            }
+            contentHtml = resContent;
           }
+        } catch(e) {}
+        
+        appendMessage('ai', contentHtml);
+        
+        if (m.sources_json) lastSources = JSON.parse(m.sources_json);
+        if (m.workflow_json) lastWorkflow = JSON.parse(m.workflow_json);
+      }
+    });
+    
+    // Restore KB context
+    if (lastSources && lastSources.length > 0) {
+      renderSources(lastSources);
+    } else {
+      kbContext.innerHTML = '<div class="text-muted text-center py-4" style="font-size:0.9rem;">No articles found for this query.</div>';
+    }
+    
+    // Restore Workflow
+    if (lastWorkflow) {
+      ['ticket_analysis', 'knowledge_retrieval', 'context_augmentation', 'response_generation'].forEach((key, idx) => {
+        const step = ['analyze', 'retrieve', 'context', 'generate'][idx];
+        updateWorkflow(step, lastWorkflow[key] || 'pending');
+      });
+    }
+    
+    loadConversations();
+  } catch (err) {
+    console.error(err);
+  }
+}
 
-          resultBox.style.display = "block";
-        } catch (e) {
-          errBox.textContent = e.message;
-          errBox.style.display = "block";
-        } finally {
-          btn.disabled = false;
-          btn.textContent = "Run Pipeline";
+async function renameChat() {
+  if (!currentConversationId) return;
+  const newTitle = prompt("Enter new conversation title:", chatTitle.innerText);
+  if (newTitle && newTitle.trim()) {
+    try {
+      await fetch(`/api/ai/conversations/${currentConversationId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+        body: JSON.stringify({ title: newTitle.trim() })
+      });
+      chatTitle.innerText = newTitle.trim();
+      loadConversations();
+    } catch(err) { console.error(err); }
+  }
+}
+
+async function deleteChat() {
+  if (!currentConversationId) return;
+  if (confirm("Are you sure you want to delete this conversation?")) {
+    try {
+      await fetch(`/api/ai/conversations/${currentConversationId}`, {
+        method: 'DELETE',
+        headers: { 'X-CSRFToken': '{{ csrf_token() }}' }
+      });
+      startNewChat();
+    } catch(err) { console.error(err); }
+  }
+}
+
+function renderSources(docs) {
+  let kbHtml = '<div class="text-muted small fw-bold mb-3">Retrieved Articles</div>';
+  docs.forEach(doc => {
+    kbHtml += `
+      <div class="context-card">
+        <div class="d-flex justify-content-between align-items-start mb-1">
+          <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1">${doc.id || 'KB'}</span>
+          <span class="text-muted" style="font-size:0.75rem;">Score: ${doc.score ? parseFloat(doc.score).toFixed(2) : 'N/A'}</span>
+        </div>
+        <div class="fw-medium text-dark" style="font-size:0.85rem; line-height:1.4;">${doc.title}</div>
+        ${doc.category ? `<div class="text-muted mt-2" style="font-size:0.75rem;">Category: ${doc.category}</div>` : ''}
+      </div>
+    `;
+  });
+  kbContext.innerHTML = kbHtml;
+}
+
+async function sendMsg() {
+  const text = input.value.trim();
+  if (!text) return;
+  
+  if (emptyState) emptyState.style.display = 'none';
+  
+  // Add User Message
+  appendMessage('user', text);
+  input.value = '';
+  input.style.height = 'auto';
+  sendBtn.disabled = true;
+  
+  // Add Typing Indicator
+  const typingId = appendTyping();
+  
+  // Update Workflow
+  resetWorkflow();
+  updateWorkflow('analyze', 'active');
+  kbContext.innerHTML = '<div class="text-muted text-center py-4" style="font-size:0.9rem;">Retrieving knowledge...</div>';
+
+  try {
+    const res = await fetch('/api/agents/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': '{{ csrf_token() }}'
+      },
+      body: JSON.stringify({ query: text, conversation_id: currentConversationId })
+    });
+    
+    const data = await res.json();
+    document.getElementById(typingId).remove();
+    
+    if (data.status === 'success') {
+      const isNew = !currentConversationId;
+      currentConversationId = data.conversation_id;
+      chatMenuBtn.style.display = 'block';
+      if (isNew) {
+        // Need to fetch title or we can let loadConversations do it
+        loadConversations();
+        // optionally update chatTitle text
+      } else {
+        loadConversations(); // Just to update timestamp
+      }
+      
+      // Update Workflow
+      updateWorkflow('analyze', 'completed');
+      updateWorkflow('retrieve', 'completed');
+      
+      const isInsufficient = data.resolution && typeof data.resolution === 'string' && data.resolution.includes('INSUFFICIENT_KNOWLEDGE');
+      
+      if (isInsufficient) {
+        updateWorkflow('context', 'skipped');
+        updateWorkflow('generate', 'completed');
+        
+        appendMessage('ai', `
+          <div class="fw-bold text-danger mb-2">Insufficient Knowledge</div>
+          <p>No sufficiently relevant knowledge-base articles were found for this issue.</p>
+          <p class="mb-0 text-muted small">Knowledge coverage is insufficient. More investigation is required before a reliable resolution can be provided.</p>
+        `);
+      } else {
+        updateWorkflow('context', 'completed');
+        updateWorkflow('generate', 'completed');
+        
+        // Render Resolution
+        let resContent = '';
+        try {
+          const parsed = typeof data.resolution === 'string' ? JSON.parse(data.resolution) : data.resolution;
+          if (parsed.likely_cause) {
+            resContent += `<div class="fw-bold mb-1">Likely Cause</div><p class="small text-muted mb-3">${parsed.likely_cause}</p>`;
+          }
+          if (parsed.troubleshooting_steps && parsed.troubleshooting_steps.length > 0) {
+            resContent += `<div class="fw-bold mb-1">Recommended Steps</div><ol class="small mb-3 ps-3">`;
+            parsed.troubleshooting_steps.forEach(s => {
+              if (typeof s === 'string') {
+                resContent += `<li class="mb-1">${s}</li>`;
+              } else if (typeof s === 'object') {
+                resContent += `<li class="mb-1"><strong>${s.heading || ''}</strong> ${s.description || ''}</li>`;
+              }
+            });
+            resContent += `</ol>`;
+          }
+          if (parsed.recommended_resolution) {
+            resContent += `<div class="fw-bold mb-1">Resolution</div><p class="small text-muted mb-0">${parsed.recommended_resolution}</p>`;
+          }
+        } catch(e) {
+          resContent = `<p class="mb-0">${data.resolution}</p>`;
+        }
+        appendMessage('ai', resContent);
+        
+        // Update Title if it was a new chat
+        if (isNew) {
+           chatTitle.innerText = "Active Conversation"; // Ideally we'd fetch the generated title here, loadConversations does it asynchronously though
+           // To be safe let's just let the sidebar show it.
         }
       }
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  </body>
-</html>
+      
+      // Update Context Panel
+      if (data.retrieved_documents && data.retrieved_documents.length > 0) {
+        renderSources(data.retrieved_documents);
+      } else {
+        kbContext.innerHTML = '<div class="text-muted text-center py-4" style="font-size:0.9rem;">No articles found for this query.</div>';
+      }
+      
+    } else {
+      appendMessage('ai', `<div class="text-danger">Error: ${data.message || 'Unknown error occurred'}</div>`);
+      kbContext.innerHTML = '<div class="text-muted text-center py-4" style="font-size:0.9rem;">Error during retrieval.</div>';
+    }
+  } catch (err) {
+    document.getElementById(typingId).remove();
+    appendMessage('ai', `<div class="text-danger">Unable to generate a resolution right now. Network or server error.</div>`);
+    kbContext.innerHTML = '<div class="text-muted text-center py-4" style="font-size:0.9rem;">Error during retrieval.</div>';
+  }
+}
+
+function appendMessage(sender, html) {
+  const msgDiv = document.createElement('div');
+  msgDiv.className = `message ${sender}`;
+  msgDiv.innerHTML = `<div class="bubble">${html}</div>`;
+  messages.appendChild(msgDiv);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function appendTyping() {
+  const id = 'typing-' + Date.now();
+  const msgDiv = document.createElement('div');
+  msgDiv.className = `message ai`;
+  msgDiv.id = id;
+  msgDiv.innerHTML = `<div class="bubble typing-indicator"><span></span><span></span><span></span></div>`;
+  messages.appendChild(msgDiv);
+  messages.scrollTop = messages.scrollHeight;
+  return id;
+}
+
+// Initial load
+document.documentElement.dataset.bsTheme = '{{ prefs.theme if prefs and prefs.theme else "light" }}';
+loadConversations();
+fetchSuggestions();
+</script>
+{% endblock %}

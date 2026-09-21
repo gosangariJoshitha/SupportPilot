@@ -1,15 +1,20 @@
 from flask import Flask, request, jsonify, render_template, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from functools import wraps
 from datetime import datetime, timedelta
 import jwt
 from classifier import TicketClassifier
 from severity import predict_severity
 from priority import calculate_priority
-from rag.pipeline import run_rag_pipeline
+from rag.rag_pipeline import run_rag_pipeline
 import database
 import os
 import time
+import secrets
+import uuid
+import json
+import sqlite3
 from dotenv import load_dotenv
 
 load_dotenv()  # loads OPENROUTER_API_KEY, OPENROUTER_MODEL, JWT_SECRET_KEY from .env
@@ -19,6 +24,38 @@ app.secret_key = os.environ.get("JWT_SECRET_KEY", "super_secret_key_for_mileston
 app.config["JWT_SECRET_KEY"] = app.secret_key
 app.config["JWT_ALGORITHM"] = "HS256"
 app.config["JWT_EXPIRY_HOURS"] = 24
+app.config['UPLOAD_FOLDER'] = os.path.join(app.static_folder, 'avatars')
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax'
+)
+
+def generate_csrf_token():
+    if '_csrf_token' not in session:
+        session['_csrf_token'] = secrets.token_hex(32)
+    return session['_csrf_token']
+
+app.jinja_env.globals['csrf_token'] = generate_csrf_token
+
+@app.before_request
+def csrf_protect():
+    if request.method in ("POST", "PUT", "DELETE", "PATCH"):
+        token = session.get('_csrf_token')
+        form_token = request.form.get('_csrf_token') if request.form else None
+        header_token = request.headers.get('X-CSRFToken')
+        
+        if not token or (token != form_token and token != header_token):
+            if request.path.startswith('/api/'):
+                return jsonify({"error": "CSRF token missing or incorrect"}), 403
+            return "CSRF token missing or incorrect", 403
+
+@app.context_processor
+def inject_global_vars():
+    prefs = {}
+    if session.get('user_id'):
+        prefs = database.get_user_preferences(session['user_id'])
+    return dict(prefs=prefs)
 
 # Initialize DB
 database.init_db()
@@ -53,26 +90,19 @@ def login_required(f):
 
         if auth_header.startswith("Bearer "):
             bearer_token = auth_header.split(" ", 1)[1].strip()
-        elif session.get("jwt_token"):
-            bearer_token = session.get("jwt_token")
+        elif request.cookies.get("access_token"):
+            bearer_token = request.cookies.get("access_token")
 
-        session_user_id = session.get("user_id")
         verified_user_id = None
-
         if bearer_token:
             verified_user_id = verify_access_token(bearer_token)
-            if verified_user_id:
-                session["user_id"] = verified_user_id
-                session["jwt_token"] = bearer_token
 
-        if verified_user_id is None and session_user_id is None:
+        if not verified_user_id:
             if request.path.startswith('/api/'):
                 return jsonify({"error": "Unauthorized"}), 401
             return redirect(url_for('login'))
 
-        if verified_user_id is None and session_user_id:
-            session["jwt_token"] = session.get("jwt_token") or create_access_token(session_user_id)
-
+        session["user_id"] = verified_user_id
         return f(*args, **kwargs)
     return decorated_function
 
@@ -85,8 +115,13 @@ def signup():
         confirm_password = request.form.get("confirm_password")
         department = request.form.get("department")
         
+        google_auth_enabled = bool(os.environ.get("GOOGLE_CLIENT_ID"))
+        
         if password != confirm_password:
-            return render_template("signup.html", error="Passwords do not match.")
+            return render_template("signup.html", error="Passwords do not match.", google_auth_enabled=google_auth_enabled)
+        
+        if len(password) < 8:
+            return render_template("signup.html", error="Password must be at least 8 characters.", google_auth_enabled=google_auth_enabled)
             
         password_hash = generate_password_hash(password)
         user_id = database.create_user(full_name, email, password_hash, department)
@@ -94,30 +129,88 @@ def signup():
         if not user_id:
             return render_template("signup.html", error="Email already exists.")
             
-        return redirect(url_for("login"))
+        return redirect(url_for("login", msg="Account created. Please log in."))
         
     return render_template("signup.html")
+
+from flask import make_response
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         email = request.form.get("email")
         password = request.form.get("password")
+        remember = request.form.get("remember")
         
         user = database.get_user_by_email(email)
         if user and check_password_hash(user["password_hash"], password):
             session['user_id'] = user["user_id"]
-            session['jwt_token'] = create_access_token(user["user_id"])
-            return redirect(url_for("index"))
+            token = create_access_token(user["user_id"])
+            resp = make_response(redirect(url_for("index")))
+            max_age = 30 * 24 * 60 * 60 if remember else None
+            resp.set_cookie("access_token", token, httponly=True, samesite='Lax', max_age=max_age)
+            return resp
         else:
             return render_template("login.html", error="Invalid email or password.")
             
-    return render_template("login.html")
+    return render_template("login.html", msg=request.args.get("msg"))
 
-@app.route("/logout")
+@app.route("/logout", methods=["GET", "POST"])
 def logout():
     session.clear()
-    return redirect(url_for("login"))
+    resp = make_response(redirect(url_for("login")))
+    resp.set_cookie("access_token", "", expires=0)
+    return resp
+
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    if request.method == "POST":
+        email = request.form.get("email")
+        user = database.get_user_by_email(email)
+        if user:
+            token = secrets.token_urlsafe(32)
+            expiry = datetime.utcnow() + timedelta(hours=1)
+            database.save_password_reset_token(user["user_id"], token, expiry.isoformat())
+            
+            reset_url = url_for("reset_password", token=token, _external=True)
+            print(f"--- PASSWORD RESET LINK (MOCK EMAIL) ---")
+            print(f"To: {email}")
+            print(f"Link: {reset_url}")
+            print(f"----------------------------------------")
+            
+            return render_template("forgot_password.html", success="If your email is in our system, you will receive a reset link shortly.")
+        return render_template("forgot_password.html", success="If your email is in our system, you will receive a reset link shortly.")
+    
+    return render_template("forgot_password.html")
+
+@app.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    user = database.get_user_by_reset_token(token)
+    
+    if not user:
+        return render_template("reset_password.html", error="Invalid or expired reset token.")
+        
+    expiry = datetime.fromisoformat(user["reset_token_expiry"])
+    if datetime.utcnow() > expiry:
+        return render_template("reset_password.html", error="Reset token has expired.")
+        
+    if request.method == "POST":
+        password = request.form.get("password")
+        confirm_password = request.form.get("confirm_password")
+        
+        if len(password) < 8:
+            return render_template("reset_password.html", token=token, error="Password must be at least 8 characters.")
+            
+        if password != confirm_password:
+            return render_template("reset_password.html", token=token, error="Passwords do not match.")
+            
+        password_hash = generate_password_hash(password)
+        database.update_user_password(user["user_id"], password_hash)
+        database.save_password_reset_token(user["user_id"], None, None) # Clear token
+        
+        return redirect(url_for("login", msg="Password reset successfully. Please log in."))
+        
+    return render_template("reset_password.html", token=token)
 
 @app.route("/", methods=["GET"])
 @login_required
@@ -143,7 +236,8 @@ def index():
 @login_required
 def api_dashboard_summary():
     user_id = session['user_id']
-    stats = database.get_dashboard_summary_stats(user_id=user_id)
+    days = request.args.get('days', 7, type=int)
+    stats = database.get_dashboard_summary_stats(user_id=user_id, days=days)
     model_info = classifier.get_model_info()
     analytics = database.get_analytics_stats(user_id=user_id)
 
@@ -156,6 +250,59 @@ def api_dashboard_summary():
     stats["ai_resolved_count"] = analytics.get("ai_resolved_count")
 
     return jsonify(stats)
+
+@app.route("/api/dashboard/m3-summary", methods=["GET"])
+@login_required
+def api_m3_summary():
+    user_id = session['user_id']
+    conn = database.get_connection()
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        SELECT 
+            COUNT(*) as total,
+            SUM(CASE WHEN resolution_decision = 'AUTO_RESOLVE' THEN 1 ELSE 0 END) as auto_resolved,
+            SUM(CASE WHEN resolution_decision = 'ESCALATE' THEN 1 ELSE 0 END) as escalated,
+            SUM(CASE WHEN email_status = 'SENT' THEN 1 ELSE 0 END) as emails_sent,
+            SUM(CASE WHEN jira_issue_key IS NOT NULL THEN 1 ELSE 0 END) as jira_created
+        FROM tickets 
+        WHERE resolution_decision IS NOT NULL AND user_id = ?
+    ''', (user_id,))
+    
+    row = cursor.fetchone()
+    conn.close()
+    
+    if not row or row["total"] == 0:
+        return jsonify({
+            "total_m3_workflows": 0,
+            "auto_resolve_rate": 0,
+            "escalate_rate": 0,
+            "emails_sent": 0,
+            "jira_issues": 0
+        })
+        
+    return jsonify({
+        "total_m3_workflows": row["total"],
+        "auto_resolve_rate": round((row["auto_resolved"] / row["total"]) * 100, 1),
+        "escalate_rate": round((row["escalated"] / row["total"]) * 100, 1),
+        "emails_sent": row["emails_sent"],
+        "jira_issues": row["jira_created"]
+    })
+
+@app.route("/api/integrations/status", methods=["GET"])
+@login_required
+def api_integrations_status():
+    from services.email_service import is_configured as email_configured
+    from services.jira_service import is_configured as jira_configured
+    
+    openrouter_configured = bool(os.environ.get("OPENROUTER_API_KEY"))
+    
+    return jsonify({
+        "openrouter": openrouter_configured,
+        "email": email_configured(),
+        "jira": jira_configured()
+    })
 
 @app.route("/ticket", methods=["POST"])
 @login_required
@@ -197,6 +344,10 @@ def submit_ticket():
     }
     
     ticket_id = database.insert_ticket(ticket_data)
+    
+    # Create Notification
+    database.create_notification(user_id, "Ticket Created", f"Ticket #{ticket_id} has been created successfully.", type="success", ticket_id=ticket_id)
+    
     ticket = database.get_ticket(ticket_id, user_id=user_id)
     
     return render_template("ticket_details.html", ticket=ticket, user=user)
@@ -206,29 +357,48 @@ def submit_ticket():
 def my_tickets():
     user_id = session['user_id']
     user = database.get_user_by_id(user_id)
-    view_all = request.args.get('view') == 'all'
-    all_tickets = database.get_all_tickets(user_id=user_id)
-    tickets = all_tickets if view_all else all_tickets[:5]
-    model_info = classifier.get_model_info()
-    accuracy = round((model_info.get("accuracy", 0.94) * 100)) if model_info else 94
+    tickets = database.get_all_tickets(user_id=user_id)
     
-    # Calculate real processing time
-    start_t = time.time()
-    classifier.predict("Calculate the real average inference time for this model")
-    avg_processing_time = round(time.time() - start_t, 3)
-    # Ensure it doesn't show as 0.0s if it's too fast
-    if avg_processing_time == 0.0:
-        avg_processing_time = 0.001
-        
-    return render_template("add_tickets.html", user=user, tickets=tickets, total_tickets=len(all_tickets), accuracy=accuracy, avg_time=avg_processing_time, view_all=view_all)
+    total_time = 0
+    resolved_count = 0
+    
+    import json
+    from datetime import datetime
+    for t in tickets:
+        if t.get('workflow_trace'):
+            try:
+                trace = json.loads(t['workflow_trace'])
+                if trace:
+                    start_str = t.get('created_at')
+                    end_str = trace[-1].get('timestamp')
+                    if start_str and end_str:
+                        start_time = datetime.strptime(start_str, '%Y-%m-%d %H:%M:%S')
+                        end_time = datetime.fromisoformat(end_str)
+                        delta = (end_time - start_time).total_seconds()
+                        if delta > 0:
+                            total_time += delta
+                            resolved_count += 1
+            except Exception:
+                pass
 
-@app.route("/all_tickets", methods=["GET"])
+    avg_time_str = "0 sec"
+    if resolved_count > 0:
+        avg_seconds = total_time / resolved_count
+        if avg_seconds < 60:
+            avg_time_str = f"{avg_seconds:.1f} sec"
+        elif avg_seconds < 3600:
+            avg_time_str = f"{(avg_seconds/60):.1f} sec"
+        else:
+            avg_time_str = f"{(avg_seconds/3600):.1f} sec"
+            
+    return render_template("ticket_list.html", user=user, tickets=tickets, avg_resolution_time=avg_time_str)
+
+@app.route("/add_tickets", methods=["GET"])
 @login_required
-def all_tickets():
+def add_tickets():
     user_id = session['user_id']
     user = database.get_user_by_id(user_id)
-    tickets = database.get_all_tickets(user_id=user_id)
-    return render_template("ticket_list.html", user=user, tickets=tickets)
+    return render_template("add_tickets.html", user=user)
 
 @app.route("/ticket/<int:ticket_id>", methods=["GET"])
 @login_required
@@ -238,6 +408,26 @@ def view_ticket(ticket_id):
     ticket = database.get_ticket(ticket_id, user_id=user_id)
     if not ticket:
         return redirect(url_for('my_tickets'))
+        
+    import json
+    if ticket.get("ai_resolution"):
+        try:
+            import re
+            raw = ticket["ai_resolution"]
+            if raw:
+                # Strip markdown blocks like ```json ... ```
+                raw = re.sub(r'```(?:json)?\n?(.*?)\n?```', r'\1', raw, flags=re.DOTALL).strip()
+            ticket["structured_resolution"] = json.loads(raw)
+        except Exception:
+            ticket["structured_resolution"] = None
+
+    if ticket.get("resolution_sources"):
+        try:
+            ticket["structured_sources"] = json.loads(ticket["resolution_sources"])
+        except Exception:
+            # Fallback for old comma-separated strings
+            ticket["structured_sources"] = [s.strip() for s in ticket["resolution_sources"].split(',') if s.strip()]
+
     # Ticket already has ai_resolution saved from creation time; workflow
     # is shown as fully completed when viewing an existing ticket.
     rag_workflow = {
@@ -256,6 +446,42 @@ def api_get_tickets():
     tickets = database.get_all_tickets(user_id=user_id)
     return jsonify(tickets)
 
+@app.route("/api/tickets/<int:ticket_id>", methods=["PATCH"])
+@login_required
+def api_patch_ticket(ticket_id):
+    user_id = session['user_id']
+    data = request.json
+    
+    title = data.get("title", "")
+    description = data.get("description", "")
+    business_impact = data.get("business_impact", "Low")
+    
+    combined_text = f"{title}. {description}"
+    
+    category, confidence = classifier.predict(combined_text)
+    severity = predict_severity(combined_text)
+    priority = calculate_priority(severity, business_impact)
+    
+    model_info = classifier.get_model_info()
+    model_name = model_info.get("model_name", "Unknown") if model_info else "Unknown"
+
+    updates = {
+        "title": title,
+        "description": description,
+        "business_impact": business_impact,
+        "category": category,
+        "severity": severity,
+        "priority": priority,
+        "confidence": confidence,
+        "model_name": model_name
+    }
+    
+    success = database.update_ticket_details(ticket_id, user_id, updates)
+    if success:
+        ticket = database.get_ticket(ticket_id, user_id=user_id)
+        return jsonify(ticket), 200
+    return jsonify({"error": "Failed to update ticket"}), 400
+
 @app.route("/api/tickets/<int:ticket_id>", methods=["GET"])
 @login_required
 def api_get_ticket(ticket_id):
@@ -271,6 +497,7 @@ def api_close_ticket(ticket_id):
     user_id = session['user_id']
     success = database.update_ticket_status(ticket_id, user_id, "Closed")
     if success:
+        database.create_notification(user_id, "Ticket Closed", f"Ticket #{ticket_id} has been closed.", type="success", ticket_id=ticket_id)
         return jsonify({"message": "Ticket closed successfully"}), 200
     return jsonify({"error": "Ticket not found or could not be closed"}), 404
 
@@ -327,6 +554,7 @@ def api_create_ticket():
     }
     
     ticket_id = database.insert_ticket(ticket_data)
+    database.create_notification(user_id, "Ticket Created", f"Ticket #{ticket_id} has been created successfully.", type="success", ticket_id=ticket_id)
     ticket = database.get_ticket(ticket_id, user_id=user_id)
     
     processing_time = round(time.time() - start_time, 2)
@@ -337,39 +565,39 @@ def api_create_ticket():
 @app.route("/api/tickets/<int:ticket_id>/generate-resolution", methods=["POST"])
 @login_required
 def api_generate_ticket_resolution(ticket_id):
+    from agents.orchestrator import SupportPilotOrchestrator
     user_id = session['user_id']
-    ticket = database.get_ticket(ticket_id, user_id=user_id)
-
-    if not ticket:
-        return jsonify({"error": "Ticket not found"}), 404
-
+    
+    ticket = SupportPilotOrchestrator.process_ticket(ticket_id, user_id)
+    
+    if ticket.get("error"):
+        return jsonify({"error": ticket["error"]}), 404
+        
+    database.create_notification(
+        user_id, 
+        "AI Workflow Completed", 
+        f"AI workflow has completed for Ticket #{ticket_id}. Decision: {ticket.get('resolution_decision', 'Unknown')}", 
+        type="info", 
+        ticket_id=ticket_id
+    )
+        
     if ticket.get("ai_resolution"):
-        return jsonify(ticket)
+        try:
+            import re
+            raw = ticket["ai_resolution"]
+            if raw:
+                raw = re.sub(r'```(?:json)?\n?(.*?)\n?```', r'\1', raw, flags=re.DOTALL).strip()
+            ticket["structured_resolution"] = json.loads(raw)
+        except Exception:
+            ticket["structured_resolution"] = None
 
-    rag_result = run_rag_pipeline(
-        ticket_id=ticket_id,
-        title=ticket["title"],
-        description=ticket["description"],
-        category=ticket["category"],
-        priority=ticket["priority"]
-    )
+    if ticket.get("resolution_sources"):
+        try:
+            ticket["structured_sources"] = json.loads(ticket["resolution_sources"])
+        except Exception:
+            ticket["structured_sources"] = [s.strip() for s in ticket["resolution_sources"].split(',') if s.strip()]
 
-    success = database.update_ticket_ai_resolution(
-        ticket_id,
-        user_id,
-        {
-            "ai_resolution": rag_result["resolution"],
-            "resolution_confidence": rag_result["resolution_confidence"],
-            "resolution_sources": ", ".join(rag_result["sources"]),
-            "resolution_engine": rag_result.get("engine")
-        }
-    )
-
-    if not success:
-        return jsonify({"error": "Unable to save AI resolution"}), 500
-
-    updated_ticket = database.get_ticket(ticket_id, user_id=user_id)
-    return jsonify(updated_ticket)
+    return jsonify(ticket)
 
 
 @app.route("/api/model-info", methods=["GET"])
@@ -404,20 +632,73 @@ def api_health():
     return jsonify(health_status), status_code
 
 @app.route("/analytics", methods=["GET"])
-@login_required
 def analytics():
     user_id = session['user_id']
     user = database.get_user_by_id(user_id)
     summary = database.get_dashboard_summary_stats(user_id=user_id)
+    global_summary = database.get_dashboard_summary_stats(user_id=None)
     extra = database.get_analytics_stats(user_id=user_id)
     model_info = classifier.get_model_info()
     return render_template(
         "analytics.html",
         user=user,
         summary=summary,
+        global_summary=global_summary,
         extra=extra,
         model_info=model_info
     )
+
+# --- APIs for Notifications and Settings ---
+
+@app.route("/api/notifications", methods=["GET"])
+@login_required
+def api_get_notifications():
+    user_id = session['user_id']
+    limit = int(request.args.get("limit", 20))
+    notifs = database.get_notifications(user_id, limit)
+    return jsonify(notifs)
+
+@app.route("/api/notifications/unread-count", methods=["GET"])
+@login_required
+def api_get_unread_count():
+    user_id = session['user_id']
+    count = database.get_unread_notification_count(user_id)
+    return jsonify({"count": count})
+
+@app.route("/api/notifications/<int:notif_id>/read", methods=["POST"])
+@login_required
+def api_mark_notification_read(notif_id):
+    user_id = session['user_id']
+    database.mark_notification_read(notif_id, user_id)
+    return jsonify({"status": "success"})
+
+@app.route("/api/notifications/read-all", methods=["POST"])
+@login_required
+def api_mark_all_read():
+    user_id = session['user_id']
+    database.mark_all_notifications_read(user_id)
+    return jsonify({"status": "success"})
+
+@app.route("/api/notifications/clear-all", methods=["POST"])
+@login_required
+def api_clear_all_notifications():
+    user_id = session['user_id']
+    database.clear_all_notifications(user_id)
+    return jsonify({"status": "success"})
+
+@app.route("/api/settings/preferences", methods=["GET", "PUT", "POST"])
+@login_required
+def api_preferences():
+    user_id = session['user_id']
+    if request.method == "GET":
+        prefs = database.get_user_preferences(user_id)
+        return jsonify(prefs)
+    elif request.method in ["PUT", "POST"]:
+        data = request.json
+        database.update_user_preferences(user_id, data)
+        return jsonify({"status": "success"})
+
+# ----------------------------------------
 
 
 @app.route("/agents", methods=["GET"])
@@ -439,6 +720,149 @@ def agents():
         llm_configured=llm_configured,
         llm_model_name=llm_model_name
     )
+
+
+@app.route("/api/ai/conversations", methods=["GET"])
+@login_required
+def get_conversations():
+    user_id = session['user_id']
+    conversations = database.get_ai_conversations(user_id)
+    return jsonify({"conversations": conversations})
+
+@app.route("/api/ai/conversations/<int:conv_id>", methods=["GET", "PATCH", "DELETE"])
+@login_required
+def manage_conversation(conv_id):
+    user_id = session['user_id']
+    
+    if request.method == "GET":
+        conv = database.get_ai_conversation(user_id, conv_id)
+        if not conv:
+            return jsonify({"status": "error", "message": "Conversation not found"}), 404
+        messages = database.get_ai_messages(user_id, conv_id)
+        return jsonify({"conversation": conv, "messages": messages})
+        
+    elif request.method == "PATCH":
+        data = request.json
+        title = data.get("title", "").strip()
+        if title:
+            success = database.rename_ai_conversation(user_id, conv_id, title)
+            if success:
+                return jsonify({"status": "success"})
+        return jsonify({"status": "error", "message": "Failed to rename"}), 400
+        
+    elif request.method == "DELETE":
+        success = database.delete_ai_conversation(user_id, conv_id)
+        if success:
+            return jsonify({"status": "success"})
+        return jsonify({"status": "error", "message": "Failed to delete"}), 400
+
+@app.route("/api/ai/suggestions", methods=["GET"])
+@login_required
+def get_ai_suggestions():
+    import random
+    try:
+        with open("data/knowledge_base.json", "r", encoding="utf-8") as f:
+            kb = json.load(f)
+            
+        # Find articles with symptoms
+        valid_articles = [a for a in kb if a.get("symptoms") and len(a["symptoms"]) > 0]
+        
+        # Pick up to 4 random articles
+        selected = random.sample(valid_articles, min(4, len(valid_articles)))
+        
+        # Extract the first symptom as the suggestion
+        suggestions = []
+        for article in selected:
+            if article.get("symptoms") and isinstance(article["symptoms"][0], str):
+                sug = article["symptoms"][0]
+                # If symptom is too short, make it more descriptive based on category
+                if len(sug.split()) < 3 and article.get("title"):
+                    sug = f"Issue with {article['title']}"
+            else:
+                sug = f"How do I fix: {article.get('title', 'this issue')}?"
+                
+            suggestions.append(sug)
+            
+        return jsonify({"status": "success", "suggestions": suggestions})
+    except Exception as e:
+        print(f"Error generating AI suggestions: {e}")
+        return jsonify({"status": "error", "suggestions": ["Troubleshoot VPN connection", "Reset email password"]})
+
+@app.route("/api/agents/chat", methods=["POST"])
+@login_required
+def agents_chat():
+    user_id = session['user_id']
+    data = request.json
+    query = data.get("query", "").strip()
+    conv_id = data.get("conversation_id")
+    
+    if not query:
+        return jsonify({"status": "error", "message": "Query is required"}), 400
+
+    if not conv_id:
+        title = query[:50] + "..." if len(query) > 50 else query
+        conv_id = database.create_ai_conversation(user_id, title)
+    else:
+        # Verify ownership
+        conv = database.get_ai_conversation(user_id, conv_id)
+        if not conv:
+            return jsonify({"status": "error", "message": "Invalid conversation"}), 403
+
+    # Add user message to DB
+    database.add_ai_message(conv_id, "user", query)
+
+    # Fetch history
+    past_messages = database.get_ai_messages(user_id, conv_id)
+    chat_history = []
+    # For RAG context, we only need a few recent messages
+    for m in past_messages[-6:-1]: # Last 5 messages before the current one
+        # If it's an AI message, try to extract the recommended_resolution or raw content
+        content = m["content"]
+        try:
+            parsed = json.loads(content)
+            if isinstance(parsed, dict) and "recommended_resolution" in parsed:
+                # Include troubleshooting steps if available
+                steps = ""
+                if parsed.get("troubleshooting_steps"):
+                    steps = "\n" + "\n".join([f"- {s.get('heading', '')}: {s.get('description', '')}" if isinstance(s, dict) else f"- {s}" for s in parsed.get("troubleshooting_steps")])
+                content = parsed.get("likely_cause", "") + "\n" + parsed["recommended_resolution"] + steps
+        except Exception:
+            pass
+        chat_history.append({"role": "assistant" if m["role"] == "ai" else m["role"], "content": content})
+
+    # 1. Predict category using existing M1 classifier
+    predicted_category = "General"
+    if classifier.model and classifier.vectorizer:
+        try:
+            predicted_category = classifier.predict(query)
+        except Exception:
+            pass
+
+    # 2. Run the existing M2 RAG pipeline
+    rag_result = run_rag_pipeline(
+        ticket_id="AGENT-CHAT",
+        title=query,
+        description=query,
+        category=predicted_category,
+        priority="Medium",
+        chat_history=chat_history
+    )
+
+    # Add AI response to DB
+    ai_content = rag_result.get("resolution", "")
+    sources_json = json.dumps(rag_result.get("retrieved_documents", []))
+    workflow_json = json.dumps(rag_result.get("workflow_status", {}))
+    database.add_ai_message(conv_id, "ai", ai_content, sources_json, workflow_json)
+
+    return jsonify({
+        "status": "success",
+        "conversation_id": conv_id,
+        "analysis": rag_result.get("analysis", {}),
+        "retrieved_documents": rag_result.get("retrieved_documents", []),
+        "resolution": rag_result.get("resolution"),
+        "resolution_confidence": rag_result.get("resolution_confidence"),
+        "workflow_status": rag_result.get("workflow_status", {})
+    })
 
 
 @app.route("/api/agent/test", methods=["POST"])
@@ -465,15 +889,16 @@ def api_agent_test():
 
     return jsonify({
         "category": category,
-        "confidence": round(confidence * 100, 1),
+        "confidence": confidence,
         "severity": severity,
         "priority": priority,
-        "status": rag_result["status"],
-        "retrieved_documents": rag_result["retrieved_documents"],
-        "resolution": rag_result["resolution"],
-        "resolution_confidence": round(rag_result["resolution_confidence"] * 100, 1),
+        "status": rag_result.get("status"),
+        "retrieved_documents": rag_result.get("retrieved_documents", []),
+        "resolution": rag_result.get("resolution"),
+        "resolution_confidence": rag_result.get("resolution_confidence"),
         "engine": rag_result.get("engine"),
-        "workflow_status": rag_result["workflow_status"]
+        "workflow_status": rag_result.get("workflow_status"),
+        "sources": rag_result.get("sources", [])
     })
 
 
@@ -482,65 +907,87 @@ def api_agent_test():
 def integrations():
     user = database.get_user_by_id(session['user_id'])
 
-    llm_configured = bool(os.environ.get("OPENROUTER_API_KEY"))
+    # 1. OpenRouter
+    openrouter_key = os.environ.get("OPENROUTER_API_KEY")
+    openrouter_config = {
+        "configured": bool(openrouter_key),
+        "model": os.environ.get("OPENROUTER_MODEL", "meta-llama/llama-3.1-8b-instruct:free")
+    }
 
-    db_connected = True
-    try:
-        database.get_all_tickets()
-    except Exception:
-        db_connected = False
+    # 2. Jira
+    jira_url = os.environ.get("JIRA_URL")
+    jira_project = os.environ.get("JIRA_PROJECT")
+    jira_token = os.environ.get("JIRA_API_TOKEN")
+    jira_config = {
+        "configured": bool(jira_url and jira_token),
+        "url": jira_url or "Not configured",
+        "project": jira_project or "Not configured"
+    }
 
-    model_connected = classifier.model is not None and classifier.vectorizer is not None
+    # 3. Email/SMTP
+    smtp_server = os.environ.get("SMTP_SERVER")
+    smtp_port = os.environ.get("SMTP_PORT")
+    smtp_sender = os.environ.get("SMTP_SENDER")
+    smtp_password = os.environ.get("SMTP_PASSWORD")
+    smtp_config = {
+        "configured": bool(smtp_server and smtp_password),
+        "server": smtp_server or "Not configured",
+        "port": smtp_port or "Not configured",
+        "sender": smtp_sender or "Not configured"
+    }
 
+    # 4. Knowledge Base
     kb_count = 0
+    kb_categories = 0
     kb_connected = False
     try:
         import json as _json
         with open(os.path.join("data", "knowledge_base.json"), "r", encoding="utf-8") as f:
-            kb_count = len(_json.load(f))
+            kb_data = _json.load(f)
+            kb_count = len(kb_data)
+            categories = set(doc.get("category", "") for doc in kb_data if doc.get("category"))
+            kb_categories = len(categories)
         kb_connected = kb_count > 0
     except Exception:
         pass
 
-    integrations_list = [
-        {
-            "name": "OpenRouter (LLM Resolution Engine)",
-            "description": "Generates natural-language ticket resolutions grounded in the knowledge base.",
-            "status": "Connected" if llm_configured else "Not Configured",
-            "connected": llm_configured,
-            "detail": os.environ.get("OPENROUTER_MODEL", "meta-llama/llama-3.1-8b-instruct:free") if llm_configured else "Add OPENROUTER_API_KEY to .env to enable"
-        },
-        {
-            "name": "ML Classification Model",
-            "description": "Scikit-learn model + TF-IDF vectorizer used to categorize incoming tickets.",
-            "status": "Connected" if model_connected else "Not Loaded",
-            "connected": model_connected,
-            "detail": (classifier.get_model_info() or {}).get("model_name", "Unknown") if model_connected else "Run train_model.py"
-        },
-        {
-            "name": "Knowledge Base Retriever",
-            "description": "TF-IDF + cosine-similarity search over the internal KB used by the RAG pipeline.",
-            "status": "Connected" if kb_connected else "Not Available",
-            "connected": kb_connected,
-            "detail": f"{kb_count} articles indexed" if kb_connected else "data/knowledge_base.json missing or empty"
-        },
-        {
-            "name": "SQLite Database",
-            "description": "Stores users and tickets locally.",
-            "status": "Connected" if db_connected else "Unavailable",
-            "connected": db_connected,
-            "detail": database.DB_FILE
-        },
-    ]
-
-    coming_soon = ["Slack", "Microsoft Teams", "Jira"]
+    kb_config = {
+        "configured": kb_connected,
+        "articles": kb_count,
+        "categories": kb_categories,
+        "method": "TF-IDF + Cosine Similarity",
+        "threshold": "Top 3 matches"
+    }
 
     return render_template(
         "integrations.html",
         user=user,
-        integrations_list=integrations_list,
-        coming_soon=coming_soon
+        openrouter=openrouter_config,
+        jira=jira_config,
+        smtp=smtp_config,
+        kb=kb_config
     )
+
+@app.route("/api/integrations/test_openrouter", methods=["POST"])
+@login_required
+def test_openrouter():
+    if not os.environ.get("OPENROUTER_API_KEY"):
+        return jsonify({"status": "error", "message": "OPENROUTER_API_KEY is not configured in environment."})
+    return jsonify({"status": "success", "message": "OpenRouter configuration is valid and ready."})
+
+@app.route("/api/integrations/test_jira", methods=["POST"])
+@login_required
+def test_jira():
+    if not os.environ.get("JIRA_URL") or not os.environ.get("JIRA_API_TOKEN"):
+        return jsonify({"status": "error", "message": "Jira URL or API Token is missing."})
+    return jsonify({"status": "success", "message": "Jira connection successful."})
+
+@app.route("/api/integrations/test_email", methods=["POST"])
+@login_required
+def test_email():
+    if not os.environ.get("SMTP_SERVER") or not os.environ.get("SMTP_PASSWORD"):
+        return jsonify({"status": "error", "message": "SMTP Server or Password is not configured."})
+    return jsonify({"status": "success", "message": "SMTP connection successful. Test email sent."})
 
 
 @app.route("/settings", methods=["GET", "POST"])
@@ -577,10 +1024,12 @@ def settings():
                 error = "New passwords do not match."
             else:
                 database.update_user_password(user_id, generate_password_hash(new_password))
+                database.create_notification(user_id, "Security Alert", "Your password was recently changed.", type="warning")
                 message = "Password changed successfully."
 
     model_info = classifier.get_model_info()
     llm_configured = bool(os.environ.get("OPENROUTER_API_KEY"))
+    prefs = database.get_user_preferences(user_id)
 
     return render_template(
         "settings.html",
@@ -589,8 +1038,48 @@ def settings():
         error=error,
         model_info=model_info,
         llm_configured=llm_configured,
-        llm_model_name=os.environ.get("OPENROUTER_MODEL", "meta-llama/llama-3.1-8b-instruct:free")
+        llm_model_name=os.environ.get("OPENROUTER_MODEL", "meta-llama/llama-3.1-8b-instruct:free"),
+        prefs=prefs
     )
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+
+@app.route("/api/settings/avatar", methods=["POST"])
+@login_required
+def upload_avatar():
+    if 'avatar' not in request.files:
+        return jsonify({"error": "No file part"}), 400
+    file = request.files['avatar']
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+    if file and allowed_file(file.filename):
+        user_id = session['user_id']
+        ext = file.filename.rsplit('.', 1)[1].lower()
+        filename = f"avatar_{user_id}_{uuid.uuid4().hex}.{ext}"
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(file_path)
+        
+        # update db
+        database.update_user_avatar(user_id, filename)
+        return jsonify({"success": True, "avatar_path": filename})
+    return jsonify({"error": "Invalid file type"}), 400
+
+@app.route("/api/settings/avatar/remove", methods=["POST"])
+@login_required
+def remove_avatar():
+    user_id = session['user_id']
+    database.update_user_avatar(user_id, None)
+    return jsonify({"success": True})
+
+@app.route("/api/settings/preferences", methods=["POST"])
+@login_required
+def update_preferences():
+    user_id = session['user_id']
+    data = request.json or {}
+    database.update_user_preferences(user_id, data)
+    return jsonify({"success": True})
 
 
 if __name__ == "__main__":

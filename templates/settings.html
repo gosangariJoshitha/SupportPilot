@@ -1,199 +1,458 @@
-<!DOCTYPE html>
-<html lang="en" data-bs-theme="light">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SupportPilot - Settings</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <style>
-        body { display: flex; min-height: 100vh; overflow-x: hidden; }
-        .sidebar { width: 250px; display: flex; flex-direction: column; flex-shrink: 0; z-index: 1040; height: 100vh; position: sticky; top: 0; border-right: 1px solid #dee2e6; }
-        .main-content { flex-grow: 1; padding: 2rem 3rem; overflow-y: auto; max-height: 100vh; }
-        .brand-logo { background-color: #6366f1; color: white; border-radius: 0.375rem; padding: 0.25rem 0.5rem; font-weight: bold; font-size: 14px; }
-        .mobile-toggle { display: none; }
-        @media (max-width: 991.98px) {
-            .sidebar { position: fixed; left: -250px; height: 100vh; transition: left 0.3s ease; background: white; }
-            .sidebar.show { left: 0; }
-            .mobile-toggle { display: block; }
-            .main-content { padding: 1rem; }
+{% extends "base.html" %}
+
+{% block title %}SupportPilot - Settings{% endblock %}
+
+{% set active = 'settings' %}
+{% set promo_title = 'Customize your experience' %}
+{% set promo_text = 'Make SupportPilot work the way you do.' %}
+{% set promo_icon = 'gear' %}
+{% set topbar_subtitle = '' %}
+
+{% block extra_head %}
+<style>
+  body { font-family:'Inter',sans-serif; }
+  .settings-tabs { display:flex; gap:1.5rem; border-bottom:1px solid #e5e7eb; margin-bottom:1.25rem; flex-wrap:wrap; }
+  .settings-tab { display:flex; align-items:center; gap:.4rem; padding-bottom:.7rem; font-weight:600; font-size:.85rem; color:#6b7280; border-bottom:2px solid transparent; cursor:pointer; }
+  .settings-tab.active { color:#2563eb; border-color:#2563eb; }
+  .avatar-lg { width:70px;height:70px;border-radius:50%;background:#2563eb;color:#fff;font-size:1.5rem;font-weight:700;display:flex;align-items:center;justify-content:center; }
+  .side-panel-row { display:flex; justify-content:space-between; align-items:center; padding:.8rem 0; border-bottom:1px solid #f3f4f6; }
+  .side-panel-row:last-child { border-bottom:none; }
+  .toggle-switch { width:40px;height:22px;border-radius:999px;background:#e5e7eb;position:relative;flex-shrink:0;cursor:pointer;transition:.15s;}
+  .toggle-switch.on { background:#2563eb; }
+  .toggle-switch .knob { width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:.15s; box-shadow:0 1px 3px rgba(0,0,0,.2); }
+  .toggle-switch.on .knob { left:20px; }
+  .theme-opt { border:1px solid #e5e7eb; border-radius:.6rem; padding:.6rem 1rem; font-size:.82rem; font-weight:600; color:#374151; display:flex; align-items:center; gap:.4rem; cursor:pointer; transition: all 0.2s; }
+  .theme-opt:hover { border-color: #9ca3af; background: #f9fafb; }
+  .theme-opt.active { border: 2px solid #2563eb; background:#eff6ff; color:#1e40af; }
+  .status-banner { background:#ecfdf5; border:1px solid #a7f3d0; border-radius:.8rem; padding:1rem; }
+  .input-icon-wrap { position:relative; }
+  .input-icon-wrap .form-control { padding-left:2.6rem; }
+  .input-icon-wrap .form-select { padding-left:2.6rem; }
+  .input-icon { position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:#64748b; }
+  
+  /* Layout Refinements */
+  .settings-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 2.2fr) minmax(300px, 0.9fr);
+    gap: 1.5rem;
+    align-items: start;
+  }
+  @media (max-width: 991.98px) {
+    .settings-layout { grid-template-columns: 1fr; }
+  }
+  .right-column-cards { display: flex; flex-direction: column; gap: 1.25rem; }
+  .sp-card-content { padding: 1.75rem; }
+  .settings-info-text { font-size: 0.85rem; color: #6b7280; margin-top: 1rem; border-top: 1px solid #f3f4f6; padding-top: 1rem; line-height: 1.5; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+      <div class="page-title" style="font-size:1.55rem;">Settings</div>
+      <p class="page-subtitle mb-3">Manage your account, preferences, and application settings.</p>
+
+      {% if message %}<div class="alert alert-success py-2 small flash-message">{{ message }}</div>{% endif %}
+      {% if error %}<div class="alert alert-danger py-2 small flash-message">{{ error }}</div>{% endif %}
+
+      <div class="settings-tabs">
+        <div class="settings-tab active" data-tab="profile">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          Profile
+        </div>
+        <div class="settings-tab" data-tab="preferences">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          Preferences
+        </div>
+        <div class="settings-tab" data-tab="security">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          Security
+        </div>
+        <div class="settings-tab" data-tab="notifications">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          Notifications
+        </div>
+        <div class="settings-tab" data-tab="api">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+          API Access
+        </div>
+      </div>
+
+      <div class="settings-layout">
+        <div class="left-column">
+
+          <!-- PROFILE -->
+          <div class="settings-pane" id="pane-profile">
+            <div class="sp-card mb-3">
+              <div class="sp-card-content">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="fw-bold text-dark d-flex align-items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                  Profile Information
+                </div>
+              </div>
+              <form method="POST" action="/settings">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="update_profile">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                  {% if user.avatar_path %}
+                  <img src="{{ url_for('static', filename='avatars/' + user.avatar_path) }}" class="avatar-lg" style="object-fit: cover;" id="avatar-preview" alt="Avatar">
+                  {% else %}
+                  <span class="avatar-lg" id="avatar-preview-initials">{{ (user.full_name or "U")[0]|upper }}</span>
+                  <img src="" class="avatar-lg d-none" style="object-fit: cover;" id="avatar-preview" alt="Avatar">
+                  {% endif %}
+                  <div class="d-flex flex-column gap-2">
+                    <div class="d-flex gap-2">
+                      <button type="button" class="sp-btn-outline" style="padding:.35rem .8rem; font-size:.82rem;" id="change-avatar-btn" onclick="document.getElementById('avatar-upload').click()">Change Avatar</button>
+                      <input type="file" id="avatar-upload" class="d-none" accept="image/png, image/jpeg, image/gif, image/webp">
+                      <button type="button" id="remove-avatar-btn" class="sp-btn-outline text-danger" style="padding:.35rem .8rem; font-size:.82rem; border-color:#fecaca; background:#fef2f2;">Remove</button>
+                    </div>
+                    <div class="text-muted small">JPG, PNG or GIF. 1MB max.</div>
+                  </div>
+                </div>
+                <div class="row g-3 mb-3">
+                  <div class="col-md-12">
+                    <label class="form-label-sp">Full Name</label>
+                    <input type="text" class="form-control" name="full_name" value="{{ user.full_name }}" required>
+                  </div>
+                </div>
+                <div class="row g-3 mb-3">
+                  <div class="col-md-6">
+                    <label class="form-label-sp">Email Address</label>
+                    <div class="input-icon-wrap">
+                      <input type="email" class="form-control" value="{{ user.email }}" disabled>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="input-icon"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label-sp">Phone Number</label>
+                    <div class="input-icon-wrap">
+                      <input type="text" class="form-control" value="" disabled placeholder="Not configured">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="input-icon"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                    </div>
+                  </div>
+                </div>
+                <div class="row g-3 mb-3">
+                  <div class="col-md-6">
+                    <label class="form-label-sp">Department</label>
+                    <div class="input-icon-wrap">
+                      <input type="text" class="form-control" name="department" value="{{ user.department or '' }}" placeholder="e.g. Engineering">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="input-icon"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label-sp">Role</label>
+                    <div class="input-icon-wrap">
+                      <select class="form-select" disabled>
+                        <option selected>User</option>
+                      </select>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="input-icon"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    </div>
+                  </div>
+                </div>
+                <div class="row g-3 mb-4">
+                  <div class="col-md-6">
+                    <label class="form-label-sp">Timezone</label>
+                    <div class="input-icon-wrap">
+                      <select class="form-select" disabled>
+                        <option selected>UTC-08:00 (Pacific Time)</option>
+                      </select>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="input-icon"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    </div>
+                  </div>
+                </div>
+                <button type="submit" class="sp-btn-primary">Save Changes</button>
+              </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECURITY -->
+          <div class="settings-pane d-none" id="pane-security">
+            <div class="sp-card mb-3">
+              <div class="sp-card-content">
+              <div class="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                Change Password
+              </div>
+              <form method="POST" action="/settings">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="change_password">
+                <div class="mb-3">
+                  <label class="form-label-sp">Current Password</label>
+                  <input type="password" class="form-control" name="current_password" required>
+                </div>
+                <div class="row g-3 mb-3">
+                  <div class="col-md-6">
+                    <label class="form-label-sp">New Password</label>
+                    <input type="password" class="form-control" name="new_password" required minlength="6">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label-sp">Confirm New Password</label>
+                    <input type="password" class="form-control" name="confirm_password" required minlength="6">
+                  </div>
+                </div>
+                <button type="submit" class="sp-btn-primary">Change Password</button>
+              </form>
+              <div class="settings-info-text">
+                <div class="fw-bold text-dark mb-1">Password Security</div>
+                Your password is stored securely as a cryptographic hash and is never displayed or transmitted in plaintext. Use a strong password and never share your credentials.
+              </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PREFERENCES -->
+          <div class="settings-pane d-none" id="pane-preferences">
+            <div class="sp-card mb-3">
+              <div class="sp-card-content">
+              <div class="fw-bold text-dark mb-3">Theme</div>
+              <div class="d-flex gap-2">
+                <div class="theme-opt active" data-theme="light">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line></svg>
+                  Light
+                </div>
+                <div class="theme-opt" data-theme="dark">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                  Dark
+                </div>
+                <div class="theme-opt" data-theme="system">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line></svg>
+                  System
+                </div>
+              </div>
+              <div class="text-muted small mt-2">Theme preference is stored locally in your browser for this session only.</div>
+              <div class="settings-info-text">
+                <div class="fw-bold text-dark mb-1">Appearance Settings</div>
+                Choose how SupportPilot appears across the application. Selecting "System" will automatically match your operating system's active color scheme.
+              </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- NOTIFICATIONS -->
+          <div class="settings-pane d-none" id="pane-notifications">
+            <div class="sp-card mb-3">
+              <div class="sp-card-content">
+              <div class="fw-bold text-dark mb-3">Email & Push Notifications</div>
+              <p class="text-muted small mb-4">Manage how and when you receive notifications from SupportPilot.</p>
+              <div class="side-panel-row"><span class="small fw-medium text-dark">Ticket status updates</span><div class="toggle-switch pref-toggle" data-key="notify_ticket_status"><div class="knob"></div></div></div>
+              <div class="side-panel-row"><span class="small fw-medium text-dark">AI agent suggestions</span><div class="toggle-switch pref-toggle" data-key="notify_ai_suggestions"><div class="knob"></div></div></div>
+              <div class="side-panel-row"><span class="small fw-medium text-dark">Weekly summary</span><div class="toggle-switch pref-toggle" data-key="notify_weekly_summary"><div class="knob"></div></div></div>
+              <div class="side-panel-row"><span class="small fw-medium text-dark">Product updates</span><div class="toggle-switch pref-toggle" data-key="notify_product_updates"><div class="knob"></div></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- API ACCESS -->
+          <div class="settings-pane d-none" id="pane-api">
+            <div class="sp-card mb-3">
+              <div class="sp-card-content">
+              <div class="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>
+                AI Agent Configuration
+              </div>
+              <div class="side-panel-row">
+                <div><div class="fw-semibold text-dark small">LLM Provider</div><div class="text-muted small">Used for generating grounded resolutions</div></div>
+                <span class="pill {{ 'pill-green' if llm_configured else 'pill-gray' }}">{{ 'Configured' if llm_configured else 'Not Configured' }}</span>
+              </div>
+              <div class="side-panel-row">
+                <div><div class="fw-semibold text-dark small">Model</div></div>
+                <span class="text-dark small fw-semibold">{{ llm_model_name }}</span>
+              </div>
+              <div class="side-panel-row">
+                <div><div class="fw-semibold text-dark small">Classifier</div></div>
+                <span class="text-dark small fw-semibold">{{ model_info.model_type if model_info else 'N/A' }}</span>
+              </div>
+              <div class="side-panel-row">
+                <div><div class="fw-semibold text-dark small">Classifier Accuracy</div></div>
+                <span class="text-dark small fw-semibold">{{ (model_info.accuracy * 100)|round(1) if model_info and model_info.accuracy else '—' }}%</span>
+              </div>
+              <div class="settings-info-text">
+                <div class="fw-bold text-dark mb-1">Configuration Security</div>
+                API credentials and model endpoint configurations are managed server-side and are never exposed in the browser environment.
+              </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="right-column-cards">
+          <div class="status-banner">
+            <div class="d-flex align-items-center gap-2 fw-bold" style="color:#0f766e;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              Your account is active
+            </div>
+            <div class="text-muted small mt-1">You have access to all features.</div>
+          </div>
+
+          <div class="sp-card p-3">
+            <div class="fw-bold text-dark mb-1" style="font-size:.9rem;">Notification Preferences</div>
+            <div class="text-muted small mb-2">Choose what notifications you want to receive.</div>
+            <div class="side-panel-row"><span class="small fw-medium text-dark">Ticket status updates</span><div class="toggle-switch pref-toggle" data-key="notify_ticket_status"><div class="knob"></div></div></div>
+            <div class="side-panel-row"><span class="small fw-medium text-dark">AI agent suggestions</span><div class="toggle-switch pref-toggle" data-key="notify_ai_suggestions"><div class="knob"></div></div></div>
+            <div class="side-panel-row"><span class="small fw-medium text-dark">Weekly summary</span><div class="toggle-switch pref-toggle" data-key="notify_weekly_summary"><div class="knob"></div></div></div>
+            <div class="side-panel-row"><span class="small fw-medium text-dark">Product updates</span><div class="toggle-switch pref-toggle" data-key="notify_product_updates"><div class="knob"></div></div></div>
+          </div>
+
+
+        </div>
+      </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+  document.querySelectorAll('.settings-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.settings-pane').forEach(p => p.classList.add('d-none'));
+      tab.classList.add('active');
+      document.getElementById('pane-' + tab.dataset.tab).classList.remove('d-none');
+    });
+  });
+
+  // Initialize Theme from Jinja
+  const currentTheme = "{{ prefs.theme | default('system') }}";
+  document.querySelectorAll('.theme-opt').forEach(o => o.classList.remove('active'));
+  const activeOpt = document.querySelector(`.theme-opt[data-theme="${currentTheme}"]`);
+  if (activeOpt) activeOpt.classList.add('active');
+
+  // Initialize Notification Toggles from Jinja
+  const prefs = {
+    notify_ticket_status: {{ 'true' if prefs.notify_ticket_status else 'false' }},
+    notify_ai_suggestions: {{ 'true' if prefs.notify_ai_suggestions else 'false' }},
+    notify_weekly_summary: {{ 'true' if prefs.notify_weekly_summary else 'false' }},
+    notify_product_updates: {{ 'true' if prefs.notify_product_updates else 'false' }}
+  };
+  
+  Object.keys(prefs).forEach(k => {
+    document.querySelectorAll(`.pref-toggle[data-key="${k}"]`).forEach(toggle => {
+      if (prefs[k]) toggle.classList.add('on');
+      else toggle.classList.remove('on');
+    });
+  });
+
+  async function updatePreference(key, value) {
+    try {
+      const payload = {};
+      payload[key] = value;
+      const res = await fetch('/api/settings/preferences', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok && window.toast) {
+        window.toast.show('Preference Saved', 'Your settings have been updated.', 'success', 2000);
+      }
+    } catch(e) { console.error(e); }
+  }
+
+  // Attach Toggle Listeners
+  document.querySelectorAll('.pref-toggle').forEach(toggle => {
+    toggle.addEventListener('click', function() {
+      const isOn = !this.classList.contains('on');
+      const key = this.dataset.key;
+      
+      // Optimistically update ALL toggles with the same key
+      document.querySelectorAll(`.pref-toggle[data-key="${key}"]`).forEach(t => {
+        if (isOn) t.classList.add('on');
+        else t.classList.remove('on');
+      });
+      
+      updatePreference(key, isOn);
+    });
+  });
+
+  // Attach Theme Listeners
+  document.querySelectorAll('.theme-opt').forEach(opt => {
+    opt.addEventListener('click', () => {
+      document.querySelectorAll('.theme-opt').forEach(o => o.classList.remove('active'));
+      opt.classList.add('active');
+      const theme = opt.dataset.theme;
+      
+      // Apply Theme Locally
+      localStorage.setItem('sp-theme', theme);
+      document.documentElement.dataset.bsTheme = theme === 'system' ? 
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme;
+        
+      updatePreference('theme', theme);
+    });
+  });
+
+  // Avatar Logic
+  document.getElementById('avatar-upload').addEventListener('change', async function(e) {
+    if (this.files && this.files[0]) {
+      const file = this.files[0];
+      const formData = new FormData();
+      formData.append('avatar', file);
+      
+      const btn = document.getElementById('change-avatar-btn');
+      const originalText = btn.innerText;
+      btn.innerText = 'Uploading...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/settings/avatar', {
+          method: 'POST',
+          headers: { 'X-CSRFToken': '{{ csrf_token() }}' },
+          body: formData
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const img = document.getElementById('avatar-preview');
+          const initials = document.getElementById('avatar-preview-initials');
+          img.src = '/assets/avatars/' + data.avatar_path;
+          img.classList.remove('d-none');
+          if(initials) initials.classList.add('d-none');
+          
+          if (window.toast) window.toast.show('Success', 'Avatar updated successfully', 'success');
+        } else {
+          if (window.toast) window.toast.show('Error', 'Failed to upload avatar', 'error');
         }
-    </style>
-</head>
-<body>
-<!-- Sidebar -->
-    <aside class="sidebar py-4" id="sidebarMenu">
-        <div class="px-4 mb-5 d-flex align-items-center">
-            <span class="brand-logo me-2">SP</span>
-            <span class="fw-bold text-dark fs-5">SupportPilot</span>
-            <button class="btn-close d-lg-none ms-auto" onclick="document.getElementById('sidebarMenu').classList.remove('show')"></button>
-        </div>
-        
-        <ul class="nav flex-column gap-1 px-3 mb-auto">
-            <li class="nav-item">
-                <a href="/" class="nav-link d-flex align-items-center rounded py-2 px-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-3"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                    Dashboard
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/my_tickets" class="nav-link d-flex align-items-center rounded py-2 px-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-3"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                    Add Tickets
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/all_tickets" class="nav-link d-flex align-items-center rounded py-2 px-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-3"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-                    My Tickets
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/agents" class="nav-link d-flex align-items-center rounded py-2 px-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-3"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                    AI Agent
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/integrations" class="nav-link d-flex align-items-center rounded py-2 px-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-3"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-                    Integrations
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/analytics" class="nav-link d-flex align-items-center rounded py-2 px-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-3"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-                    Analytics
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/settings" class="nav-link active d-flex align-items-center rounded py-2 px-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-3"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                    Settings
-                </a>
-            </li>
-        </ul>
-        
-        <div class="px-4 mt-auto">
-            <div class="border-top border-secondary pt-3 d-flex align-items-center justify-content-between">
-                <div class="text-truncate pe-2">
-                    <div class="small fw-semibold text-dark">{{ user.full_name }}</div>
-                    <div class="small text-muted" style="font-size: 0.75rem;">{{ user.department }}</div>
-                </div>
-                <a href="/logout" class="text-muted d-flex flex-shrink-0" title="Logout">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                </a>
-            </div>
-        </div>
-    </aside>
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="d-flex align-items-center justify-content-between mb-4 d-lg-none">
-            <a class="navbar-brand fw-bold d-flex align-items-center fs-5 text-decoration-none text-dark" href="/">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                SupportPilot
-            </a>
-            <button class="btn btn-outline-light btn-sm" onclick="document.getElementById('sidebarMenu').classList.add('show')">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-            </button>
-        </div>
+      } catch (err) {
+        if (window.toast) window.toast.show('Error', 'Failed to upload avatar', 'error');
+      } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+        this.value = ''; // Reset file input
+      }
+    }
+  });
 
-        <div class="mb-4 pb-2">
-            <h2 class="fw-bold mb-1 text-dark">Settings</h2>
-            <p class="text-muted mb-0">Your real account settings, stored in the database.</p>
-        </div>
+  document.getElementById('remove-avatar-btn').addEventListener('click', async function() {
+    const btn = this;
+    const originalText = btn.innerText;
+    btn.innerText = 'Removing...';
+    btn.disabled = true;
 
-        {% if message %}
-        <div class="alert alert-success">{{ message }}</div>
-        {% endif %}
-        {% if error %}
-        <div class="alert alert-danger">{{ error }}</div>
-        {% endif %}
+    try {
+      const res = await fetch('/api/settings/avatar/remove', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token() }}' }
+      });
+      if (res.ok) {
+        const img = document.getElementById('avatar-preview');
+        const initials = document.getElementById('avatar-preview-initials');
+        img.src = '';
+        img.classList.add('d-none');
+        if(initials) initials.classList.remove('d-none');
+        if (window.toast) window.toast.show('Success', 'Avatar removed successfully', 'success');
+      }
+    } catch (err) {
+      if (window.toast) window.toast.show('Error', 'Failed to remove avatar', 'error');
+    } finally {
+      btn.innerText = originalText;
+      btn.disabled = false;
+    }
+  });
 
-        <div class="row g-4 mb-4">
-            <div class="col-lg-6">
-                <div class="light-card p-4 h-100">
-                    <h5 class="fw-bold mb-3 text-dark">Profile</h5>
-                    <form method="POST">
-                        <input type="hidden" name="action" value="update_profile">
-                        <div class="mb-3">
-                            <label class="form-label small fw-semibold text-dark">Full Name</label>
-                            <input type="text" class="form-control" name="full_name" value="{{ user.full_name }}" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-semibold text-dark">Email</label>
-                            <input type="email" class="form-control" value="{{ user.email }}" disabled>
-                            <div class="form-text">Email cannot be changed.</div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-semibold text-dark">Department</label>
-                            <input type="text" class="form-control" name="department" value="{{ user.department or '' }}">
-                        </div>
-                        <button type="submit" class="btn btn-primary">Save Profile</button>
-                    </form>
-                </div>
-            </div>
-
-            <div class="col-lg-6">
-                <div class="light-card p-4 h-100">
-                    <h5 class="fw-bold mb-3 text-dark">Change Password</h5>
-                    <form method="POST">
-                        <input type="hidden" name="action" value="change_password">
-                        <div class="mb-3">
-                            <label class="form-label small fw-semibold text-dark">Current Password</label>
-                            <input type="password" class="form-control" name="current_password" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-semibold text-dark">New Password</label>
-                            <input type="password" class="form-control" name="new_password" minlength="6" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-semibold text-dark">Confirm New Password</label>
-                            <input type="password" class="form-control" name="confirm_password" minlength="6" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Change Password</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="light-card p-4 mb-5">
-            <h5 class="fw-bold mb-3 text-dark">System Info</h5>
-            <div class="row g-3">
-                <div class="col-6 col-md-3">
-                    <div class="stat-box">
-                        <div class="fs-6 fw-bold text-dark">{{ model_info.model_name if model_info else 'N/A' }}</div>
-                        <div class="text-muted small">Classifier Model</div>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="stat-box">
-                        <div class="fs-6 fw-bold text-dark">{{ "%.1f%%"|format(model_info.accuracy * 100) if model_info else 'N/A' }}</div>
-                        <div class="text-muted small">Model Test Accuracy</div>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="stat-box">
-                        <div class="fs-6 fw-bold text-dark">{{ 'Enabled' if llm_configured else 'Disabled' }}</div>
-                        <div class="text-muted small">LLM Resolutions</div>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="stat-box">
-                        <div class="fs-6 fw-bold text-dark">{{ llm_model_name if llm_configured else '&mdash;' }}</div>
-                        <div class="text-muted small">LLM Model</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </main>
-
-    <script>
-        window.USER_EMAIL = "{{ user.email }}";
-        window.USER_DEPT = "{{ user.department }}";
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+  // Auto-hide flash messages
+  setTimeout(() => {
+    document.querySelectorAll('.flash-message').forEach(el => {
+      el.style.transition = 'opacity 0.4s ease';
+      el.style.opacity = '0';
+      setTimeout(() => el.remove(), 400);
+    });
+  }, 3500);
+</script>
+{% endblock %}

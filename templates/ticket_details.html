@@ -1,793 +1,133 @@
-<!doctype html>
-<html lang="en" data-bs-theme="light">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ticket Result - SupportPilot</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/style.css') }}"
-    />
-    <style>
-      body {
-        display: flex;
-        min-height: 100vh;
-        overflow-x: hidden;
-      }
-      .sidebar {
-        width: 250px;
-        display: flex;
-        flex-direction: column;
-        flex-shrink: 0;
-        z-index: 1040;
-        height: 100vh;
-        position: sticky;
-        top: 0;
-      }
-      .main-content {
-        flex-grow: 1;
-        padding: 2rem 3rem;
-        overflow-y: auto;
-        max-height: 100vh;
-      }
-      .brand-logo {
-        background-color: #6366f1;
-        color: white;
-        border-radius: 0.375rem;
-        padding: 0.25rem 0.5rem;
-        font-weight: bold;
-        font-size: 14px;
-      }
-      .mobile-toggle {
-        display: none;
-      }
-      .ai-resolution-panel {
-        border: 1px solid #cfe0ff;
-        border-radius: 18px;
-        background: linear-gradient(180deg, #f8fbff 0%, #f3f8ff 100%);
-        box-shadow: 0 10px 24px rgba(59, 130, 246, 0.08);
-        overflow: hidden;
-      }
-      .ai-resolution-header {
-        padding: 20px 24px;
-        border-bottom: 1px solid #dce8f7;
-        background: rgba(255, 255, 255, 0.12);
-      }
-      .ai-icon-wrap {
-        width: 36px;
-        height: 36px;
-        border-radius: 12px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, #dbeafe, #eff6ff);
-        border: 1px solid #bfd7ff;
-        color: #2563eb;
-        font-size: 1.1rem;
-      }
-      .ai-resolution-title {
-        font-size: 1.25rem;
-        font-weight: 700;
-        margin: 0;
-        color: #1f2937;
-      }
-      .ai-resolution-subtitle {
-        margin: 4px 0 0;
-        color: #667085;
-        font-size: 0.92rem;
-        line-height: 1.45;
-      }
-      .status-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        border-radius: 999px;
-        padding: 0.5rem 0.8rem;
-        font-size: 0.8rem;
-        font-weight: 600;
-        white-space: nowrap;
-      }
-      .status-processing {
-        background: #edf5ff;
-        color: #1d4ed8;
-        border: 1px solid #bfd7ff;
-      }
-      .status-generated {
-        background: #ecfdf5;
-        color: #0f766e;
-        border: 1px solid #aee8d0;
-      }
-      .status-insufficient {
-        background: #fff7ed;
-        color: #b45309;
-        border: 1px solid #fdba74;
-      }
-      .ai-resolution-content {
-        padding: 20px 24px 22px;
-      }
-      .ai-stage-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 12px;
-        margin-bottom: 14px;
-      }
-      .ai-stage-card {
-        min-height: 96px;
-        border-radius: 14px;
-        border: 1px solid #dbe7f6;
-        background: rgba(255, 255, 255, 0.7);
-        padding: 12px 10px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: 6px;
-        transition: all 0.2s ease;
-      }
-      .ai-stage-card.complete {
-        border-color: #7ad7ad;
-        background: #ebfff3;
-      }
-      .ai-stage-card.active {
-        border-color: #79aefc;
-        background: #edf5ff;
-        box-shadow: 0 0 0 0.15rem rgba(79, 142, 247, 0.08);
-      }
-      .ai-stage-card.pending {
-        opacity: 0.77;
-      }
-      .stage-number {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 30px;
-        height: 30px;
-        border-radius: 10px;
-        font-size: 0.78rem;
-        font-weight: 700;
-        background: rgba(59, 130, 246, 0.12);
-        color: #2563eb;
-      }
-      .ai-stage-card.complete .stage-number {
-        background: rgba(16, 185, 129, 0.15);
-        color: #0f766e;
-      }
-      .ai-stage-card.active .stage-number {
-        background: rgba(59, 130, 246, 0.18);
-        color: #1d4ed8;
-      }
-      .stage-title {
-        font-size: 0.82rem;
-        font-weight: 700;
-        color: #1f2937;
-      }
-      .stage-detail {
-        font-size: 0.73rem;
-        color: #6b7280;
-      }
-      .stage-status {
-        margin-top: 2px;
-        font-size: 0.72rem;
-        font-weight: 600;
-      }
-      .stage-status.complete {
-        color: #0f766e;
-      }
-      .stage-status.active {
-        color: #1d4ed8;
-      }
-      .stage-status.pending {
-        color: #7b8794;
-      }
-      .ai-processing-box {
-        margin-top: 8px;
-        border-radius: 14px;
-        border: 1px solid #d8e8ff;
-        background: linear-gradient(180deg, #f8fbff 0%, #f3f7ff 100%);
-        padding: 18px 16px;
-      }
-      .ai-processing-header {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 12px;
-        flex-wrap: wrap;
-      }
-      .mini-loader {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-      }
-      .mini-loader span {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: #4f8ef7;
-        display: inline-block;
-        animation: aiPulse 1.2s infinite ease-in-out;
-      }
-      .mini-loader span:nth-child(2) {
-        animation-delay: 0.15s;
-      }
-      .mini-loader span:nth-child(3) {
-        animation-delay: 0.3s;
-      }
-      .ai-processing-title {
-        margin: 0;
-        font-size: 1.05rem;
-        font-weight: 700;
-        color: #1f2937;
-        text-align: center;
-      }
-      .ai-processing-subtitle {
-        margin: 6px 0 0;
-        font-size: 0.8rem;
-        color: #6b7280;
-        text-align: center;
-      }
-      .ai-result-shell {
-        display: flex;
-        flex-direction: column;
-        gap: 18px;
-      }
-      .result-divider {
-        height: 1px;
-        background: linear-gradient(
-          90deg,
-          rgba(148, 163, 184, 0.6),
-          rgba(148, 163, 184, 0.15)
-        );
-      }
-      .result-section {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-      .result-heading {
-        font-size: 0.96rem;
-        font-weight: 700;
-        color: #1f2937;
-      }
-      .result-pre {
-        margin: 0;
-        background: rgba(255, 255, 255, 0.7);
-        border: 1px solid #dbe7f6;
-        border-radius: 12px;
-        padding: 16px;
-        white-space: pre-wrap;
-        font-family: inherit;
-        line-height: 1.7;
-        color: #1f2937;
-      }
-      .meta-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-      .meta-pill {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.45rem 0.7rem;
-        border-radius: 999px;
-        background: #edf5ff;
-        border: 1px solid #cfe0ff;
-        color: #1d4ed8;
-        font-size: 0.76rem;
-        font-weight: 600;
-      }
-      .source-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-      .source-chip {
-        display: inline-flex;
-        align-items: center;
-        border-radius: 999px;
-        border: 1px solid #dbe7f6;
-        background: #ffffff;
-        color: #40536b;
-        padding: 0.45rem 0.7rem;
-        font-size: 0.76rem;
-        font-weight: 600;
-      }
-      .ai-empty-state {
-        padding: 8px 0;
-      }
-      .ai-empty-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 16px;
-        padding: 8px 0;
-      }
-      .ai-empty-copy {
-        font-size: 0.95rem;
-        color: #475467;
-      }
-      @keyframes aiPulse {
-        0%,
-        80%,
-        100% {
-          transform: scale(0.75);
-          opacity: 0.45;
-        }
-        40% {
-          transform: scale(1);
-          opacity: 1;
-        }
-      }
-      @media (max-width: 991.98px) {
-        .sidebar {
-          position: fixed;
-          left: -250px;
-          height: 100vh;
-          transition: left 0.3s ease;
-        }
-        .sidebar.show {
-          left: 0;
-        }
-        .mobile-toggle {
-          display: block;
-        }
-        .main-content {
-          padding: 1rem;
-        }
-      }
-      /* Removed FAB Styling */
-    </style>
-  </head>
-  <body>
-    <!-- Sidebar -->
-    <aside class="sidebar py-4" id="sidebarMenu">
-      <div class="px-4 mb-5 d-flex align-items-center">
-        <span class="brand-logo me-2">SP</span>
-        <span class="fw-bold text-dark fs-5">SupportPilot</span>
-        <button
-          class="btn-close d-lg-none ms-auto"
-          onclick="
-            document.getElementById('sidebarMenu').classList.remove('show')
-          "
-        ></button>
-      </div>
+{% extends "base.html" %}
 
-      <ul class="nav flex-column gap-1 px-3 mb-auto">
-        <li class="nav-item">
-          <a
-            href="/"
-            class="nav-link d-flex align-items-center rounded py-2 px-3"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="me-3"
-            >
-              <rect x="3" y="3" width="7" height="7"></rect>
-              <rect x="14" y="3" width="7" height="7"></rect>
-              <rect x="14" y="14" width="7" height="7"></rect>
-              <rect x="3" y="14" width="7" height="7"></rect>
-            </svg>
-            Dashboard
-          </a>
-        </li>
-        <li class="nav-item">
-          <a
-            href="/my_tickets"
-            class="nav-link d-flex align-items-center rounded py-2 px-3"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="me-3"
-            >
-              <path
-                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-              ></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-              <line x1="16" y1="13" x2="8" y2="13"></line>
-              <line x1="16" y1="17" x2="8" y2="17"></line>
-              <polyline points="10 9 9 9 8 9"></polyline>
-            </svg>
-            Add Tickets
-          </a>
-        </li>
-        <li class="nav-item">
-          <a
-            href="/all_tickets"
-            class="nav-link d-flex align-items-center rounded py-2 px-3"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="me-3"
-            >
-              <line x1="8" y1="6" x2="21" y2="6"></line>
-              <line x1="8" y1="12" x2="21" y2="12"></line>
-              <line x1="8" y1="18" x2="21" y2="18"></line>
-              <line x1="3" y1="6" x2="3.01" y2="6"></line>
-              <line x1="3" y1="12" x2="3.01" y2="12"></line>
-              <line x1="3" y1="18" x2="3.01" y2="18"></line>
-            </svg>
-            My Tickets
-          </a>
-        </li>
-        <li class="nav-item">
-          <a
-            href="/agents"
-            class="nav-link d-flex align-items-center rounded py-2 px-3"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="me-3"
-            >
-              <path
-                d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
-              ></path>
-            </svg>
-            AI Agent
-          </a>
-        </li>
-        <li class="nav-item">
-          <a
-            href="/integrations"
-            class="nav-link d-flex align-items-center rounded py-2 px-3"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="me-3"
-            >
-              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-            </svg>
-            Integrations
-          </a>
-        </li>
-        <li class="nav-item">
-          <a
-            href="/analytics"
-            class="nav-link d-flex align-items-center rounded py-2 px-3"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="me-3"
-            >
-              <line x1="18" y1="20" x2="18" y2="10"></line>
-              <line x1="12" y1="20" x2="12" y2="4"></line>
-              <line x1="6" y1="20" x2="6" y2="14"></line>
-            </svg>
-            Analytics
-          </a>
-        </li>
-        <li class="nav-item">
-          <a
-            href="/settings"
-            class="nav-link d-flex align-items-center rounded py-2 px-3"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="me-3"
-            >
-              <circle cx="12" cy="12" r="3"></circle>
-              <path
-                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
-              ></path>
-            </svg>
-            Settings
-          </a>
-        </li>
-      </ul>
+{% block title %}Ticket Details - SupportPilot{% endblock %}
 
-      <div class="px-4 mt-auto">
-        <div
-          class="border-top border-secondary pt-3 d-flex align-items-center justify-content-between"
-        >
-          <div class="text-truncate pe-2">
-            <div class="small fw-semibold text-dark">{{ user.full_name }}</div>
-            <div class="small text-muted" style="font-size: 0.75rem">
-              {{ user.department }}
-            </div>
-          </div>
-          <a
-            href="/logout"
-            class="text-muted d-flex flex-shrink-0"
-            title="Logout"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-              <polyline points="16 17 21 12 16 7"></polyline>
-              <line x1="21" y1="12" x2="9" y2="12"></line>
-            </svg>
-          </a>
+{% set active = 'my_tickets' %}
+{% set topbar_subtitle = 'View and manage ticket information and AI-generated resolution.' %}
+
+{% block extra_head %}
+<style>
+  .sp-card { background:#fff; border-radius:1rem; border:1px solid #eef0f4; box-shadow:0 4px 15px rgba(0,0,0,.02); }
+  .section-title { font-size:1.05rem; font-weight:800; color:#0f172a; margin-bottom:1rem; display:flex; align-items:center; gap:.5rem; }
+  
+  .status-badge { display:inline-flex; align-items:center; border-radius:999px; padding:.25rem .75rem; font-size:.78rem; font-weight:700; white-space:nowrap; }
+  .status-processing { background:#fef3c7; color:#d97706; }
+  .status-generated { background:#dcfce7; color:#16a34a; }
+  .status-insufficient { background:#fee2e2; color:#dc2626; }
+  
+  .ai-stage-list { display: flex; flex-direction: column; }
+  .ai-stage-row { display: flex; align-items: center; justify-content: space-between; border: 1px solid #e5e7eb; padding: 0.85rem 1.25rem; background: #fff; margin-bottom: -1px; position: relative; }
+  .ai-stage-row:first-child { border-top-left-radius: 0.6rem; border-top-right-radius: 0.6rem; }
+  .ai-stage-row:last-child { border-bottom-left-radius: 0.6rem; border-bottom-right-radius: 0.6rem; margin-bottom: 0; }
+  
+  .ai-stage-row.complete { border-color: #86efac; z-index: 1; }
+  .ai-stage-row.active { border-color: #3b82f6; z-index: 2; }
+  
+  .stage-row-left { display: flex; align-items: center; gap: 0.8rem; }
+  .stage-row-num { font-size: 0.75rem; font-weight: 700; color: #94a3b8; width: 32px; display: flex; align-items: center; justify-content: center; }
+  .stage-row-title { font-size: 0.9rem; font-weight: 600; color: #111827; }
+  .stage-row-detail { font-size: 0.85rem; color: #64748b; margin-left: 0.5rem; }
+  
+  .stage-row-status { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+  .stage-row-status.pending { color: #94a3b8; }
+  .stage-row-status.active { color: #2563eb; }
+  .stage-row-status.complete { color: #16a34a; }
+  
+  .resolution-box { background:#f8fafc; border:1px solid #eef0f4; border-radius:.8rem; padding:1.25rem; font-size:.9rem; color:#334155; line-height:1.6; }
+  .result-section { margin-top:1.2rem; padding-top:1.2rem; border-top:1px dashed #e2e8f0; }
+  .result-heading { font-size:.82rem; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:.03em; margin-bottom:.5rem; }
+  .source-list { display:flex; gap:.4rem; flex-wrap:wrap; }
+  .source-chip { font-size:.75rem; background:#fff; border:1px solid #cbd5e1; border-radius:999px; padding:.15rem .6rem; color:#475569; font-weight:600; }
+  
+  .ai-empty-row { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:10px 0; flex-wrap:wrap; }
+  .ai-empty-copy { font-size:.88rem; color:#475467; }
+  @keyframes aiPulse { 0%,80%,100% { transform:scale(.75); opacity:.45; } 40% { transform:scale(1); opacity:1; } }
+  .classification-pill-box { border-radius:.8rem; padding:1rem; background:#f8fafc; border:1px solid #eef0f4; text-align:center; }
+  .classification-pill-box .lbl { font-size:.72rem; color:#6b7280; font-weight:600; text-transform:uppercase; letter-spacing:.02em; margin-bottom:.5rem; }
+  .confidence-track { height:10px; border-radius:999px; background:#eef0f4; overflow:hidden; }
+  .confidence-fill { height:100%; background:linear-gradient(90deg,#3b82f6,#2563eb); border-radius:999px; }
+  .accordion-btn-sp { width:100%; text-align:left; background:#fff; border:1px solid #e6e9f0; border-radius:.8rem; padding:.9rem 1.1rem; display:flex; align-items:center; justify-content:space-between; font-weight:700; color:#111827; font-size:.9rem; }
+  .accordion-body-sp { border:1px solid #e6e9f0; border-top:none; border-radius:0 0 .8rem .8rem; padding:1rem 1.1rem; margin-top:-1px; font-size:.85rem; color:#374151; }
+</style>
+{% endblock %}
+
+{% block content %}
+      <div class="d-flex justify-content-between align-items-center mb-3">
         </div>
-      </div>
-    </aside>
-
-    <main class="main-content">
-      <!-- Mobile Header -->
-      <div
-        class="d-flex align-items-center justify-content-between mb-4 d-lg-none"
-      >
-        <a
-          class="navbar-brand fw-bold text-gradient d-flex align-items-center fs-5 text-decoration-none"
-          href="/"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="me-2"
-          >
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-          </svg>
-          SupportPilot
+        <a href="/my_tickets" class="sp-btn-outline">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          Back to My Tickets
         </a>
-        <button
-          class="btn btn-outline-light btn-sm"
-          onclick="document.getElementById('sidebarMenu').classList.add('show')"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <line x1="3" y1="12" x2="21" y2="12"></line>
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <line x1="3" y1="18" x2="21" y2="18"></line>
-          </svg>
-        </button>
       </div>
 
-      <!-- Dashboard Header -->
-      <div class="d-flex justify-content-between align-items-end mb-4 pb-2">
-        <div>
-          <h2 class="fw-bold mb-1 d-flex align-items-center text-dark">
-            <span id="greeting-text">Good morning</span>, {{
-            user.full_name.split()[0] }} <span class="ms-2 fs-4">👋</span>
-          </h2>
-          <p class="text-muted mb-0">Ticket Details</p>
-        </div>
-        <div class="d-none d-md-block">
-          <a
-            href="/all_tickets"
-            class="btn btn-sm btn-outline-primary rounded-pill px-3 d-inline-flex align-items-center gap-2"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <line x1="19" y1="12" x2="5" y2="12"></line>
-              <polyline points="12 19 5 12 12 5"></polyline>
-            </svg>
-            Back to My Tickets
-          </a>
-        </div>
-      </div>
-
-      <div class="row g-4 justify-content-center">
+      <div class="row g-3">
         <div class="col-lg-7">
-          <div class="light-card p-4 h-100">
+          <div class="sp-card p-4 h-100">
             <div class="d-flex justify-content-between align-items-start mb-3">
-              <span
-                class="badge badge-soft-info px-3 py-2 text-uppercase fw-semibold tracking-wider"
-                >Ticket #T-{{ ticket.ticket_id }}</span
-              >
-              <span
-                class="badge rounded-pill px-3 py-2 {% if ticket.status == 'Open' %}badge-soft-warning {% elif ticket.status == 'In Progress' %}badge-soft-info {% elif ticket.status == 'Resolved' %}badge-soft-success {% elif ticket.status == 'Closed' %}badge-soft-secondary {% else %}badge-soft-primary{% endif %}"
-              >
-                {{ ticket.status }}
-              </span>
+              <span class="pill pill-blue">TICKET #T-{{ ticket.ticket_id }}</span>
+              <span class="pill {% if ticket.status == 'Open' %}pill-orange{% elif ticket.status == 'In Progress' %}pill-blue{% elif ticket.status == 'Resolved' %}pill-green{% elif ticket.status == 'Closed' %}pill-gray{% else %}pill-blue{% endif %}">{{ ticket.status }}</span>
             </div>
-            <h3 class="fw-bold mb-3 text-dark">{{ ticket.title }}</h3>
+            <h3 class="fw-bold mb-2 text-dark" style="font-size:1.4rem;">{{ ticket.title }}</h3>
+            <p class="text-muted mb-3">{{ ticket.description }}</p>
 
-            <div class="bg-light p-4 rounded border border-secondary mb-4">
-              <p
-                class="text-dark mb-0"
-                style="line-height: 1.6; white-space: pre-wrap"
-              >
-                {{ ticket.description }}
-              </p>
-            </div>
-
-            <div class="row text-muted small">
-              <div class="col-sm-6 mb-2 mb-sm-0">
-                <strong>Requester:</strong> {{ ticket.employee_name }} ({{
-                ticket.email }})
-              </div>
-              <div class="col-sm-6 text-sm-end">
-                <strong>Submitted:</strong> {{ ticket.created_at[:16] }}
-              </div>
+            <div class="row text-muted small border-top pt-3">
+              <div class="col-sm-6 mb-2 mb-sm-0"><strong class="text-dark">Requester:</strong> {{ ticket.employee_name }} ({{ ticket.email }})</div>
+              <div class="col-sm-6 text-sm-end"><strong class="text-dark">Submitted:</strong> {{ ticket.created_at[:16] }}</div>
             </div>
           </div>
         </div>
 
         <div class="col-lg-5">
-          <div class="light-card p-0 overflow-hidden h-100">
-            <div class="bg-gradient-header p-4 border-bottom border-secondary">
-              <h5 class="mb-0 fw-bold text-dark d-flex align-items-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  class="me-2 text-info"
-                >
-                  <path
-                    d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
-                  ></path>
-                </svg>
-                AI Classification Result
-              </h5>
+          <div class="sp-card p-4 h-100">
+            <div class="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4"></circle></svg>
+              AI Classification Result
             </div>
-
-            <div class="p-4">
-              <div class="classification-card mb-3">
-                <div class="text-muted small text-uppercase fw-semibold mb-2">
-                  Category Identified
-                </div>
-                <div class="classification-value text-info">
-                  {{ ticket.category }}
+            <div class="row g-2 mb-3">
+              <div class="col-4">
+                <div class="classification-pill-box">
+                  <div class="lbl">Category</div>
+                  <span class="pill pill-blue">{{ ticket.category }}</span>
                 </div>
               </div>
-
-              <div class="classification-card mb-3">
-                <div class="text-muted small text-uppercase fw-semibold mb-2">
-                  Severity Predicted
-                </div>
-                <div>
-                  <span
-                    class="classification-badge {% if ticket.severity == 'Critical' %}severity-critical {% elif ticket.severity == 'High' %}severity-high {% elif ticket.severity == 'Medium' %}severity-medium {% else %}severity-low{% endif %}"
-                  >
-                    {{ ticket.severity }} Severity
-                  </span>
+              <div class="col-4">
+                <div class="classification-pill-box">
+                  <div class="lbl">Severity</div>
+                  <span class="pill {% if ticket.severity == 'Critical' %}pill-red{% elif ticket.severity == 'High' %}pill-orange{% elif ticket.severity == 'Medium' %}pill-blue{% else %}pill-green{% endif %}">{{ ticket.severity }} Severity</span>
                 </div>
               </div>
-
-              <div class="classification-card mb-4">
-                <div class="text-muted small text-uppercase fw-semibold mb-2">
-                  Priority Assigned
-                </div>
-                <div
-                  class="classification-priority {% if ticket.priority in ['P1', 'P2'] %}priority-high{% else %}priority-standard{% endif %}"
-                >
-                  {{ ticket.priority }}
+              <div class="col-4">
+                <div class="classification-pill-box">
+                  <div class="lbl">Priority</div>
+                  <span class="pill {% if ticket.priority in ['P1','P2'] %}pill-red{% else %}pill-blue{% endif %}">{{ ticket.priority }}</span>
                 </div>
               </div>
-
-              <div class="mt-4 pt-3 border-top border-secondary text-center">
-                <span class="text-muted small"
-                  >Ticket Confidence Score:
-                  <strong class="text-dark"
-                    >{{ "%.1f"|format(ticket.confidence * 100) }}%</strong
-                  ></span
-                >
+            </div>
+            <div class="mt-2">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="small text-muted fw-semibold">Confidence Score</span>
+                <span class="small fw-bold text-dark">{{ "%.0f"|format(ticket.confidence * 100) }} / 100</span>
               </div>
+              <div class="confidence-track"><div class="confidence-fill" style="width: {{ (ticket.confidence * 100)|round(0, 'floor') }}%;"></div></div>
             </div>
           </div>
         </div>
       </div>
 
-      <div
-        class="row g-4 justify-content-center mt-1"
-        id="ai-resolution-section"
-        data-ticket-id="{{ ticket.ticket_id }}"
-      >
-        <div class="col-lg-12">
+      <div class="row g-3 mt-1" id="ai-resolution-section" data-ticket-id="{{ ticket.ticket_id }}">
+        <div class="col-12">
           <div class="ai-resolution-panel">
             <div class="ai-resolution-header">
-              <div
-                class="d-flex justify-content-between align-items-start gap-3"
-              >
+              <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
                 <div class="d-flex align-items-center gap-3">
                   <div class="ai-icon-wrap">✦</div>
                   <div>
                     <h5 class="ai-resolution-title">AI Resolution Agent</h5>
-                    <p class="ai-resolution-subtitle">
-                      Grounded resolution generated from enterprise knowledge
-                      using Retrieval-Augmented Generation (RAG).
-                    </p>
+                    <p class="ai-resolution-subtitle">Grounded resolution generated from the enterprise knowledge base using Retrieval-Augmented Generation (RAG).</p>
                   </div>
                 </div>
-                <span
-                  class="status-badge {% if ticket.ai_resolution %}status-generated{% else %}status-processing{% endif %}"
-                  id="ai-status-badge"
-                >
-                  {% if ticket.ai_resolution %}✓ Generated{% else %}●
-                  Processing{% endif %}
+                <span class="status-badge {% if ticket.ai_resolution %}status-generated{% else %}status-processing{% endif %}" id="ai-status-badge">
+                  {% if ticket.ai_resolution %}✓ Generated{% else %}● Processing{% endif %}
                 </span>
               </div>
             </div>
@@ -795,522 +135,341 @@
             <div class="ai-resolution-content" id="ai-resolution-content">
               {% if ticket.ai_resolution %}
               <div class="ai-result-shell">
-                <div class="ai-stage-grid">
-                  <div class="ai-stage-card complete">
-                    <div class="stage-number">01</div>
-                    <div class="stage-title">Ticket Analysis</div>
-                    <div class="stage-status complete">✓ Completed</div>
-                  </div>
-                  <div class="ai-stage-card complete">
-                    <div class="stage-number">02</div>
-                    <div class="stage-title">Knowledge Retrieval</div>
-                    <div class="stage-status complete">✓ Completed</div>
-                  </div>
-                  <div class="ai-stage-card complete">
-                    <div class="stage-number">03</div>
-                    <div class="stage-title">Context Augmentation</div>
-                    <div class="stage-status complete">✓ Completed</div>
-                  </div>
-                  <div class="ai-stage-card complete">
-                    <div class="stage-number">04</div>
-                    <div class="stage-title">AI Resolution</div>
-                    <div class="stage-status complete">✓ Completed</div>
-                  </div>
+                <div class="ai-stage-list">
+                  <div class="ai-stage-row complete"><div class="stage-row-left"><div class="stage-row-num">1</div><div class="stage-row-title">Diagnosis</div><div class="stage-row-detail">Analyzed by M1</div></div><div class="stage-row-status complete">✓ COMPLETED</div></div>
+                  <div class="ai-stage-row complete"><div class="stage-row-left"><div class="stage-row-num">2</div><div class="stage-row-title">Retrieval</div><div class="stage-row-detail">Searched KB</div></div><div class="stage-row-status complete">✓ COMPLETED</div></div>
+                  <div class="ai-stage-row complete"><div class="stage-row-left"><div class="stage-row-num">3</div><div class="stage-row-title">Resolution</div><div class="stage-row-detail">Generated by Agent</div></div><div class="stage-row-status complete">✓ COMPLETED</div></div>
+                  <div class="ai-stage-row complete"><div class="stage-row-left"><div class="stage-row-num">4</div><div class="stage-row-title">Validation</div><div class="stage-row-detail">{% if ticket.validation_confidence is not none %}Score: {{ "%.1f"|format(ticket.validation_confidence) }}%{% else %}N/A{% endif %}</div></div><div class="stage-row-status complete">✓ COMPLETED</div></div>
+                  <div class="ai-stage-row complete"><div class="stage-row-left"><div class="stage-row-num">5</div><div class="stage-row-title">Execution</div><div class="stage-row-detail">{% if ticket.resolution_decision == 'AUTO_RESOLVE' %}Email Sent{% elif ticket.resolution_decision == 'ESCALATE' %}Escalated to Jira{% else %}Completed{% endif %}</div></div><div class="stage-row-status complete">✓ COMPLETED</div></div>
                 </div>
 
                 <div class="result-divider"></div>
+                
+                {% if ticket.resolution_decision %}
+                <div class="alert {% if ticket.resolution_decision == 'AUTO_RESOLVE' %}alert-success{% else %}alert-warning text-dark{% endif %} mt-3 py-2 px-3 small fw-bold">
+                  {% if ticket.resolution_decision == 'AUTO_RESOLVE' %}
+                    ✓ Decision: AUTO_RESOLVE (Email {{ ticket.email_status }})
+                  {% else %}
+                    ⚠ Decision: ESCALATE (Jira: {% if ticket.jira_issue_key %}<a href="{{ ticket.jira_issue_url }}" target="_blank" class="text-dark fw-bold text-decoration-underline">{{ ticket.jira_issue_key }}</a>{% else %}Failed/Pending{% endif %})<br>
+                    <span class="fw-normal mt-1 d-block text-muted">Reason: {{ ticket.escalation_reason }}</span>
+                  {% endif %}
+                </div>
+                {% endif %}
 
+                {% if ticket.structured_resolution %}
+                <div class="resolution-premium-card mt-3">
+                  <div class="premium-row d-flex align-items-center mb-3">
+                    <div class="premium-icon" style="background:#fef3c7; color:#d97706; padding:8px; border-radius:8px;">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    </div>
+                    <div class="ms-3">
+                      <div class="fw-bold text-dark mb-1" style="font-size:0.95rem;">Status &amp; Diagnosis</div>
+                      <span class="badge {% if ticket.structured_resolution.status == 'RESOLVED' %}bg-success{% else %}bg-warning text-dark{% endif %} px-3 py-2" style="font-size:0.75rem;">
+                        {{ ticket.structured_resolution.status }}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div class="premium-block mt-4 mb-4">
+                    <div class="fw-bold text-dark mb-2" style="font-size:0.9rem;">Likely Cause</div>
+                    <p class="text-muted m-0" style="font-size:0.85rem; line-height:1.6;">{{ ticket.structured_resolution.likely_cause or 'Insufficient data to determine a specific cause.' }}</p>
+                  </div>
+
+                  <div class="premium-block mb-4">
+                    <div class="fw-bold text-dark mb-2" style="font-size:0.9rem;">Troubleshooting Steps</div>
+                    {% if ticket.structured_resolution.troubleshooting_steps %}
+                    <div class="steps-list mt-3">
+                      {% for step in ticket.structured_resolution.troubleshooting_steps %}
+                      <div class="mb-3">
+                        {% if step is mapping %}
+                          <div class="fw-bold text-dark" style="font-size:0.85rem;">{{ loop.index }}. {{ step.heading }}</div>
+                          <div class="text-muted" style="font-size:0.85rem; line-height:1.6;">{{ step.description }}</div>
+                        {% else %}
+                          <div class="text-muted" style="font-size:0.85rem; line-height:1.6;">{{ loop.index }}. {{ step }}</div>
+                        {% endif %}
+                      </div>
+                      {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted m-0 small">No steps provided.</p>
+                    {% endif %}
+                  </div>
+
+                  <div class="premium-block p-4 rounded-3" style="background:#f0fdf4; border:1px solid #bbf7d0;">
+                    <div class="d-flex align-items-center gap-2 mb-2 text-success">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                      <div class="fw-bold" style="font-size:0.9rem;">Recommended Resolution</div>
+                    </div>
+                    <p class="text-success m-0" style="font-size:0.85rem; line-height:1.6; font-weight:500;">
+                      {{ ticket.structured_resolution.recommended_resolution }}
+                    </p>
+                  </div>
+                </div>
+                {% else %}
                 <div class="result-section">
                   <div class="result-heading">Recommended Resolution</div>
-                  <pre class="result-pre">{{ ticket.ai_resolution }}</pre>
+                  <pre class="result-pre" style="font-family:inherit;font-size:.85rem;white-space:pre-wrap;">{{ ticket.ai_resolution }}</pre>
                 </div>
+                {% endif %}
 
-                <div class="meta-row">
-                  {% if ticket.resolution_confidence is not none %}
-                  <span class="meta-pill"
-                    >Resolution confidence: {{
-                    "%.0f"|format((ticket.resolution_confidence or 0) * 100)
-                    }}%</span
-                  >
-                  {% endif %}
-                  <span class="meta-pill"
-                    >Generated by {% if ticket.resolution_engine %}{{
-                    ticket.resolution_engine|upper }}{% else %}Template{% endif
-                    %}</span
-                  >
+                <div class="meta-row mt-4">
+                  {% if ticket.resolution_confidence is not none %}<span class="meta-pill">Resolution confidence: {{ (ticket.resolution_confidence * 100)|round(0, 'floor')|int }}%</span>{% endif %}
+                  <span class="meta-pill">Generated by {% if ticket.resolution_engine %}{{ ticket.resolution_engine|upper }}{% else %}Template{% endif %}</span>
                 </div>
 
                 <div class="result-section">
-                  <div class="result-heading">Sources</div>
+                  <div class="result-heading">Knowledge Sources</div>
                   <div class="source-list">
-                    {% if ticket.resolution_sources %} {% for source in
-                    ticket.resolution_sources.split(',') %} {% if source.strip()
-                    %}
-                    <span class="source-chip">{{ source.strip() }}</span>
-                    {% endif %} {% endfor %} {% else %}
+                    {% if ticket.structured_sources %}
+                      {% for source in ticket.structured_sources %}
+                        <span class="source-chip">{{ source }}</span>
+                      {% endfor %}
+                    {% else %}
                     <span class="text-muted small">No sources available.</span>
                     {% endif %}
                   </div>
                 </div>
               </div>
               {% else %}
-              <div class="ai-empty-state">
-                <div class="ai-empty-row">
-                  <div class="ai-empty-copy">
-                    Generate a grounded troubleshooting recommendation using the
-                    enterprise knowledge base.
-                  </div>
-                  <button
-                    type="button"
-                    id="generate-ai-resolution-btn"
-                    class="btn btn-primary btn-gradient px-4 py-2 fw-medium"
-                  >
-                    Generate AI Resolution
-                  </button>
-                </div>
+              <div class="ai-empty-row">
+                <div class="ai-empty-copy">Generate a grounded troubleshooting recommendation using the enterprise knowledge base.</div>
+                <button type="button" id="generate-ai-resolution-btn" class="sp-btn-primary">Generate AI Resolution</button>
               </div>
               {% endif %}
             </div>
           </div>
         </div>
       </div>
-    </main>
 
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const generateButton = document.getElementById(
-          "generate-ai-resolution-btn",
-        );
-        if (!generateButton) {
-          return;
-        }
-
-        const shouldAutoGenerate =
-          new URLSearchParams(window.location.search).get("generate") ===
-          "true";
-        const contentContainer = document.getElementById(
-          "ai-resolution-content",
-        );
-        const statusBadge = document.getElementById("ai-status-badge");
-        const stageLabels = [
-          { label: "Ticket Analysis", detail: "Query generated", icon: "01" },
-          { label: "Knowledge Retrieval", detail: "Searching KB", icon: "02" },
-          {
-            label: "Context Augmentation",
-            detail: "Preparing context",
-            icon: "03",
-          },
-          { label: "AI Resolution", detail: "Generating response", icon: "04" },
-        ];
-
-        function setStatusBadge(status) {
-          if (!statusBadge) {
-            return;
-          }
-
-          statusBadge.className = "status-badge";
-          if (status === "generated") {
-            statusBadge.classList.add("status-generated");
-            statusBadge.textContent = "✓ Generated";
-          } else if (status === "insufficient") {
-            statusBadge.classList.add("status-insufficient");
-            statusBadge.textContent = "⚠ Insufficient Knowledge";
-          } else {
-            statusBadge.classList.add("status-processing");
-            statusBadge.textContent = "● Processing";
-          }
-        }
-
-        function renderStageCards(activeIndex) {
-          return stageLabels
-            .map((stage, index) => {
-              let className = "ai-stage-card pending";
-              let statusText = "Pending";
-              let statusClass = "pending";
-
-              if (index < activeIndex) {
-                className = "ai-stage-card complete";
-                statusText = "✓ Completed";
-                statusClass = "complete";
-              } else if (index === activeIndex) {
-                className = "ai-stage-card active";
-                statusText = "● Running";
-                statusClass = "active";
-              }
-
-              return `
-                <div class="${className}">
-                  <div class="stage-number">${stage.icon}</div>
-                  <div class="stage-title">${stage.label}</div>
-                  <div class="stage-detail">${stage.detail}</div>
-                  <div class="stage-status ${statusClass}">${statusText}</div>
-                </div>
-              `;
-            })
-            .join("");
-        }
-
-        function renderProcessingState(activeIndex) {
-          setStatusBadge("processing");
-
-          contentContainer.innerHTML = `
-            <div class="ai-result-shell">
-              <div class="ai-stage-grid">
-                ${renderStageCards(activeIndex)}
-              </div>
-
-              <div class="ai-processing-box">
-                <div class="ai-processing-header">
-                  <div class="mini-loader">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                  </div>
-                </div>
-                <div class="ai-processing-title">Generating a grounded resolution from the retrieved knowledge-base context...</div>
-                <div class="ai-processing-subtitle">
-                  Using the retrieved knowledge to prepare a grounded support response.
-                </div>
-              </div>
+      <!-- Ticket Analysis & Query Generation -->
+      <div class="mt-3">
+        <button class="accordion-btn-sp" type="button" data-bs-toggle="collapse" data-bs-target="#analysisCollapse" aria-expanded="false">
+          <span class="d-flex align-items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+            Ticket Analysis &amp; Query Generation
+          </span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="collapse" id="analysisCollapse">
+          <div class="accordion-body-sp">
+            <div class="row g-3">
+              <div class="col-md-4"><div class="text-muted small text-uppercase fw-semibold mb-1">Category</div><div class="fw-semibold text-dark">{{ ticket.category }}</div></div>
+              <div class="col-md-4"><div class="text-muted small text-uppercase fw-semibold mb-1">Priority</div><div class="fw-semibold text-dark">{{ ticket.priority }}</div></div>
+              <div class="col-md-4"><div class="text-muted small text-uppercase fw-semibold mb-1">Generated Query</div><div class="fw-semibold text-dark text-truncate">{{ ticket.title }} {{ ticket.description }}</div></div>
             </div>
-          `;
-        }
-
-        function renderGeneratedState(ticket) {
-          const sources = ticket.resolution_sources
-            ? ticket.resolution_sources
-                .split(",")
-                .map((item) => item.trim())
-                .filter(Boolean)
-            : [];
-
-          const confidence =
-            ticket.resolution_confidence != null
-              ? `${Math.round(ticket.resolution_confidence * 100)}%`
-              : null;
-
-          const engine = ticket.resolution_engine
-            ? ticket.resolution_engine.toUpperCase()
-            : "Template";
-
-          setStatusBadge("generated");
-
-          contentContainer.innerHTML = `
-            <div class="ai-result-shell">
-              <div class="ai-stage-grid">
-                ${renderStageCards(3)}
-              </div>
-
-              <div class="result-divider"></div>
-
-              <div class="result-section">
-                <div class="result-heading">Recommended Resolution</div>
-                <pre class="result-pre">${escapeHtml(ticket.ai_resolution || "")}</pre>
-              </div>
-
-              <div class="meta-row">
-                ${confidence ? `<span class="meta-pill">Resolution confidence: ${confidence}</span>` : ""}
-                <span class="meta-pill">Generated by ${engine}</span>
-              </div>
-
-              <div class="result-section">
-                <div class="result-heading">Sources</div>
-                <div class="source-list">
-                  ${
-                    sources.length
-                      ? sources
-                          .map(
-                            (source) =>
-                              `<span class="source-chip">${escapeHtml(source)}</span>`,
-                          )
-                          .join("")
-                      : '<span class="text-muted small">No sources available.</span>'
-                  }
-                </div>
-              </div>
-            </div>
-          `;
-        }
-
-        generateButton.addEventListener("click", async function () {
-          const ticketId = Number(
-            document.getElementById("ai-resolution-section").dataset.ticketId,
-          );
-          const originalText = generateButton.textContent;
-
-          generateButton.disabled = true;
-          generateButton.textContent = "Generating...";
-
-          let activeIndex = 0;
-          renderProcessingState(activeIndex);
-
-          const stageInterval = setInterval(() => {
-            activeIndex = Math.min(activeIndex + 1, stageLabels.length - 1);
-            renderProcessingState(activeIndex);
-          }, 450);
-
-          try {
-            const response = await fetch(
-              `/api/tickets/${ticketId}/generate-resolution`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-              },
-            );
-
-            if (!response.ok) {
-              throw new Error("Unable to generate AI resolution");
-            }
-
-            const ticket = await response.json();
-
-            if (!ticket.ai_resolution) {
-              throw new Error("No AI resolution returned");
-            }
-
-            clearInterval(stageInterval);
-            renderGeneratedState(ticket);
-          } catch (error) {
-            console.error(error);
-            clearInterval(stageInterval);
-            setStatusBadge("insufficient");
-            contentContainer.innerHTML = `
-              <div class="ai-processing-box">
-                <div class="ai-processing-title">Unable to generate a grounded resolution.</div>
-                <div class="ai-processing-subtitle">
-                  Please check the retrieved knowledge base results and try again.
-                </div>
-              </div>
-            `;
-          } finally {
-            generateButton.disabled = false;
-            generateButton.textContent = originalText;
-          }
-        });
-
-        if (shouldAutoGenerate) {
-          generateButton.click();
-        }
-      });
-
-      function escapeHtml(value) {
-        return String(value)
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#039;");
-      }
-    </script>
-
-    <!-- Floating Action Button removed based on user feedback -->
-    <!-- Create Ticket Modal -->
-    <div
-      class="modal fade"
-      id="newTicketModal"
-      tabindex="-1"
-      aria-hidden="true"
-      data-bs-backdrop="static"
-    >
-      <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content light-card border-secondary">
-          <div class="modal-header border-secondary p-4">
-            <h5 class="modal-title fw-bold text-dark">Create New Ticket</h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-              onclick="resetModalForm()"
-            ></button>
-          </div>
-          <div class="modal-body p-4">
-            <!-- Result State (Hidden initially) -->
-            <div id="modal-result-state" class="d-none text-center py-4">
-              <div class="mb-3">
-                <div
-                  class="d-inline-flex align-items-center justify-content-center bg-success bg-opacity-10 text-success rounded-circle"
-                  style="width: 64px; height: 64px"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="32"
-                    height="32"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="3"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                </div>
-              </div>
-              <h4 class="fw-bold mb-4">Ticket Created Successfully</h4>
-
-              <div class="row g-3 text-start mb-4 justify-content-center">
-                <div class="col-md-3 col-6">
-                  <div class="light-card p-3 h-100 text-center border">
-                    <div class="text-muted small text-uppercase mb-1">
-                      Category
-                    </div>
-                    <div class="fw-bold text-info" id="res-modal-cat"></div>
-                  </div>
-                </div>
-                <div class="col-md-3 col-6">
-                  <div class="light-card p-3 h-100 text-center border">
-                    <div class="text-muted small text-uppercase mb-1">
-                      Severity
-                    </div>
-                    <div class="fw-bold" id="res-modal-sev"></div>
-                  </div>
-                </div>
-                <div class="col-md-3 col-6">
-                  <div class="light-card p-3 h-100 text-center border">
-                    <div class="text-muted small text-uppercase mb-1">
-                      Priority
-                    </div>
-                    <div class="fw-bold" id="res-modal-pri"></div>
-                  </div>
-                </div>
-                <div class="col-md-3 col-6">
-                  <div class="light-card p-3 h-100 text-center border">
-                    <div class="text-muted small text-uppercase mb-1">
-                      Ticket Confidence
-                    </div>
-                    <div class="fw-bold text-muted" id="res-modal-conf"></div>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                class="btn btn-primary btn-gradient px-4 py-2 fw-medium"
-                data-bs-dismiss="modal"
-                onclick="
-                  resetModalForm();
-                  window.location.reload();
-                "
-              >
-                Close & Refresh
-              </button>
-            </div>
-
-            <!-- Form State -->
-            <form id="ticketModalForm">
-              <div class="mb-3">
-                <label
-                  class="form-label text-muted small fw-semibold text-uppercase"
-                  >Ticket Title</label
-                >
-                <input
-                  type="text"
-                  class="form-control glass-input"
-                  id="title"
-                  name="title"
-                  required
-                  placeholder="E.g. VPN Connection Failing"
-                />
-              </div>
-
-              <div class="mb-3">
-                <label
-                  class="form-label text-muted small fw-semibold text-uppercase"
-                  >Description</label
-                >
-                <textarea
-                  class="form-control glass-input"
-                  id="description"
-                  name="description"
-                  rows="4"
-                  required
-                  placeholder="Detailed error messages and troubleshooting steps..."
-                ></textarea>
-              </div>
-
-              <div class="row g-3 mb-3">
-                <div class="col-md-6">
-                  <label
-                    class="form-label text-muted small fw-semibold text-uppercase"
-                    >Requester Email</label
-                  >
-                  <input
-                    type="email"
-                    class="form-control glass-input opacity-75"
-                    id="email"
-                    name="email"
-                    value="{{ user.email }}"
-                    readonly
-                  />
-                </div>
-                <div class="col-md-6">
-                  <label
-                    class="form-label text-muted small fw-semibold text-uppercase"
-                    >Department</label
-                  >
-                  <select
-                    class="form-select glass-input opacity-75"
-                    id="department"
-                    name="department"
-                    disabled
-                  >
-                    <option value="{{ user.department }}" selected>
-                      {{ user.department }}
-                    </option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="mb-4">
-                <label
-                  class="form-label text-muted small fw-semibold text-uppercase"
-                  >Business Impact</label
-                >
-                <select
-                  class="form-select glass-input"
-                  id="business_impact"
-                  name="business_impact"
-                  required
-                >
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
-                  <option value="Critical">Critical</option>
-                </select>
-              </div>
-
-              <div class="text-end pt-3 border-top border-secondary mt-2">
-                <button
-                  type="button"
-                  class="btn btn-link text-muted text-decoration-none me-2"
-                  data-bs-dismiss="modal"
-                  onclick="resetModalForm()"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  id="modalSubmitBtn"
-                  class="btn btn-primary btn-gradient px-4 py-2 fw-medium d-inline-flex align-items-center"
-                >
-                  Submit Ticket
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- User context for JS -->
-    <script>
-      window.USER_EMAIL = "{{ user.email }}";
-      window.USER_DEPT = "{{ user.department }}";
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
-  </body>
-</html>
+      <!-- Knowledge Base Retrieval -->
+      <div class="mt-2">
+        {% set src_count = ticket.resolution_sources.split(',')|selectattr('0')|list|length if ticket.resolution_sources else 0 %}
+        <button class="accordion-btn-sp" type="button" data-bs-toggle="collapse" data-bs-target="#kbCollapse" aria-expanded="false">
+          <span class="d-flex align-items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+            Knowledge Base Retrieval {% if ticket.ai_resolution %}({{ src_count }} article{{ 's' if src_count != 1 else '' }}){% endif %}
+          </span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="collapse" id="kbCollapse">
+          <div class="accordion-body-sp">
+            {% if ticket.resolution_sources %}
+              <div class="d-flex flex-wrap gap-2">
+                {% for source in ticket.resolution_sources.split(',') %}
+                  {% if source.strip() %}<span class="source-chip">{{ source.strip() }}</span>{% endif %}
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="text-muted small">No knowledge-base articles retrieved yet. Generate an AI resolution to search the knowledge base.</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Format markdown for any server-rendered resolution text
+    document.querySelectorAll('.result-pre').forEach(pre => {
+      let html = pre.innerHTML;
+      pre.innerHTML = html.replace(/\*\*(.*?)\*\*/g, '<strong class="text-dark fw-bold" style="font-size:0.9rem;">$1</strong>');
+    });
+
+    const generateButton = document.getElementById("generate-ai-resolution-btn");
+    if (!generateButton) return;
+
+    const shouldAutoGenerate = new URLSearchParams(window.location.search).get("generate") === "true";
+    const contentContainer = document.getElementById("ai-resolution-content");
+    const statusBadge = document.getElementById("ai-status-badge");
+    const stageLabels = [
+      { label: "Diagnosis", detail: "Analyzed by M1", icon: '1' },
+      { label: "Retrieval", detail: "Searching KB", icon: '2' },
+      { label: "Resolution", detail: "Generating response", icon: '3' },
+      { label: "Validation", detail: "Checking confidence", icon: '4' },
+      { label: "Execution", detail: "Triggering Integrations", icon: '5' }
+    ];
+
+    function setStatusBadge(status) {
+      if (!statusBadge) return;
+      statusBadge.className = "status-badge";
+      if (status === "generated") { statusBadge.classList.add("status-generated"); statusBadge.textContent = "✓ Generated"; }
+      else if (status === "insufficient") { statusBadge.classList.add("status-insufficient"); statusBadge.textContent = "⚠ Insufficient Knowledge"; }
+      else { statusBadge.classList.add("status-processing"); statusBadge.textContent = "● Processing"; }
+    }
+
+    function renderStageCards(activeIndex) {
+      return stageLabels.map((stage, index) => {
+        let className = "ai-stage-row", statusText = "PENDING", statusClass = "pending";
+        if (index < activeIndex) { className = "ai-stage-row complete"; statusText = "✓ COMPLETED"; statusClass = "complete"; }
+        else if (index === activeIndex) { className = "ai-stage-row active"; statusText = "● RUNNING"; statusClass = "active"; }
+        return `<div class="${className}"><div class="stage-row-left"><div class="stage-row-num">${stage.icon}</div><div class="stage-row-title">${stage.label}</div><div class="stage-row-detail">${stage.detail}</div></div><div class="stage-row-status ${statusClass}">${statusText}</div></div>`;
+      }).join("");
+    }
+
+    function renderProcessingState(activeIndex) {
+      setStatusBadge("processing");
+      contentContainer.innerHTML = `
+        <div class="ai-result-shell">
+          <div class="ai-stage-list">${renderStageCards(activeIndex)}</div>
+          <div class="ai-processing-box">
+            <div class="ai-processing-header"><div class="mini-loader"><span></span><span></span><span></span></div></div>
+            <div class="ai-processing-title">Generating a grounded resolution from the retrieved knowledge-base context...</div>
+            <div class="ai-processing-subtitle">Using the retrieved knowledge to prepare a grounded support response.</div>
+          </div>
+        </div>`;
+    }
+
+    function renderGeneratedState(ticket) {
+      const sources = ticket.resolution_sources ? ticket.resolution_sources.split(",").map((i) => i.trim()).filter(Boolean) : [];
+      const confidence = ticket.resolution_confidence != null ? `${Math.round(ticket.resolution_confidence * 100)}%` : null;
+      const engine = ticket.resolution_engine ? ticket.resolution_engine.toUpperCase() : "Template";
+      setStatusBadge("generated");
+      
+      let resolutionHtml = "";
+      if (ticket.structured_resolution) {
+        const sr = ticket.structured_resolution;
+        const statusClass = sr.status === 'RESOLVED' ? 'bg-success' : 'bg-warning text-dark';
+            const stepsHtml = sr.troubleshooting_steps && sr.troubleshooting_steps.length 
+              ? `<div class="steps-list mt-3">
+                  ${sr.troubleshooting_steps.map((s, idx) => {
+                    if (typeof s === 'object' && s !== null) {
+                      return `<div class="mb-3"><div class="fw-bold text-dark" style="font-size:0.85rem;">${idx + 1}. ${escapeHtml(s.heading)}</div><div class="text-muted" style="font-size:0.85rem; line-height:1.6;">${escapeHtml(s.description)}</div></div>`;
+                    } else {
+                      return `<div class="mb-3"><div class="text-muted" style="font-size:0.85rem; line-height:1.6;">${idx + 1}. ${escapeHtml(s)}</div></div>`;
+                    }
+                  }).join('')}
+                 </div>`
+              : `<p class="text-muted m-0 small">No steps provided.</p>`;
+          
+        resolutionHtml = `
+          <div class="resolution-premium-card mt-3">
+            <div class="premium-row d-flex align-items-center mb-3">
+              <div class="premium-icon" style="background:#fef3c7; color:#d97706; padding:8px; border-radius:8px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              </div>
+              <div class="ms-3">
+                <div class="fw-bold text-dark mb-1" style="font-size:0.95rem;">Status &amp; Diagnosis</div>
+                <span class="badge ${statusClass} px-3 py-2" style="font-size:0.75rem;">${escapeHtml(sr.status || 'UNKNOWN')}</span>
+              </div>
+            </div>
+            
+            <div class="premium-block mt-4 mb-4">
+              <div class="fw-bold text-dark mb-2" style="font-size:0.9rem;">Likely Cause</div>
+              <p class="text-muted m-0" style="font-size:0.85rem; line-height:1.6;">${escapeHtml(sr.likely_cause || 'Insufficient data to determine a specific cause.')}</p>
+            </div>
+
+            <div class="premium-block mb-4">
+              <div class="fw-bold text-dark mb-2" style="font-size:0.9rem;">Troubleshooting Steps</div>
+              ${stepsHtml}
+            </div>
+
+            <div class="premium-block p-4 rounded-3" style="background:#f0fdf4; border:1px solid #bbf7d0;">
+              <div class="d-flex align-items-center gap-2 mb-2 text-success">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                <div class="fw-bold" style="font-size:0.9rem;">Recommended Resolution</div>
+              </div>
+              <p class="text-success m-0" style="font-size:0.85rem; line-height:1.6; font-weight:500;">
+                ${escapeHtml(sr.recommended_resolution || '')}
+              </p>
+            </div>
+          </div>
+        `;
+      } else {
+        resolutionHtml = `<div class="result-section"><div class="result-heading">Recommended Resolution</div><pre class="result-pre" style="font-family:inherit;font-size:.85rem;white-space:pre-wrap;">${formatMarkdown(ticket.ai_resolution || "")}</pre></div>`;
+      }
+
+      let decisionHtml = '';
+      if(ticket.resolution_decision) {
+        if(ticket.resolution_decision === 'AUTO_RESOLVE') {
+            decisionHtml = `<div class="alert alert-success mt-3 py-2 px-3 small fw-bold">✓ Decision: AUTO_RESOLVE (Email ${ticket.email_status})</div>`;
+        } else {
+            decisionHtml = `<div class="alert alert-warning text-dark mt-3 py-2 px-3 small fw-bold">⚠ Decision: ESCALATE (Jira: ${ticket.jira_issue_key ? `<a href="${ticket.jira_issue_url}" target="_blank" class="text-dark fw-bold text-decoration-underline">${ticket.jira_issue_key}</a>` : 'Pending/Failed'})<br><span class="fw-normal mt-1 d-block text-muted">Reason: ${escapeHtml(ticket.escalation_reason)}</span></div>`;
+        }
+      }
+
+      contentContainer.innerHTML = `
+        <div class="ai-result-shell">
+          <div class="ai-stage-list">${renderStageCards(5)}</div>
+          <div class="result-divider"></div>
+          ${decisionHtml}
+          ${resolutionHtml}
+          <div class="meta-row mt-4">
+            ${confidence ? `<span class="meta-pill">Resolution confidence: ${confidence}</span>` : ""}
+            <span class="meta-pill">Generated by ${engine}</span>
+          </div>
+          <div class="result-section mt-3 pt-3 border-top">
+            <div class="result-heading mb-2" style="font-size:0.8rem;">Sources</div>
+            <div class="source-list">${sources.length ? sources.map((s) => `<span class="source-chip bg-light border px-3 py-1 rounded-pill text-muted" style="font-size:0.75rem;">${escapeHtml(s)}</span>`).join("") : '<span class="text-muted small">No sources available.</span>'}</div>
+          </div>
+        </div>`;
+    }
+
+    generateButton.addEventListener("click", async function () {
+      const ticketId = Number(document.getElementById("ai-resolution-section").dataset.ticketId);
+      const originalText = generateButton.textContent;
+      generateButton.disabled = true;
+      generateButton.textContent = "Generating...";
+
+      let activeIndex = 0;
+      renderProcessingState(activeIndex);
+      const stageInterval = setInterval(() => {
+        activeIndex = Math.min(activeIndex + 1, stageLabels.length - 1);
+        renderProcessingState(activeIndex);
+      }, 450);
+
+      try {
+        const response = await fetch(`/api/tickets/${ticketId}/generate-resolution`, { method: "POST", headers: { "Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token() }}" } });
+        if (!response.ok) throw new Error("Unable to generate AI resolution");
+        const ticket = await response.json();
+        if (!ticket.ai_resolution) throw new Error("No AI resolution returned");
+        clearInterval(stageInterval);
+        renderGeneratedState(ticket);
+      } catch (error) {
+        console.error(error);
+        clearInterval(stageInterval);
+        setStatusBadge("insufficient");
+        contentContainer.innerHTML = `<div class="ai-processing-box"><div class="ai-processing-title">Unable to generate a grounded resolution.</div><div class="ai-processing-subtitle">Please check the retrieved knowledge base results and try again.</div></div>`;
+      } finally {
+        generateButton.disabled = false;
+        generateButton.textContent = originalText;
+      }
+    });
+
+    // Auto-generate logic removed as per user request to explicitly require clicks
+  });
+
+  function escapeHtml(unsafe) {
+    if (!unsafe) return "";
+    return unsafe.toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  }
+
+  function formatMarkdown(text) {
+    if (!text) return "";
+    let html = escapeHtml(text);
+    // Replace **text** with styled strong tags
+    return html.replace(/\*\*(.*?)\*\*/g, '<strong class="text-dark fw-bold" style="font-size:0.9rem;">$1</strong>');
+  }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}
