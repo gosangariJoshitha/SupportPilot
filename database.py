@@ -29,6 +29,15 @@ def get_cursor(conn):
         return getattr(conn, "cursor")(cursor_factory=DictCursor)
     return getattr(conn, "cursor")()
 
+def parse_row(row):
+    if not row:
+        return None
+    d = dict(row)
+    for k, v in d.items():
+        if isinstance(v, datetime):
+            d[k] = v.strftime('%Y-%m-%d %H:%M:%S')
+    return d
+
 def execute_query(cursor, query, params=()):
     if IS_POSTGRES:
         query = query.replace('?', '%s')
@@ -239,7 +248,7 @@ def get_user_by_email(email):
     execute_query(cursor, 'SELECT * FROM users WHERE email = ?', (email,))
     row = cursor.fetchone()
     conn.close()
-    return dict(row) if row else None
+    return parse_row(row) if row else None
 
 def get_user_by_id(user_id):
     conn = get_connection()
@@ -247,7 +256,7 @@ def get_user_by_id(user_id):
     execute_query(cursor, 'SELECT * FROM users WHERE user_id = ?', (user_id,))
     row = cursor.fetchone()
     conn.close()
-    return dict(row) if row else None
+    return parse_row(row) if row else None
 
 def insert_ticket(data):
     conn = get_connection()
@@ -291,7 +300,7 @@ def get_all_tickets(user_id=None):
         execute_query(cursor, 'SELECT * FROM tickets ORDER BY created_at DESC')
     rows = cursor.fetchall()
     conn.close()
-    return [dict(row) for row in rows]
+    return [parse_row(row) for row in rows]
 
 def get_ticket(ticket_id, user_id=None):
     conn = get_connection()
@@ -302,7 +311,7 @@ def get_ticket(ticket_id, user_id=None):
         execute_query(cursor, 'SELECT * FROM tickets WHERE ticket_id = ?', (ticket_id,))
     row = cursor.fetchone()
     conn.close()
-    return dict(row) if row else None
+    return parse_row(row) if row else None
 
 def update_ticket_status(ticket_id, user_id, new_status):
     conn = get_connection()
@@ -694,7 +703,7 @@ def get_user_preferences(user_id):
         execute_query(cursor, 'SELECT * FROM user_preferences WHERE user_id = ?', (user_id,))
         row = cursor.fetchone()
     conn.close()
-    return dict(row)
+    return parse_row(row)
 
 def update_user_preferences(user_id, data):
     conn = get_connection()
@@ -738,7 +747,7 @@ def get_notifications(user_id, limit=20):
     execute_query(cursor, 'SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT ?', (user_id, limit))
     rows = cursor.fetchall()
     conn.close()
-    return [dict(row) for row in rows]
+    return [parse_row(row) for row in rows]
 
 def get_unread_notification_count(user_id):
     conn = get_connection()
@@ -787,7 +796,7 @@ def get_user_by_reset_token(token):
     execute_query(cursor, 'SELECT * FROM users WHERE password_reset_token = ?', (token,))
     row = cursor.fetchone()
     conn.close()
-    return dict(row) if row else None
+    return parse_row(row) if row else None
 
 # --- AI Agent Conversations ---
 
