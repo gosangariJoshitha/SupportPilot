@@ -56,7 +56,7 @@ class ValidationAgent:
             val_info.update({"decision": "ESCALATE", "reason": "RESOLUTION_FAILED", "confidence": 0.0})
             return val_info
             
-        if retrieval["retrieved_count"] == 0 or retrieval["top_score"] < 0.10:
+        if retrieval["retrieved_count"] == 0 or retrieval["top_score"] < 0.02:
             val_info.update({"decision": "ESCALATE", "reason": "VALIDATION_FAILURE", "confidence": 0.0})
             return val_info
 

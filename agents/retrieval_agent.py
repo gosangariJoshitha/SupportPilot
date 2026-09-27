@@ -11,7 +11,7 @@ def get_retriever():
     return _retriever
 
 class RetrievalAgent:
-    MIN_RELEVANCE = 0.10
+    MIN_RELEVANCE = 0.02
 
     @staticmethod
     def retrieve(query, top_k=3):
