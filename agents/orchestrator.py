@@ -25,10 +25,10 @@ class SupportPilotOrchestrator:
             
         # Increment repeated_attempts if we are re-processing
         # This gets updated before diagnosis.
-        from database import get_connection
+        from database import get_connection, execute_query
         conn = get_connection()
         cursor = conn.cursor()
-        cursor.execute("UPDATE tickets SET repeated_attempts = COALESCE(repeated_attempts, 0) + 1 WHERE ticket_id = ?", (ticket_id,))
+        execute_query(cursor, "UPDATE tickets SET repeated_attempts = COALESCE(repeated_attempts, 0) + 1 WHERE ticket_id = ?", (ticket_id,))
         conn.commit()
         conn.close()
         
