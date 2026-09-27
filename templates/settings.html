@@ -1,0 +1,458 @@
+{% extends "base.html" %}
+
+{% block title %}SupportPilot - Settings{% endblock %}
+
+{% block page_title %}Settings{% endblock %}
+{% block page_subtitle %}Manage your account, preferences, and application settings.{% endblock %}
+
+{% set active = 'settings' %}
+{% set promo_title = 'Customize your experience' %}
+{% set promo_text = 'Make SupportPilot work the way you do.' %}
+{% set promo_icon = 'settings' %}
+
+
+{% block extra_head %}
+<style>
+  body { font-family:'Inter',sans-serif; }
+  .settings-tabs { display:flex; gap:1.5rem; border-bottom:1px solid #e5e7eb; margin-bottom:1.25rem; flex-wrap:wrap; }
+  .settings-tab { display:flex; align-items:center; gap:.4rem; padding-bottom:.7rem; font-weight:600; font-size:.85rem; color:#6b7280; border-bottom:2px solid transparent; cursor:pointer; }
+  .settings-tab.active { color:#2563eb; border-color:#2563eb; }
+  .avatar-lg { width:70px;height:70px;border-radius:50%;background:#2563eb;color:#fff;font-size:1.5rem;font-weight:700;display:flex;align-items:center;justify-content:center; }
+  .side-panel-row { display:flex; justify-content:space-between; align-items:center; padding:.8rem 0; border-bottom:1px solid #f3f4f6; }
+  .side-panel-row:last-child { border-bottom:none; }
+  .toggle-switch { width:40px;height:22px;border-radius:999px;background:#e5e7eb;position:relative;flex-shrink:0;cursor:pointer;transition:.15s;}
+  .toggle-switch.on { background:#2563eb; }
+  .toggle-switch .knob { width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:.15s; box-shadow:0 1px 3px rgba(0,0,0,.2); }
+  .toggle-switch.on .knob { left:20px; }
+  .theme-opt { border:1px solid #e5e7eb; border-radius:.6rem; padding:.6rem 1rem; font-size:.82rem; font-weight:600; color:#374151; display:flex; align-items:center; gap:.4rem; cursor:pointer; transition: all 0.2s; }
+  .theme-opt:hover { border-color: #9ca3af; background: #f9fafb; }
+  .theme-opt.active { border: 2px solid #2563eb; background:#eff6ff; color:#1e40af; }
+  .status-banner { background:#ecfdf5; border:1px solid #a7f3d0; border-radius:.8rem; padding:1rem; }
+  .input-icon-wrap { position:relative; }
+  .input-icon-wrap .form-control { padding-left:2.6rem; }
+  .input-icon-wrap .form-select { padding-left:2.6rem; }
+  .input-icon { position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:#64748b; }
+  
+  /* Layout Refinements */
+  .settings-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 2.2fr) minmax(300px, 0.9fr);
+    gap: 1.5rem;
+    align-items: start;
+  }
+  @media (max-width: 991.98px) {
+    .settings-layout { grid-template-columns: 1fr; }
+  }
+  .right-column-cards { display: flex; flex-direction: column; gap: 1.25rem; }
+  .sp-card-content { padding: 1.75rem; }
+  .settings-info-text { font-size: 0.85rem; color: #6b7280; margin-top: 1rem; border-top: 1px solid #f3f4f6; padding-top: 1rem; line-height: 1.5; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+      {% if message %}<div class="alert alert-success py-2 small flash-message">{{ message }}</div>{% endif %}
+      {% if error %}<div class="alert alert-danger py-2 small flash-message">{{ error }}</div>{% endif %}
+
+      <div class="settings-tabs">
+        <div class="settings-tab active" data-tab="profile">
+          <i data-lucide="user" style="width:20px;height:20px;"></i>
+          Profile
+        </div>
+        <div class="settings-tab" data-tab="preferences">
+          <i data-lucide="settings" style="width:20px;height:20px;"></i>
+          Preferences
+        </div>
+        <div class="settings-tab" data-tab="security">
+          <i data-lucide="lock" style="width:20px;height:20px;"></i>
+          Security
+        </div>
+        <div class="settings-tab" data-tab="notifications">
+          <i data-lucide="bell" style="width:20px;height:20px;"></i>
+          Notifications
+        </div>
+        <div class="settings-tab" data-tab="api">
+          <i data-lucide="code" style="width:20px;height:20px;"></i>
+          API Access
+        </div>
+      </div>
+
+      <div class="settings-layout">
+        <div class="left-column">
+
+          <!-- PROFILE -->
+          <div class="settings-pane" id="pane-profile">
+            <div class="sp-card mb-3">
+              <div class="sp-card-content">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="fw-bold text-dark d-flex align-items-center gap-2">
+                  <i data-lucide="user" style="width:20px;height:20px;"></i>
+                  Profile Information
+                </div>
+              </div>
+              <form method="POST" action="/settings">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="update_profile">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                  {% if user.avatar_path %}
+                  <img src="{{ url_for('static', filename='avatars/' + user.avatar_path) }}" class="avatar-lg" style="object-fit: cover;" id="avatar-preview" alt="Avatar">
+                  {% else %}
+                  <span class="avatar-lg" id="avatar-preview-initials">{{ (user.full_name or "U")[0]|upper }}</span>
+                  <img src="" class="avatar-lg d-none" style="object-fit: cover;" id="avatar-preview" alt="Avatar">
+                  {% endif %}
+                  <div class="d-flex flex-column gap-2">
+                    <div class="d-flex gap-2">
+                      <button type="button" class="btn btn-secondary" style="padding:.35rem .8rem; font-size:.82rem;" id="change-avatar-btn" onclick="document.getElementById('avatar-upload').click()"><i data-lucide="image" style="width:20px;height:20px;"></i> Change Avatar</button>
+                      <input type="file" id="avatar-upload" class="d-none" accept="image/png, image/jpeg, image/gif, image/webp">
+                      <button type="button" id="remove-avatar-btn" class="btn btn-secondary text-danger" style="padding:.35rem .8rem; font-size:.82rem; border-color:#fecaca; background:#fef2f2;"><i data-lucide="trash" style="width:20px;height:20px;"></i> Remove</button>
+                    </div>
+                    <div class="text-muted small">JPG, PNG or GIF. 1MB max.</div>
+                  </div>
+                </div>
+                <div class="row g-3 mb-3">
+                  <div class="col-md-12">
+                    <label class="form-label-sp">Full Name</label>
+                    <input type="text" class="form-control" name="full_name" value="{{ user.full_name }}" required>
+                  </div>
+                </div>
+                <div class="row g-3 mb-3">
+                  <div class="col-md-6">
+                    <label class="form-label-sp">Email Address</label>
+                    <div class="input-icon-wrap">
+                      <input type="email" class="form-control" value="{{ user.email }}" disabled>
+                      <i data-lucide="mail" class="input-icon" style="width:20px;height:20px;"></i>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label-sp">Phone Number</label>
+                    <div class="input-icon-wrap">
+                      <input type="text" class="form-control" value="" disabled placeholder="Not configured">
+                      <i data-lucide="phone" class="input-icon" style="width:20px;height:20px;"></i>
+                    </div>
+                  </div>
+                </div>
+                <div class="row g-3 mb-3">
+                  <div class="col-md-6">
+                    <label class="form-label-sp">Department</label>
+                    <div class="input-icon-wrap">
+                      <input type="text" class="form-control" name="department" value="{{ user.department or '' }}" placeholder="e.g. Engineering">
+                      <i data-lucide="calendar" class="input-icon" style="width:20px;height:20px;"></i>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label-sp">Role</label>
+                    <div class="input-icon-wrap">
+                      <select class="form-select" disabled>
+                        <option selected>User</option>
+                      </select>
+                      <i data-lucide="user" class="input-icon" style="width:20px;height:20px;"></i>
+                    </div>
+                  </div>
+                </div>
+                <div class="row g-3 mb-4">
+                  <div class="col-md-6">
+                    <label class="form-label-sp">Timezone</label>
+                    <div class="input-icon-wrap">
+                      <select class="form-select" disabled>
+                        <option selected>UTC-08:00 (Pacific Time)</option>
+                      </select>
+                      <i data-lucide="clock" class="input-icon" style="width:20px;height:20px;"></i>
+                    </div>
+                  </div>
+                </div>
+                <button type="submit" class="sp-btn-primary"><i data-lucide="save" style="width:20px;height:20px;"></i> Save Changes</button>
+              </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECURITY -->
+          <div class="settings-pane d-none" id="pane-security">
+            <div class="sp-card mb-3">
+              <div class="sp-card-content">
+              <div class="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                <i data-lucide="lock" style="width:20px;height:20px;"></i>
+                Change Password
+              </div>
+              <form method="POST" action="/settings">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="change_password">
+                <div class="mb-3">
+                  <label class="form-label-sp">Current Password</label>
+                  <input type="password" class="form-control" name="current_password" required>
+                </div>
+                <div class="row g-3 mb-3">
+                  <div class="col-md-6">
+                    <label class="form-label-sp">New Password</label>
+                    <input type="password" class="form-control" name="new_password" required minlength="6">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label-sp">Confirm New Password</label>
+                    <input type="password" class="form-control" name="confirm_password" required minlength="6">
+                  </div>
+                </div>
+                <button type="submit" class="sp-btn-primary"><i data-lucide="key" style="width:20px;height:20px;"></i> Change Password</button>
+              </form>
+              <div class="settings-info-text">
+                <div class="fw-bold text-dark mb-1">Password Security</div>
+                Your password is stored securely as a cryptographic hash and is never displayed or transmitted in plaintext. Use a strong password and never share your credentials.
+              </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PREFERENCES -->
+          <div class="settings-pane d-none" id="pane-preferences">
+            <div class="sp-card mb-3">
+              <div class="sp-card-content">
+              <div class="fw-bold text-dark mb-3">Theme</div>
+              <div class="d-flex gap-2">
+                <div class="theme-opt active" data-theme="light">
+                  <i data-lucide="sun" style="width:20px;height:20px;"></i>
+                  Light
+                </div>
+                <div class="theme-opt" data-theme="dark">
+                  <i data-lucide="moon" style="width:20px;height:20px;"></i>
+                  Dark
+                </div>
+                <div class="theme-opt" data-theme="system">
+                  <i data-lucide="laptop" style="width:20px;height:20px;"></i>
+                  System
+                </div>
+              </div>
+              <div class="text-muted small mt-2">Theme preference is stored locally in your browser for this session only.</div>
+              <div class="settings-info-text">
+                <div class="fw-bold text-dark mb-1">Appearance Settings</div>
+                Choose how SupportPilot appears across the application. Selecting "System" will automatically match your operating system's active color scheme.
+              </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- NOTIFICATIONS -->
+          <div class="settings-pane d-none" id="pane-notifications">
+            <div class="sp-card mb-3">
+              <div class="sp-card-content">
+              <div class="fw-bold text-dark mb-3">Email & Push Notifications</div>
+              <p class="text-muted small mb-4">Manage how and when you receive notifications from SupportPilot.</p>
+              <div class="side-panel-row"><span class="small fw-medium text-dark">Ticket status updates</span><div class="toggle-switch pref-toggle" data-key="notify_ticket_status"><div class="knob"></div></div></div>
+              <div class="side-panel-row"><span class="small fw-medium text-dark">AI agent suggestions</span><div class="toggle-switch pref-toggle" data-key="notify_ai_suggestions"><div class="knob"></div></div></div>
+              <div class="side-panel-row"><span class="small fw-medium text-dark">Weekly summary</span><div class="toggle-switch pref-toggle" data-key="notify_weekly_summary"><div class="knob"></div></div></div>
+              <div class="side-panel-row"><span class="small fw-medium text-dark">Product updates</span><div class="toggle-switch pref-toggle" data-key="notify_product_updates"><div class="knob"></div></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- API ACCESS -->
+          <div class="settings-pane d-none" id="pane-api">
+            <div class="sp-card mb-3">
+              <div class="sp-card-content">
+              <div class="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                <i data-lucide="bot" style="width:20px;height:20px;"></i>
+                AI Agent Configuration
+              </div>
+              <div class="side-panel-row">
+                <div><div class="fw-semibold text-dark small">LLM Provider</div><div class="text-muted small">Used for generating grounded resolutions</div></div>
+                <span class="pill {{ 'pill-green' if llm_configured else 'pill-gray' }}">{{ 'Configured' if llm_configured else 'Not Configured' }}</span>
+              </div>
+              <div class="side-panel-row">
+                <div><div class="fw-semibold text-dark small">Model</div></div>
+                <span class="text-dark small fw-semibold">{{ llm_model_name }}</span>
+              </div>
+              <div class="side-panel-row">
+                <div><div class="fw-semibold text-dark small">Classifier</div></div>
+                <span class="text-dark small fw-semibold">{{ model_info.model_type if model_info else 'N/A' }}</span>
+              </div>
+              <div class="side-panel-row">
+                <div><div class="fw-semibold text-dark small">Classifier Accuracy</div></div>
+                <span class="text-dark small fw-semibold">{{ (model_info.accuracy * 100)|round(1) if model_info and model_info.accuracy else '—' }}%</span>
+              </div>
+              <div class="settings-info-text">
+                <div class="fw-bold text-dark mb-1">Configuration Security</div>
+                API credentials and model endpoint configurations are managed server-side and are never exposed in the browser environment.
+              </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="right-column-cards">
+          <div class="status-banner">
+            <div class="d-flex align-items-center gap-2 fw-bold" style="color:#0f766e;">
+              <i data-lucide="circle-check" style="width:20px;height:20px;"></i>
+              Your account is active
+            </div>
+            <div class="text-muted small mt-1">You have access to all features.</div>
+          </div>
+
+          <div class="sp-card p-3">
+            <div class="fw-bold text-dark mb-1" style="font-size:.9rem;">Notification Preferences</div>
+            <div class="text-muted small mb-2">Choose what notifications you want to receive.</div>
+            <div class="side-panel-row"><span class="small fw-medium text-dark">Ticket status updates</span><div class="toggle-switch pref-toggle" data-key="notify_ticket_status"><div class="knob"></div></div></div>
+            <div class="side-panel-row"><span class="small fw-medium text-dark">AI agent suggestions</span><div class="toggle-switch pref-toggle" data-key="notify_ai_suggestions"><div class="knob"></div></div></div>
+            <div class="side-panel-row"><span class="small fw-medium text-dark">Weekly summary</span><div class="toggle-switch pref-toggle" data-key="notify_weekly_summary"><div class="knob"></div></div></div>
+            <div class="side-panel-row"><span class="small fw-medium text-dark">Product updates</span><div class="toggle-switch pref-toggle" data-key="notify_product_updates"><div class="knob"></div></div></div>
+          </div>
+
+
+        </div>
+      </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+  document.querySelectorAll('.settings-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.settings-pane').forEach(p => p.classList.add('d-none'));
+      tab.classList.add('active');
+      document.getElementById('pane-' + tab.dataset.tab).classList.remove('d-none');
+    });
+  });
+
+  // Initialize Theme from Local Storage or Backend
+  const currentTheme = localStorage.getItem('sp-theme') || "{{ prefs.theme | default('system') }}";
+  document.querySelectorAll('.theme-opt').forEach(o => o.classList.remove('active'));
+  const activeOpt = document.querySelector(`.theme-opt[data-theme="${currentTheme}"]`);
+  if (activeOpt) activeOpt.classList.add('active');
+
+  // Initialize Notification Toggles from Jinja
+  const prefs = {
+    notify_ticket_status: {{ 'true' if prefs.notify_ticket_status else 'false' }},
+    notify_ai_suggestions: {{ 'true' if prefs.notify_ai_suggestions else 'false' }},
+    notify_weekly_summary: {{ 'true' if prefs.notify_weekly_summary else 'false' }},
+    notify_product_updates: {{ 'true' if prefs.notify_product_updates else 'false' }}
+  };
+  
+  Object.keys(prefs).forEach(k => {
+    document.querySelectorAll(`.pref-toggle[data-key="${k}"]`).forEach(toggle => {
+      if (prefs[k]) toggle.classList.add('on');
+      else toggle.classList.remove('on');
+    });
+  });
+
+  async function updatePreference(key, value) {
+    try {
+      const payload = {};
+      payload[key] = value;
+      const res = await fetch('/api/settings/preferences', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok && window.toast) {
+        window.toast.show('Preference Saved', 'Your settings have been updated.', 'success', 2000);
+      }
+    } catch(e) { console.error(e); }
+  }
+
+  // Attach Toggle Listeners
+  document.querySelectorAll('.pref-toggle').forEach(toggle => {
+    toggle.addEventListener('click', function() {
+      const isOn = !this.classList.contains('on');
+      const key = this.dataset.key;
+      
+      // Optimistically update ALL toggles with the same key
+      document.querySelectorAll(`.pref-toggle[data-key="${key}"]`).forEach(t => {
+        if (isOn) t.classList.add('on');
+        else t.classList.remove('on');
+      });
+      
+      updatePreference(key, isOn);
+    });
+  });
+
+  // Attach Theme Listeners
+  document.querySelectorAll('.theme-opt').forEach(opt => {
+    opt.addEventListener('click', () => {
+      document.querySelectorAll('.theme-opt').forEach(o => o.classList.remove('active'));
+      opt.classList.add('active');
+      const theme = opt.dataset.theme;
+      
+      // Apply Theme Locally
+      localStorage.setItem('sp-theme', theme);
+      document.documentElement.dataset.bsTheme = theme === 'system' ? 
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme;
+        
+      updatePreference('theme', theme);
+    });
+  });
+
+  // Avatar Logic
+  document.getElementById('avatar-upload').addEventListener('change', async function(e) {
+    if (this.files && this.files[0]) {
+      const file = this.files[0];
+      const formData = new FormData();
+      formData.append('avatar', file);
+      
+      const btn = document.getElementById('change-avatar-btn');
+      const originalText = btn.innerText;
+      btn.innerText = 'Uploading...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/settings/avatar', {
+          method: 'POST',
+          headers: { 'X-CSRFToken': '{{ csrf_token() }}' },
+          body: formData
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const img = document.getElementById('avatar-preview');
+          const initials = document.getElementById('avatar-preview-initials');
+          img.src = '/assets/avatars/' + data.avatar_path;
+          img.classList.remove('d-none');
+          if(initials) initials.classList.add('d-none');
+          
+          if (window.toast) window.toast.show('Success', 'Avatar updated successfully', 'success');
+        } else {
+          if (window.toast) window.toast.show('Error', 'Failed to upload avatar', 'error');
+        }
+      } catch (err) {
+        if (window.toast) window.toast.show('Error', 'Failed to upload avatar', 'error');
+      } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+        this.value = ''; // Reset file input
+      }
+    }
+  });
+
+  document.getElementById('remove-avatar-btn').addEventListener('click', async function() {
+    const btn = this;
+    const originalText = btn.innerText;
+    btn.innerText = 'Removing...';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch('/api/settings/avatar/remove', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token() }}' }
+      });
+      if (res.ok) {
+        const img = document.getElementById('avatar-preview');
+        const initials = document.getElementById('avatar-preview-initials');
+        img.src = '';
+        img.classList.add('d-none');
+        if(initials) initials.classList.remove('d-none');
+        if (window.toast) window.toast.show('Success', 'Avatar removed successfully', 'success');
+      }
+    } catch (err) {
+      if (window.toast) window.toast.show('Error', 'Failed to remove avatar', 'error');
+    } finally {
+      btn.innerText = originalText;
+      btn.disabled = false;
+    }
+  });
+
+  // Auto-hide flash messages
+  setTimeout(() => {
+    document.querySelectorAll('.flash-message').forEach(el => {
+      el.style.transition = 'opacity 0.4s ease';
+      el.style.opacity = '0';
+      setTimeout(() => el.remove(), 400);
+    });
+  }, 3500);
+</script>
+{% endblock %}

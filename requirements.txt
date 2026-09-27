@@ -1,0 +1,13 @@
+Flask
+PyJWT
+scikit-learn==1.6.1
+pandas
+numpy
+joblib
+matplotlib
+seaborn
+pytest
+requests
+python-dotenv
+gunicorn
+psycopg2-binary

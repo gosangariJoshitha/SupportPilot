@@ -1,0 +1,14 @@
+{
+    "model_name": "Linear SVC C=50",
+    "accuracy": 0.9259259259259259,
+    "macro_f1": 0.9243163054695563,
+    "weighted_f1": 0.9243163054695562,
+    "classes": [
+        "Hardware",
+        "Network",
+        "Password",
+        "Software",
+        "System",
+        "VPN"
+    ]
+}

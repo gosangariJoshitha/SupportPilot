@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}My Tickets - SupportPilot{% endblock %}
+
+{% block page_title %}My Tickets{% endblock %}
+{% block page_subtitle %}Track, manage, and view all your submitted support tickets.{% endblock %}
+
+{% set active = 'my_tickets' %}
+{% set promo_title = 'Smarter Support Happier Teams' %}
+{% set promo_text = 'Let AI handle the routine, so you can focus on what matters.' %}
+{% set promo_icon = 'bot' %}
+
+
+{% block extra_head %}
+<style>
+  body { font-family:'Inter',sans-serif; }
+  table.tk-table thead th { font-size:.72rem; text-transform:uppercase; letter-spacing:.03em; color:#9ca3af; font-weight:700; border-bottom:1px solid #eef0f4; padding:.7rem .6rem; }
+  table.tk-table td { padding:.85rem .6rem; border-bottom:1px solid #f3f4f6; font-size:.85rem; vertical-align:middle; }
+  table.tk-table tr:last-child td { border-bottom:none; }
+  table.tk-table tbody tr:hover { background:#f8fafc; cursor:pointer; }
+  .page-btn { width:32px;height:32px;border-radius:.5rem;border:1px solid #e5e7eb;background:#fff;display:inline-flex;align-items:center;justify-content:center;color:#374151;font-size:.82rem;font-weight:600; }
+  .page-btn.active { background:#2563eb;border-color:#2563eb;color:#fff; }
+  .page-btn { width:32px;height:32px;border-radius:.5rem;border:1px solid #e5e7eb;background:#fff;display:inline-flex;align-items:center;justify-content:center;color:#374151;font-size:.82rem;font-weight:600; }
+  .page-btn.active { background:#2563eb;border-color:#2563eb;color:#fff; }
+  .input-icon-wrap { position:relative; }
+  .input-icon-wrap .form-control { padding-left:2.6rem; }
+  .input-icon { position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:#64748b; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+
+      <div class="sp-card">
+        <div class="p-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <div class="fw-bold text-dark d-flex align-items-center gap-2" style="font-size:1.1rem;">
+            <i data-lucide="list" class="text-primary"></i>
+            All Tickets
+          </div>
+          <a href="/add_tickets" class="btn btn-primary d-flex align-items-center gap-2">
+            <i data-lucide="plus" style="width:16px;height:16px;"></i>
+            New Ticket
+          </a>
+        </div>
+
+        <div class="row g-2 mb-4 align-items-center px-3">
+          <div class="col-md-3">
+            <div class="position-relative">
+              <i data-lucide="search" class="position-absolute text-muted" style="left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px;"></i>
+              <input type="text" class="form-control" id="searchInput" placeholder="Search tickets..." style="padding-left: 36px;">
+            </div>
+          </div>
+          <div class="col-md-2 col-6">
+            <select class="form-select" id="filterCategory">
+              <option value="">All Categories</option>
+              {% for c in tickets|map(attribute='category')|unique|list %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="col-md-2 col-6">
+            <select class="form-select" id="filterStatus">
+              <option value="">Status</option>
+              {% for s in tickets|map(attribute='status')|unique|list %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="col-md-2 col-6">
+            <select class="form-select" id="filterPriority">
+              <option value="">Priority</option>
+              {% for p in tickets|map(attribute='priority')|unique|list %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="col-md-2 col-6">
+            <select class="form-select" id="filterDate">
+              <option value="">Date Range</option>
+              <option value="7">Last 7 days</option>
+              <option value="30">Last 30 days</option>
+            </select>
+          </div>
+          <div class="col-md-1 col-12 ms-auto text-end">
+            <button class="btn btn-secondary w-100 justify-content-center" onclick="exportTickets()">
+              <i data-lucide="download" style="width:16px;height:16px;"></i>
+              Export
+            </button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table tk-table mb-0">
+            <thead>
+              <tr><th>#</th><th>Title</th><th>Category</th><th>Severity</th><th>Priority</th><th>Status</th><th>Created</th><th class="text-end">Actions</th></tr>
+            </thead>
+            <tbody id="ticketsTbody">
+              {% for t in tickets %}
+              <tr class="ticket-row" data-title="{{ t.title|lower }}" data-desc="{{ (t.description or '')|lower }}" data-id="{{ t.ticket_id }}" data-status="{{ t.status }}" data-category="{{ t.category }}" data-severity="{{ t.severity }}" data-priority="{{ t.priority }}" data-created="{{ t.created_at }}" onclick="if(!event.target.closest('button')) window.location.href='/ticket/{{ t.ticket_id }}'">
+                <td class="fw-medium text-muted">#T-{{ t.ticket_id }}</td>
+                <td class="fw-semibold text-dark">{{ t.title }}</td>
+                <td><span class="badge badge-info">{{ t.category }}</span></td>
+                <td class="{% if t.severity == 'Critical' %}text-danger{% elif t.severity == 'High' %}text-warning{% elif t.severity == 'Medium' %}text-primary{% else %}text-success{% endif %} fw-medium">{{ t.severity }}</td>
+                <td><span class="badge {% if t.priority in ['P1'] %}badge-danger{% elif t.priority == 'P2' %}badge-warning{% elif t.priority == 'P3' %}badge-info{% else %}badge-secondary{% endif %}">{{ t.priority }}</span></td>
+                <td>
+                  <span class="badge {% if t.status == 'Open' %}badge-warning{% elif t.status == 'In Progress' %}badge-primary{% elif t.status == 'Resolved' %}badge-success{% elif t.status == 'Closed' %}badge-secondary{% else %}badge-primary{% endif %}">{{ t.status }}</span>
+                </td>
+                <td class="text-muted">{{ t.created_at[:16] }}</td>
+                <td class="text-end">
+                  <div class="d-flex align-items-center justify-content-end gap-2">
+                    <button class="btn btn-sm btn-light border d-flex align-items-center justify-content-center text-primary" style="width: 32px; height: 32px; padding: 0;" title="View" onclick="event.stopPropagation(); window.location.href='/ticket/{{ t.ticket_id }}'">
+                      <i data-lucide="eye" style="width:16px;height:16px;"></i>
+                    </button>
+                    {% if t.status != 'Closed' %}
+                    <button class="btn btn-sm btn-light border d-flex align-items-center justify-content-center text-success" style="width: 32px; height: 32px; padding: 0;" title="Close ticket" onclick="event.stopPropagation(); closeTicket({{ t.ticket_id }})">
+                      <i data-lucide="check" style="width:16px;height:16px;"></i>
+                    </button>
+                    {% endif %}
+                    <button class="btn btn-sm btn-light border d-flex align-items-center justify-content-center text-danger" style="width: 32px; height: 32px; padding: 0;" title="Delete ticket" onclick="event.stopPropagation(); deleteTicket({{ t.ticket_id }})">
+                      <i data-lucide="trash-2" style="width:16px;height:16px;"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+              {% if not tickets %}
+              <tr><td colspan="8" class="text-center text-muted py-5">No tickets found. <a href="/add_tickets">Create your first ticket</a>.</td></tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <div class="text-muted small">Showing {{ tickets|length }} of {{ tickets|length }} tickets</div>
+          <div class="d-flex gap-1">
+            <span class="page-btn"><i data-lucide="chevron-left" style="width:16px;height:16px;"></i></span>
+            <span class="page-btn active">1</span>
+            <span class="page-btn"><i data-lucide="chevron-right" style="width:16px;height:16px;"></i></span>
+          </div>
+        </div>
+      </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.USER_EMAIL = "{{ user.email }}";
+  window.USER_DEPT = "{{ user.department }}";
+
+  function applyFilters() {
+    const term = document.getElementById('searchInput').value.toLowerCase();
+    const cat = document.getElementById('filterCategory').value;
+    const stat = document.getElementById('filterStatus').value;
+    const pri = document.getElementById('filterPriority').value;
+    const days = parseInt(document.getElementById('filterDate').value);
+    
+    const now = new Date();
+
+    document.querySelectorAll('.ticket-row').forEach(row => {
+      const title = row.dataset.title || '';
+      const desc = row.dataset.desc || '';
+      const matchTerm = !term || title.includes(term) || desc.includes(term);
+      const matchCat = !cat || row.dataset.category === cat;
+      const matchStat = !stat || row.dataset.status === stat;
+      const matchPri = !pri || row.dataset.priority === pri;
+      
+      let matchDate = true;
+      if (days && !isNaN(days) && row.dataset.created) {
+        const rowDate = new Date(row.dataset.created);
+        const diffTime = Math.abs(now - rowDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        matchDate = diffDays <= days;
+      }
+      
+      row.style.display = (matchTerm && matchCat && matchStat && matchPri && matchDate) ? '' : 'none';
+    });
+  }
+
+  ['searchInput','filterCategory','filterStatus','filterPriority','filterDate'].forEach(id => {
+    document.getElementById(id).addEventListener('input', applyFilters);
+    document.getElementById(id).addEventListener('change', applyFilters);
+  });
+
+  async function closeTicket(id) {
+    if (!confirm('Mark this ticket as closed?')) return;
+    try {
+      const res = await fetch(`/api/tickets/${id}/close`, { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token() }}' } });
+      if (res.ok) window.location.reload();
+      else alert('Could not close ticket.');
+    } catch (e) { alert('An error occurred.'); }
+  }
+
+  async function deleteTicket(id) {
+    if (!confirm('Delete this ticket permanently?')) return;
+    try {
+      const res = await fetch(`/api/tickets/${id}/delete`, { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token() }}' } });
+      if (res.ok) window.location.reload();
+      else alert('Could not delete ticket.');
+    } catch (e) { alert('An error occurred.'); }
+  }
+
+  function exportTickets() {
+    var csv = [];
+    // Select visible rows only
+    var rows = document.querySelectorAll("table.tk-table tr");
+    
+    for (var i = 0; i < rows.length; i++) {
+        // Only include if the row is visible
+        if (rows[i].style.display !== 'none') {
+            var row = [], cols = rows[i].querySelectorAll("td, th");
+            // Skip last column "Actions"
+            for (var j = 0; j < cols.length - 1; j++) {
+                var data = cols[j].innerText.replace(/"/g, '""');
+                row.push('"' + data + '"');
+            }
+            csv.push(row.join(","));
+        }
+    }
+
+    var csvFile = new Blob([csv.join("\n")], {type: "text/csv"});
+    var downloadLink = document.createElement("a");
+    downloadLink.download = "supportpilot_tickets.csv";
+    downloadLink.href = window.URL.createObjectURL(csvFile);
+    downloadLink.style.display = "none";
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+  }
+</script>
+{% endblock %}

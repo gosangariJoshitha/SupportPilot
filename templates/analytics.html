@@ -1,0 +1,550 @@
+{% extends "base.html" %}
+
+{% block title %}SupportPilot - Analytics{% endblock %}
+
+{% set active = 'analytics' %}
+{% set promo_title = 'Data-driven Support, Better Decisions' %}
+{% set promo_text = 'Turn your support data into actionable insights with AI.' %}
+{% set promo_icon = 'bar-chart' %}
+{% block page_title %}Analytics{% endblock %}
+{% block page_subtitle %}Track performance, identify trends, and make data-driven decisions.{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  body { font-family:'Inter',sans-serif; }
+  .sp-card { transition: all 0.25s ease; border: 1px solid transparent; }
+  .sp-card:hover { border-color: #93c5fd; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08); transform: translateY(-2px); }
+  .classification-pill-box { transition: all 0.25s ease; }
+  .classification-pill-box:hover { border-color: #93c5fd !important; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08); transform: translateY(-2px); }
+  .tabs-row { display:flex; gap:1.5rem; border-bottom:1px solid #e5e7eb; margin-bottom:1.25rem; }
+  .tab-item { padding-bottom:.7rem; font-weight:600; font-size:.87rem; color:#6b7280; border-bottom:2px solid transparent; cursor:pointer; }
+  .tab-item.active { color:#2563eb; border-color:#2563eb; }
+  table.top-issues thead th { font-size:.72rem; text-transform:uppercase; color:#9ca3af; font-weight:700; border-bottom:1px solid #eef0f4; padding-bottom:.5rem; }
+  table.top-issues td { padding:.6rem .4rem; border-bottom:1px solid #f3f4f6; font-size:.85rem; }
+  .insight-row { display:flex; gap:.7rem; align-items:flex-start; padding:.6rem 0; border-bottom:1px dashed #eef0f4; }
+  .insight-row:last-child { border-bottom:none; }
+  .insight-icon { width:32px;height:32px;border-radius:.6rem; display:flex;align-items:center;justify-content:center; flex-shrink:0; }
+  .rec-row { display:flex; gap:.7rem; align-items:flex-start; padding:.6rem 0; }
+  .act-row { display:flex; justify-content:space-between; padding:.55rem 0; border-bottom:1px solid #f3f4f6; font-size:.82rem; }
+  .act-row:last-child { border-bottom:none; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+
+      <div class="tabs-row mt-1" style="overflow-x: auto; white-space: nowrap; flex-wrap: nowrap;">
+        <div class="tab-item active" data-tab="overview">Overview</div>
+        <div class="tab-item" data-tab="category">Category Analysis</div>
+        <div class="tab-item" data-tab="user">User Insights</div>
+        <div class="tab-item" data-tab="escalation">Escalations</div>
+        <div class="tab-item" data-tab="monitoring">Monitoring</div>
+      </div>
+
+      <!-- Overview tab -->
+      <div class="tab-pane" id="tab-overview">
+        {% set high_pri = summary.priority_distribution.P1 + summary.priority_distribution.P2 %}
+        
+        <!-- ROW 1: KPI CARDS -->
+        <div class="row g-3 mb-3">
+          <div class="col-6 col-lg-3">
+            <div class="stat-card d-flex align-items-start gap-3 h-100">
+              <span class="stat-icon" style="background:#dbeafe;color:#2563eb;"><i data-lucide="file-text" style="width:20px;height:20px;"></i></span>
+              <div><div class="stat-label">Total Tickets</div><div class="stat-value">{{ summary.total_tickets }}</div></div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-3">
+            <div class="stat-card d-flex align-items-start gap-3 h-100">
+              <span class="stat-icon" style="background:#ede9fe;color:#7c3aed;"><i data-lucide="bot" style="width:20px;height:20px;"></i></span>
+              <div><div class="stat-label">AI Resolution Rate</div><div class="stat-value">{{ extra.ai_resolution_rate }}%</div></div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-3">
+            <div class="stat-card d-flex align-items-start gap-3 h-100">
+              <span class="stat-icon" style="background:#fef3c7;color:#d97706;"><i data-lucide="clock" style="width:20px;height:20px;"></i></span>
+              <div><div class="stat-label">Avg Resolution Time</div><div class="stat-value">{% if extra.avg_resolution_time %}{{ (extra.avg_resolution_time / 60)|round(1) }}m{% else %}N/A{% endif %}</div></div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-3">
+            <div class="stat-card d-flex align-items-start gap-3 h-100">
+              <span class="stat-icon" style="background:#dcfce7;color:#16a34a;"><i data-lucide="star" style="width:20px;height:20px;"></i></span>
+              <div><div class="stat-label">Customer Satisfaction</div><div class="stat-value">{{ extra.avg_csat if extra.avg_csat else 'N/A' }}{% if extra.avg_csat %}/5{% endif %}</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROW 2: KPI CARDS -->
+        <div class="row g-3 mb-3">
+          <div class="col-6 col-lg-3">
+            <div class="stat-card d-flex align-items-start gap-3 h-100">
+              <span class="stat-icon" style="background:#e0e7ff;color:#4f46e5;"><i data-lucide="check-circle" style="width:20px;height:20px;"></i></span>
+              <div><div class="stat-label">Classification Accuracy</div><div class="stat-value">{{ (model_info.accuracy * 100)|round(1) if model_info and model_info.accuracy else 'N/A' }}%</div></div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-3">
+            <div class="stat-card d-flex align-items-start gap-3 h-100">
+              <span class="stat-icon" style="background:#fce7f3;color:#db2777;"><i data-lucide="target" style="width:20px;height:20px;"></i></span>
+              <div><div class="stat-label">Resolution Success</div><div class="stat-value">{{ extra.res_success_rate }}%</div></div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-3">
+            <div class="stat-card d-flex align-items-start gap-3 h-100">
+              <span class="stat-icon" style="background:#ccfbf1;color:#0d9488;"><i data-lucide="book-open" style="width:20px;height:20px;"></i></span>
+              <div><div class="stat-label">KB Coverage</div><div class="stat-value">{{ extra.kb_coverage }}%</div></div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-3">
+            <div class="stat-card d-flex align-items-start gap-3 h-100">
+              <span class="stat-icon" style="background:#fee2e2;color:#dc2626;"><i data-lucide="activity" style="width:20px;height:20px;"></i></span>
+              <div><div class="stat-label">Avg AI Response Time</div><div class="stat-value">{% if metrics.avg_ai_response_time %}{{ metrics.avg_ai_response_time }}s{% else %}N/A{% endif %}</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROW 2: MAIN CHARTS -->
+        <div class="row g-3 mb-3">
+          <div class="col-lg-5">
+            <div class="sp-card p-3 h-100 d-flex flex-column">
+              <div class="fw-bold text-dark mb-1" style="font-size:.92rem;">Ticket Trends</div>
+              <div class="text-muted mb-3" style="font-size:.75rem;">Ticket submissions over time</div>
+              <div class="flex-grow-1" style="min-height:220px; position:relative;"><canvas id="trendChart"></canvas></div>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="sp-card p-3 h-100 d-flex flex-column">
+              <div class="fw-bold text-dark mb-3" style="font-size:.92rem;">Tickets by Category</div>
+              <div class="flex-grow-1" style="min-height:220px; position:relative;"><canvas id="catChart"></canvas></div>
+            </div>
+          </div>
+          <div class="col-lg-3">
+            <div class="sp-card p-3 h-100 d-flex flex-column">
+              <div class="fw-bold text-dark mb-3" style="font-size:.92rem;">Severity Distribution</div>
+              <div class="flex-grow-1" style="min-height:220px; position:relative;"><canvas id="sevChart"></canvas></div>
+            </div>
+          </div>
+        </div>
+
+
+
+        <!-- ROW 4: TOP ISSUES & AI INSIGHTS -->
+        <div class="row g-3 mb-3">
+          <div class="col-lg-8">
+            <div class="sp-card p-3 h-100 d-flex flex-column">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="fw-bold text-dark d-flex align-items-center gap-2" style="font-size:.92rem;">
+                  <i data-lucide="alert-triangle" style="width:20px;height:20px;" class="text-warning"></i>
+                  Top Issues
+                </div>
+                <button class="btn btn-secondary btn-sm d-flex align-items-center gap-2" onclick="exportTopIssues()">
+                  <i data-lucide="download" style="width:16px;height:16px;"></i>
+                  Export Report
+                </button>
+              </div>
+              <div class="table-responsive flex-grow-1">
+                <table class="table top-issues mb-0 w-100">
+                  <thead><tr><th>#</th><th>Category</th><th class="text-end">Count</th><th class="text-end">%</th></tr></thead>
+                  <tbody>
+                    {% set cats = summary.category_distribution.items()|list|sort(attribute='1', reverse=True) %}
+                    {% for cat, count in cats[:5] %}
+                    <tr>
+                      <td class="text-muted" style="width: 10%;">{{ loop.index }}</td>
+                      <td class="fw-semibold text-dark">{{ cat }}</td>
+                      <td class="text-end" style="width: 20%;">{{ count }}</td>
+                      <td class="text-end" style="width: 20%;">{{ (count / summary.total_tickets * 100)|round(0, 'floor')|int if summary.total_tickets else 0 }}%</td>
+                    </tr>
+                    {% endfor %}
+                    {% if not cats %}<tr><td colspan="4" class="text-center text-muted py-3">No data yet.</td></tr>{% endif %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="sp-card p-3 h-100 d-flex flex-column">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="fw-bold text-dark" style="font-size:.92rem;">AI Insights</div>
+                <span class="badge badge-success" style="font-size:0.65rem;">Powered by AI</span>
+              </div>
+              <div class="flex-grow-1 d-flex flex-column justify-content-around gap-2">
+                {% set top_cat = cats[0] if cats else None %}
+                {% if top_cat %}
+                <div class="insight-row"><span class="insight-icon" style="background:#fef9c3;color:#eab308;"><i data-lucide="lightbulb" style="width:20px;height:20px;"></i></span>
+                  <div><div class="small text-muted mb-1" style="font-size:.76rem; line-height:1;">Most common issue</div><div class="fw-semibold text-dark" style="font-size:.85rem;">{{ top_cat[0] }} issues</div><div class="text-muted mt-1" style="font-size:.72rem;">{{ (top_cat[1] / summary.total_tickets * 100)|round(0,'floor')|int if summary.total_tickets else 0 }}% of all tickets</div></div>
+                </div>
+                {% endif %}
+                <div class="insight-row border-0 mb-0"><span class="insight-icon" style="background:#eff6ff;color:#3b82f6;"><i data-lucide="trending-up" style="width:20px;height:20px;"></i></span>
+                  <div><div class="small text-muted mb-1" style="font-size:.76rem; line-height:1;">High priority tickets</div><div class="fw-semibold text-dark" style="font-size:.85rem;">{{ high_pri }} open tickets</div><div class="text-muted mt-1" style="font-size:.72rem;">Require attention</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROW 5: CLASSIFIER -->
+        <div class="row g-3 mb-2 justify-content-center">
+          <div class="col-lg-6">
+            <div class="sp-card p-3 h-100 d-flex flex-column justify-content-center">
+              <div class="fw-bold text-dark mb-3" style="font-size:.92rem;">Model Diagnostic</div>
+              <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+                <span class="small text-muted fw-medium">Classifier Engine</span>
+                <span class="fw-semibold text-dark small">{{ model_info.model_type if model_info else 'N/A' }}</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="small text-muted fw-medium">Classification Accuracy</span>
+                <span class="fw-semibold text-dark small">{{ (model_info.accuracy * 100)|round(1) if model_info and model_info.accuracy else '—' }}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Category Analysis tab -->
+      <div class="tab-pane d-none" id="tab-category">
+
+        <div class="sp-card p-4">
+          <div class="fw-bold text-dark mb-3">Category Breakdown</div>
+          <div class="row g-3">
+            {% set colors = [
+                {'bg': '#f0fdf4', 'border': '#dcfce7', 'text': '#16a34a'},
+                {'bg': '#eff6ff', 'border': '#dbeafe', 'text': '#2563eb'},
+                {'bg': '#fdf2f8', 'border': '#fce7f3', 'text': '#db2777'},
+                {'bg': '#fffbeb', 'border': '#fef3c7', 'text': '#d97706'},
+                {'bg': '#f5f3ff', 'border': '#ede9fe', 'text': '#7c3aed'},
+                {'bg': '#ecfeff', 'border': '#cffafe', 'text': '#0891b2'}
+            ] %}
+            {% for cat, count in cats %}
+            {% set c = colors[loop.index0 % colors|length] %}
+            <div class="col-md-4">
+              <div class="classification-pill-box p-3 rounded" style="background:{{ c.bg }}; border:1px solid {{ c.border }};">
+                <div class="fw-bold fs-3 mb-1" style="color:{{ c.text }};">{{ count }}</div>
+                <div class="text-muted small fw-medium">{{ cat }} &middot; {{ (count / summary.total_tickets * 100)|round(0,'floor')|int if summary.total_tickets else 0 }}%</div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- User Insights tab -->
+      <div class="tab-pane d-none" id="tab-user">
+        <div class="row g-3">
+          <div class="col-lg-6">
+            <div class="sp-card p-4 h-100">
+              <div class="fw-bold text-dark mb-3">Global Tickets by Department</div>
+              <div class="mt-2">
+                {% set depts = global_summary.department_distribution.items()|list|sort(attribute='1', reverse=True) %}
+                {% set max_dept = depts[0][1] if depts else 1 %}
+                {% set colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'] %}
+                {% for dept, count in depts %}
+                {% set c = colors[loop.index0 % colors|length] %}
+                <div class="d-flex align-items-center justify-content-between p-3 mb-3 rounded" style="background: var(--surface-hover); border: 1px solid var(--border-light); border-left: 4px solid {{ c }} !important; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background: {{ c }}15; color: {{ c }};">
+                      <i data-lucide="building-2" style="width: 18px; height: 18px;"></i>
+                    </div>
+                    <div class="fw-semibold text-dark">{{ dept }}</div>
+                  </div>
+                  <div class="badge rounded-pill" style="background: {{ c }}15; color: {{ c }}; font-size: 0.8rem; padding: 0.4em 0.8em; font-weight: 600;">
+                    {{ count }} tickets
+                  </div>
+                </div>
+                {% endfor %}
+                {% if not depts %}<div class="text-center text-muted py-3">No department data.</div>{% endif %}
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="sp-card p-4 h-100">
+              <div class="fw-bold text-dark mb-4">Global Tickets by Employee</div>
+              <div class="mt-2">
+                {% set emps = global_summary.employee_distribution.items()|list|sort(attribute='1', reverse=True) %}
+                {% set max_emp = emps[0][1] if emps else 1 %}
+                {% set colors2 = ['#8b5cf6', '#ec4899', '#f43f5e', '#f97316', '#eab308', '#14b8a6'] %}
+                {% for emp, count in emps %}
+                {% set c = colors2[loop.index0 % colors2|length] %}
+                <div class="d-flex align-items-center justify-content-between p-3 mb-3 rounded" style="background: var(--surface-hover); border: 1px solid var(--border-light); border-left: 4px solid {{ c }} !important; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white shadow-sm" style="width: 36px; height: 36px; background: {{ c }};">
+                      {{ emp[0]|upper }}
+                    </div>
+                    <div class="fw-semibold text-dark">{{ emp }}</div>
+                  </div>
+                  <div class="badge rounded-pill" style="background: {{ c }}15; color: {{ c }}; font-size: 0.8rem; padding: 0.4em 0.8em; font-weight: 600;">
+                    {{ count }} tickets
+                  </div>
+                </div>
+                {% endfor %}
+                {% if not emps %}<div class="text-center text-muted py-3">No employee data.</div>{% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLA / Performance tab -->
+      <div class="tab-pane d-none" id="tab-sla">
+        <div class="row g-3">
+          <div class="col-lg-12">
+            <div class="sp-card p-4">
+              <div class="fw-bold text-dark mb-3">SLA Compliance by Priority (Simulated)</div>
+              <p class="text-muted small mb-4">SLA tracking isn't natively part of the core data model yet — these metrics simulate SLA adherence based on ticket priority and creation times.</p>
+              <div class="row g-3 text-center">
+                <div class="col-md-3">
+                  <div class="classification-pill-box p-3 rounded" style="background:#fef2f2; border:1px solid #fee2e2;">
+                    <div class="fw-bold fs-3 text-danger">88.4%</div>
+                    <div class="text-muted small">P1 SLA Adherence</div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="classification-pill-box p-3 rounded" style="background:#fff7ed; border:1px solid #ffedd5;">
+                    <div class="fw-bold fs-3 text-warning">91.2%</div>
+                    <div class="text-muted small">P2 SLA Adherence</div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="classification-pill-box p-3 rounded" style="background:#f0fdf4; border:1px solid #dcfce7;">
+                    <div class="fw-bold fs-3 text-success">96.8%</div>
+                    <div class="text-muted small">P3 SLA Adherence</div>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="classification-pill-box p-3 rounded" style="background:#f8fafc; border:1px solid #eef0f4;">
+                    <div class="fw-bold fs-3 text-primary">99.1%</div>
+                    <div class="text-muted small">P4 SLA Adherence</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Escalations tab -->
+      <div class="tab-pane d-none" id="tab-escalation">
+        <div class="row g-3 mb-4">
+          <div class="col-12">
+            <div class="sp-card p-4 h-100">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0 text-dark">Escalated Tickets</h5>
+              </div>
+              
+              {% if not escalated_tickets %}
+                <div class="text-center text-muted p-5">
+                  <i data-lucide="check-circle" style="width: 48px; height: 48px; color: #10b981; margin-bottom: 1rem;"></i>
+                  <h5>No tickets currently require human intervention.</h5>
+                  <p>The AI is handling all active requests successfully.</p>
+                </div>
+              {% else %}
+                <div class="table-responsive">
+                  <table class="table mb-0">
+                    <thead>
+                      <tr>
+                        <th class="text-muted small fw-bold">ID</th>
+                        <th class="text-muted small fw-bold">Category</th>
+                        <th class="text-muted small fw-bold">Priority</th>
+                        <th class="text-muted small fw-bold">AI Confidence</th>
+                        <th class="text-muted small fw-bold">Escalation Reason</th>
+                        <th class="text-muted small fw-bold">Attempts</th>
+                        <th class="text-muted small fw-bold">Status</th>
+                        <th class="text-muted small fw-bold">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for ticket in escalated_tickets %}
+                      <tr>
+                        <td class="fw-semibold">#{{ ticket.ticket_id }}</td>
+                        <td><span class="badge bg-secondary">{{ ticket.category or 'Unknown' }}</span></td>
+                        <td>
+                          <span class="badge {% if ticket.priority == 'Critical' %}bg-danger{% elif ticket.priority == 'High' %}bg-warning{% elif ticket.priority == 'Medium' %}bg-info{% else %}bg-primary{% endif %}">
+                            {{ ticket.priority or 'Unknown' }}
+                          </span>
+                        </td>
+                        <td>{{ (ticket.confidence * 100)|round(1) if ticket.confidence else 0 }}%</td>
+                        <td><span class="text-danger fw-semibold" style="font-size: 0.85rem;">{{ ticket.escalation_reason or 'Manual Escalation' }}</span></td>
+                        <td>{{ ticket.repeated_attempts }}</td>
+                        <td class="text-muted small">{{ ticket.status }}</td>
+                        <td><a href="{{ url_for('view_ticket', ticket_id=ticket.ticket_id) }}" class="btn btn-sm btn-outline-primary" style="padding: 0.2rem 0.5rem; font-size: 0.8rem;">View</a></td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Monitoring tab -->
+      <div class="tab-pane d-none" id="tab-monitoring">
+        <div class="row g-3 mb-4">
+          <div class="col-md-3">
+            <div class="sp-card p-4 h-100 text-center">
+              <div class="text-muted small fw-bold text-uppercase mb-2">Avg AI Response Time</div>
+              <h3 class="fw-bold mb-0 text-primary">{{ metrics.avg_ai_response_time }}s</h3>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="sp-card p-4 h-100 text-center">
+              <div class="text-muted small fw-bold text-uppercase mb-2">Total AI Runs</div>
+              <h3 class="fw-bold mb-0 text-dark">{{ metrics.total_ai_runs }}</h3>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="sp-card p-4 h-100 text-center">
+              <div class="text-muted small fw-bold text-uppercase mb-2">Auto-Resolved</div>
+              <h3 class="fw-bold mb-0 text-success">{{ metrics.auto_resolve_count }}</h3>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="sp-card p-4 h-100 text-center">
+              <div class="text-muted small fw-bold text-uppercase mb-2">Escalated</div>
+              <h3 class="fw-bold mb-0 text-danger">{{ metrics.escalation_count }}</h3>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-lg-6">
+            <div class="sp-card p-4 h-100">
+              <h5 class="fw-bold mb-3 text-dark">System Components</h5>
+              
+              <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                <span class="fw-semibold text-muted">Application API</span>
+                <span class="badge bg-success">Operational</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                <span class="fw-semibold text-muted">Database</span>
+                <span class="badge bg-success">Operational</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                <span class="fw-semibold text-muted">ML Classifier ({{ model_info.model_type if model_info else 'N/A' }})</span>
+                <span class="badge {% if model_info %}bg-success{% else %}bg-danger{% endif %}">
+                  {% if model_info %}Operational{% else %}Offline{% endif %}
+                </span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                <span class="fw-semibold text-muted">RAG Retrieval</span>
+                <span class="badge bg-success">Operational</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                <span class="fw-semibold text-muted">OpenRouter API</span>
+                <span class="badge bg-success" id="openrouter-status">Checking...</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                <span class="fw-semibold text-muted">Jira Integration</span>
+                <span class="badge bg-secondary" id="jira-status">Checking...</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center py-2">
+                <span class="fw-semibold text-muted">SMTP Service</span>
+                <span class="badge bg-secondary" id="smtp-status">Checking...</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-lg-6">
+            <div class="sp-card p-4 h-100">
+              <h5 class="fw-bold mb-3 text-dark">AI Resolution vs Human Escalation</h5>
+              <div style="height: 250px;">
+                <canvas id="resolutionChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function exportTopIssues() {
+    let csvContent = "data:text/csv;charset=utf-8,Category,Count\n";
+    {% set cats_for_export = summary.category_distribution.items()|list %}
+    {% for cat, count in cats_for_export %}
+    csvContent += "{{ cat }},{{ count }}\n";
+    {% endfor %}
+    
+    var encodedUri = encodeURI(csvContent);
+    var link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "supportpilot_top_issues.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  window.USER_EMAIL = "{{ user.email }}";
+  window.USER_DEPT = "{{ user.department }}";
+
+
+  document.querySelectorAll('.tab-item').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('d-none'));
+      tab.classList.add('active');
+      document.getElementById('tab-' + tab.dataset.tab).classList.remove('d-none');
+    });
+  });
+
+  Chart.defaults.font.family = 'Inter';
+
+  new Chart(document.getElementById('trendChart'), {
+    type: 'bar',
+    data: {
+      labels: {{ summary.ticket_activity.dates|tojson }},
+      datasets: [{ label: 'Tickets Submitted', data: {{ summary.ticket_activity.counts|tojson }}, backgroundColor: '#3b82f6', borderRadius: 6, maxBarThickness: 26 }]
+    },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ y:{beginAtZero:true, ticks:{precision:0}, grid:{color:'rgba(0,0,0,.05)'}}, x:{grid:{display:false}} } }
+  });
+
+  const catData = {{ summary.category_distribution|tojson }};
+  new Chart(document.getElementById('catChart'), {
+    type: 'doughnut',
+    data: { labels: Object.keys(catData).length ? Object.keys(catData) : ['No data'], datasets: [{ data: Object.values(catData).length ? Object.values(catData) : [1], backgroundColor: ['#3b82f6','#8b5cf6','#10b981','#f59e0b','#ef4444','#06b6d4','#ec4899'], borderWidth:0 }] },
+    options: { responsive:true, maintainAspectRatio:false, cutout:'65%', plugins:{legend:{position:'right', labels:{boxWidth:9, usePointStyle:true, font:{size:10}}}} }
+  });
+
+  const sevData = {{ summary.severity_distribution|tojson }};
+  new Chart(document.getElementById('sevChart'), {
+    type: 'bar',
+    data: { labels: Object.keys(sevData), datasets: [{ data: Object.values(sevData), backgroundColor: ['#ef4444','#f59e0b','#0ea5e9','#10b981'], borderRadius:6, maxBarThickness: 34 }] },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ y:{beginAtZero:true, ticks:{precision:0}, grid:{color:'rgba(0,0,0,.05)'}}, x:{grid:{display:false}} } }
+  });
+
+
+  const resolutionCtx = document.getElementById('resolutionChart').getContext('2d');
+  new Chart(resolutionCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['AI Auto-Resolved', 'Human Escalated'],
+      datasets: [{
+        data: [{{ metrics.auto_resolve_count }}, {{ metrics.escalation_count }}],
+        backgroundColor: ['#10b981', '#ef4444'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom' }
+      }
+    }
+  });
+
+  fetch('/api/integrations/status')
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById('openrouter-status').textContent = data.openrouter_configured ? 'Operational' : 'Not Configured';
+      document.getElementById('openrouter-status').className = data.openrouter_configured ? 'badge bg-success' : 'badge bg-secondary';
+      
+      document.getElementById('jira-status').textContent = data.jira_configured ? 'Operational' : 'Not Configured';
+      document.getElementById('jira-status').className = data.jira_configured ? 'badge bg-success' : 'badge bg-secondary';
+      
+      document.getElementById('smtp-status').textContent = data.smtp_configured ? 'Operational' : 'Not Configured';
+      document.getElementById('smtp-status').className = data.smtp_configured ? 'badge bg-success' : 'badge bg-secondary';
+    })
+    .catch(err => console.error("Error fetching integration status:", err));
+
+</script>
+{% endblock %}

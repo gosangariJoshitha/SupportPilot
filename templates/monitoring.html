@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}SupportPilot - Monitoring{% endblock %}
+{% set active = 'monitoring' %}
+{% block page_title %}System Health & Monitoring{% endblock %}
+{% block page_subtitle %}Application metrics, response times, and AI system health.{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="sp-card p-4 bg-white rounded shadow-sm border-0 h-100">
+      <div class="text-muted small fw-bold text-uppercase mb-2">Avg AI Response Time</div>
+      <h3 class="fw-bold mb-0 text-primary">{{ metrics.avg_ai_response_time }}s</h3>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="sp-card p-4 bg-white rounded shadow-sm border-0 h-100">
+      <div class="text-muted small fw-bold text-uppercase mb-2">Total AI Runs</div>
+      <h3 class="fw-bold mb-0 text-dark">{{ metrics.total_ai_runs }}</h3>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="sp-card p-4 bg-white rounded shadow-sm border-0 h-100">
+      <div class="text-muted small fw-bold text-uppercase mb-2">Auto-Resolved</div>
+      <h3 class="fw-bold mb-0 text-success">{{ metrics.auto_resolve_count }}</h3>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="sp-card p-4 bg-white rounded shadow-sm border-0 h-100">
+      <div class="text-muted small fw-bold text-uppercase mb-2">Escalated</div>
+      <h3 class="fw-bold mb-0 text-danger">{{ metrics.escalation_count }}</h3>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-lg-6">
+    <div class="sp-card p-4 bg-white rounded shadow-sm border-0 h-100">
+      <h5 class="fw-bold mb-3">System Components</h5>
+      
+      <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+        <span class="fw-semibold">Application API</span>
+        <span class="badge bg-success">Operational</span>
+      </div>
+      <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+        <span class="fw-semibold">Database</span>
+        <span class="badge bg-success">Operational</span>
+      </div>
+      <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+        <span class="fw-semibold">ML Classifier ({{ model_info.model_type if model_info else 'N/A' }})</span>
+        <span class="badge {% if model_info %}bg-success{% else %}bg-danger{% endif %}">
+          {% if model_info %}Operational{% else %}Offline{% endif %}
+        </span>
+      </div>
+      <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+        <span class="fw-semibold">RAG Retrieval</span>
+        <span class="badge bg-success">Operational</span>
+      </div>
+      <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+        <span class="fw-semibold">OpenRouter API</span>
+        <span class="badge bg-success" id="openrouter-status">Checking...</span>
+      </div>
+      <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+        <span class="fw-semibold">Jira Integration</span>
+        <span class="badge bg-secondary" id="jira-status">Checking...</span>
+      </div>
+      <div class="d-flex justify-content-between align-items-center py-2">
+        <span class="fw-semibold">SMTP Service</span>
+        <span class="badge bg-secondary" id="smtp-status">Checking...</span>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-lg-6">
+    <div class="sp-card p-4 bg-white rounded shadow-sm border-0 h-100">
+      <h5 class="fw-bold mb-3">AI Resolution vs Human Escalation</h5>
+      <div style="height: 250px;">
+        <canvas id="resolutionChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    // Chart
+    const ctx = document.getElementById('resolutionChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['AI Auto-Resolved', 'Human Escalated'],
+        datasets: [{
+          data: [{{ metrics.auto_resolve_count }}, {{ metrics.escalation_count }}],
+          backgroundColor: ['#10b981', '#ef4444'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom' }
+        }
+      }
+    });
+
+    // Fetch Health
+    fetch('/api/integrations/status')
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('openrouter-status').textContent = data.openrouter_configured ? 'Operational' : 'Not Configured';
+        document.getElementById('openrouter-status').className = data.openrouter_configured ? 'badge bg-success' : 'badge bg-secondary';
+        
+        document.getElementById('jira-status').textContent = data.jira_configured ? 'Operational' : 'Not Configured';
+        document.getElementById('jira-status').className = data.jira_configured ? 'badge bg-success' : 'badge bg-secondary';
+        
+        document.getElementById('smtp-status').textContent = data.smtp_configured ? 'Operational' : 'Not Configured';
+        document.getElementById('smtp-status').className = data.smtp_configured ? 'badge bg-success' : 'badge bg-secondary';
+      });
+  });
+</script>
+{% endblock %}

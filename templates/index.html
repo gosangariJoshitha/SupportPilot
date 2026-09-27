@@ -1,0 +1,491 @@
+{% extends "base.html" %}
+
+{% block title %}SupportPilot - Dashboard{% endblock %}
+
+{% set active = 'dashboard' %}
+{% set promo_title = 'Faster Support Smarter Operations' %}
+{% set promo_text = 'Let AI handle the first step, so you can focus on what matters.' %}
+{% set promo_icon = 'laptop' %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  body { font-family:'Inter',sans-serif; }
+  .chip-dot { width:9px;height:9px;border-radius:50%; display:inline-block; }
+  .insight-row { display:flex; gap:.75rem; align-items:flex-start; padding:.65rem 0; border-bottom:1px dashed #eef0f4; }
+  .insight-row:last-child { border-bottom:none; }
+  .insight-icon { width:34px;height:34px;border-radius:.6rem; display:flex;align-items:center;justify-content:center; flex-shrink:0; }
+  .qa-btn { display:flex; align-items:center; gap:.6rem; width:100%; text-align:left; border-radius:.6rem; padding:.65rem .9rem; border:1px solid #e5e7eb; background:#fff; color:#111827; font-weight:600; font-size:.85rem; text-decoration:none; }
+  .qa-btn.primary { background:#2563eb; color:#fff; border-color:#2563eb; }
+  .qa-btn:hover { border-color:#2563eb; color:#2563eb; }
+  .qa-btn.primary:hover { color:#fff; background:#1d4ed8; }
+  table.dash-table thead th { font-size:.72rem; text-transform:uppercase; letter-spacing:.03em; color:#9ca3af; font-weight:700; border-bottom:1px solid #eef0f4; padding-bottom:.6rem; }
+  table.dash-table td { padding:.75rem .5rem; border-bottom:1px solid #f3f4f6; font-size:.85rem; vertical-align:middle; }
+  table.dash-table tr:last-child td { border-bottom:none; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+      <!-- KPI cards -->
+      <div class="row g-3 mb-4" id="kpi-container">
+        <div class="col-6 col-lg-3">
+          <div class="kpi-card sp-card-hover">
+            <div class="kpi-icon info"><i data-lucide="file-text"></i></div>
+            <div class="kpi-content">
+              <div class="kpi-label">Total Tickets</div>
+              <div class="kpi-value" id="kpi-total">–</div>
+              <div class="kpi-trend up" id="kpi-total-delta"></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="kpi-card sp-card-hover">
+            <div class="kpi-icon warning"><i data-lucide="clock"></i></div>
+            <div class="kpi-content">
+              <div class="kpi-label">Open Tickets</div>
+              <div class="kpi-value" id="kpi-open">–</div>
+              <div class="kpi-trend down" id="kpi-open-delta"></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="kpi-card sp-card-hover">
+            <div class="kpi-icon success"><i data-lucide="circle-check"></i></div>
+            <div class="kpi-content">
+              <div class="kpi-label">Resolved Tickets</div>
+              <div class="kpi-value" id="kpi-resolved">–</div>
+              <div class="kpi-trend up" id="kpi-resolved-delta"></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <div class="kpi-card sp-card-hover">
+            <div class="kpi-icon primary"><i data-lucide="trending-up"></i></div>
+            <div class="kpi-content">
+              <div class="kpi-label">Resolution Rate</div>
+              <div class="kpi-value" id="kpi-rate">–</div>
+              <div class="kpi-trend up" id="kpi-rate-delta"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts row -->
+      <div class="row g-3 mb-3">
+        <div class="col-lg-5">
+          <div class="sp-card p-3 h-100 d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <div>
+                <div class="fw-bold text-dark" style="font-size:.95rem;">Ticket Trends</div>
+                <div class="text-muted" id="trends-subtitle" style="font-size:.75rem;">Ticket submissions and resolution over the last 7 days</div>
+              </div>
+              <select class="form-select form-select-sm" id="trend-days" style="width:110px; font-size:.75rem; color:#475569;">
+                <option value="7">Last 7 Days</option>
+                <option value="30">Last 30 Days</option>
+              </select>
+            </div>
+            <div class="flex-grow-1 position-relative" style="min-height:230px;"><canvas id="activityChart"></canvas></div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="sp-card p-3 h-100 d-flex flex-column">
+            <div class="fw-bold text-dark mb-2" style="font-size:.95rem;">Tickets by Category</div>
+            <div class="flex-grow-1 position-relative d-flex align-items-center justify-content-center" style="min-height:230px;"><canvas id="categoryChart"></canvas></div>
+          </div>
+        </div>
+        <div class="col-lg-3">
+          <div class="sp-card p-3 h-100 d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div class="fw-bold text-dark" style="font-size:.95rem;">AI Insights</div>
+              <span class="badge badge-ai"><i data-lucide="sparkles"></i> Powered by AI</span>
+            </div>
+            <div id="ai-insights-container" class="flex-grow-1 d-flex flex-column justify-content-between gap-2"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Workflows / M3 Summary -->
+      <div class="row g-3 mb-3">
+        <div class="col-12">
+          <div class="sp-card p-3 h-100 d-flex flex-column">
+            <div class="fw-bold text-dark mb-3" style="font-size:.95rem;">AI Ticket Resolution</div>
+            <div class="row g-3">
+              <div class="col-md-3">
+                <div class="kpi-card">
+                  <div class="kpi-content">
+                    <div class="kpi-label">Total AI Workflows</div>
+                    <div class="kpi-value text-ai" id="m3-total">0</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="kpi-card">
+                  <div class="kpi-content">
+                    <div class="kpi-label text-success">Auto-Resolved Rate</div>
+                    <div class="kpi-value text-success" id="m3-auto">0%</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="kpi-card">
+                  <div class="kpi-content">
+                    <div class="kpi-label text-warning">Escalated Rate</div>
+                    <div class="kpi-value text-warning" id="m3-esc">0%</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="kpi-card">
+                  <div class="kpi-content">
+                    <div class="kpi-label text-primary">Integrations Executed</div>
+                    <div class="kpi-value fs-5" id="m3-ints">
+                      <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-success" style="font-size: 0.85rem;"><i data-lucide="mail" style="width:14px;height:14px;"></i> Email:</span>
+                        <span class="fw-bold">0</span>
+                      </div>
+                      <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-danger" style="font-size: 0.85rem;"><i data-lucide="trello" style="width:14px;height:14px;"></i> Jira:</span>
+                        <span class="fw-bold">0</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent tickets (Full Width) -->
+      <div class="row g-3">
+        <div class="col-12">
+          <div class="sp-card p-3 h-100 d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div class="fw-bold text-dark" style="font-size:.95rem;">Recent Tickets</div>
+              <a href="/my_tickets" class="btn btn-secondary" style="padding:.3rem .8rem; font-size:.78rem;">View All</a>
+            </div>
+            <div class="table-responsive flex-grow-1">
+              <table class="table dash-table mb-0">
+                <thead>
+                  <tr><th>#</th><th>Title</th><th>Category</th><th>Severity</th><th>Priority</th><th>Status</th><th>Created</th></tr>
+                </thead>
+                <tbody id="dashboard-recent-tickets">
+                  <tr><td colspan="7" class="text-center text-muted py-4">Loading tickets…</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+  /* Floating Action Button (FAB) */
+  .fab-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 1050;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  .fab-menu {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 16px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px) scale(0.95);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .fab-container.active .fab-menu,
+  .fab-container:hover .fab-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+  }
+  .fab-main {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+  .fab-main:hover, .fab-container.active .fab-main {
+    background-color: #1d4ed8;
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.5);
+  }
+  .fab-action {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: inherit;
+  }
+  .fab-action-label {
+    background: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #374151;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .fab-container:hover .fab-action-label,
+  .fab-container.active .fab-action-label {
+    opacity: 1;
+  }
+  .fab-action-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: white;
+    color: #2563eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+  }
+  .fab-action:hover .fab-action-btn {
+    background-color: #2563eb;
+    color: white;
+    transform: scale(1.1);
+  }
+  .fab-action:hover .fab-action-label {
+    background-color: #eff6ff;
+    color: #2563eb;
+    transform: scale(1.05);
+  }
+</style>
+
+<div class="fab-container" id="dashboard-fab-container">
+  <div class="fab-menu" id="dashboard-fab-menu">
+    <a href="/agents" class="fab-action" aria-label="Open AI Agent">
+      <span class="fab-action-label">AI Agent</span>
+      <div class="fab-action-btn">
+        <i data-lucide="bot" style="color:var(--cyan); width:20px; height:20px;"></i>
+      </div>
+    </a>
+    <a href="/add_tickets" class="fab-action" aria-label="Create New Ticket">
+      <span class="fab-action-label">New Ticket</span>
+      <div class="fab-action-btn">
+        <i data-lucide="plus" style="color:var(--teal); width:20px; height:20px;"></i>
+      </div>
+    </a>
+  </div>
+  <button class="fab-main" id="dashboard-fab-main" aria-label="Open dashboard actions" aria-expanded="false">
+    <i data-lucide="star" style="width:24px; height:24px;"></i>
+  </button>
+</div>
+
+<script>
+  // Floating Action Button interactions
+  const fabContainer = document.getElementById('dashboard-fab-container');
+  const fabMain = document.getElementById('dashboard-fab-main');
+  
+  fabMain.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isActive = fabContainer.classList.contains('active');
+    fabContainer.classList.toggle('active');
+    fabMain.setAttribute('aria-expanded', !isActive);
+  });
+  
+  document.addEventListener('click', (e) => {
+    if (!fabContainer.contains(e.target)) {
+      fabContainer.classList.remove('active');
+      fabMain.setAttribute('aria-expanded', 'false');
+    }
+  });
+  
+  fabContainer.addEventListener('mouseleave', () => {
+    fabContainer.classList.remove('active');
+    fabMain.setAttribute('aria-expanded', 'false');
+  });
+  
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      fabContainer.classList.remove('active');
+      fabMain.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  const todayDateEl = document.getElementById('today-date');
+  if (todayDateEl) {
+      todayDateEl.textContent = new Date().toLocaleDateString(undefined, { weekday:'long', day:'numeric', month:'short', year:'numeric' });
+  }
+
+  function getSeverityBadge(sev) {
+    switch (sev) { case 'Critical': return 'badge-danger'; case 'High': return 'badge-warning'; case 'Medium': return 'badge-info'; case 'Low': return 'badge-success'; default: return 'badge-secondary'; }
+  }
+  function getPriorityBadge(pri) {
+    switch (pri) { case 'P1': return 'badge-danger'; case 'P2': return 'badge-warning'; case 'P3': return 'badge-info'; case 'P4': return 'badge-success'; default: return 'badge-secondary'; }
+  }
+  function statusPill(status) {
+    switch (status) {
+      case 'Open': return 'badge-warning';
+      case 'In Progress': return 'badge-info';
+      case 'Resolved': return 'badge-success';
+      case 'Closed': return 'badge-secondary';
+      default: return 'badge-secondary';
+    }
+  }
+  function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr.replace(' ', 'T'));
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  }
+
+  let activityChartInstance = null, categoryChartInstance = null;
+
+  function renderActivityChart(data) {
+    const ctx = document.getElementById('activityChart');
+    if (activityChartInstance) activityChartInstance.destroy();
+    Chart.defaults.font.family = 'Inter';
+    activityChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: data.dates.length ? data.dates.map(formatDate) : ['No data'],
+        datasets: [
+          {
+            label: 'Submitted',
+            data: data.counts.length ? data.counts : [0],
+            backgroundColor: '#3b82f6',
+            borderRadius: 4,
+            maxBarThickness: 16
+          },
+          {
+            label: 'Resolved',
+            data: data.resolved_counts && data.resolved_counts.length ? data.resolved_counts : data.counts.map(() => 0),
+            backgroundColor: '#10b981',
+            borderRadius: 4,
+            maxBarThickness: 16
+          }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: true, position: 'top', align: 'end', labels: { boxWidth: 10, usePointStyle: true, pointStyle: 'rectRounded' } } },
+        scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(0,0,0,.05)' } }, x: { grid: { display: false } } }
+      }
+    });
+  }
+
+  function renderCategoryChart(data) {
+    const ctx = document.getElementById('categoryChart');
+    if (categoryChartInstance) categoryChartInstance.destroy();
+    let labels = Object.keys(data), values = Object.values(data);
+    if (!values.length) { labels = ['No data']; values = [1]; }
+    categoryChartInstance = new Chart(ctx, {
+      type: 'doughnut',
+      data: { labels, datasets: [{ data: values, backgroundColor: ['#3b82f6','#8b5cf6','#10b981','#f59e0b','#ef4444','#06b6d4','#ec4899'], borderWidth: 0, hoverOffset: 4 }] },
+      options: { responsive: true, maintainAspectRatio: false, cutout: '68%', plugins: { legend: { position: 'right', labels: { boxWidth: 9, usePointStyle: true, font: { size: 11 } } } } }
+    });
+  }
+
+  function renderRecentTickets(tickets) {
+    const tbody = document.getElementById('dashboard-recent-tickets');
+    if (!tickets || !tickets.length) { tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No tickets yet.</td></tr>'; return; }
+    tbody.innerHTML = tickets.slice(0, 5).map(t => `
+      <tr style="cursor:pointer" onclick="window.location.href='/ticket/${t.ticket_id}'">
+        <td class="text-muted fw-medium">#T-${t.ticket_id}</td>
+        <td class="fw-semibold text-dark text-truncate" style="max-width:220px;">${t.title}</td>
+        <td><span class="badge badge-info">${t.category || '—'}</span></td>
+        <td><span class="badge ${getSeverityBadge(t.severity)}">${t.severity || '—'}</span></td>
+        <td><span class="badge ${getPriorityBadge(t.priority)}">${t.priority || '—'}</span></td>
+        <td><span class="badge ${statusPill(t.status)}">${t.status}</span></td>
+        <td class="text-muted">${(t.created_at || '').slice(0,10)}</td>
+      </tr>`).join('');
+  }
+
+  function renderAiInsights(data) {
+    const box = document.getElementById('ai-insights-container');
+    const cats = Object.entries(data.category_distribution || {});
+    let topCat = null;
+    if (cats.length) { topCat = cats.reduce((a,b) => a[1] >= b[1] ? a : b); }
+    const totalTickets = data.total_tickets || 0;
+    const topCatPct = topCat && totalTickets ? Math.round((topCat[1] / totalTickets) * 100) : null;
+    const highPriority = (data.priority_distribution.P1 || 0) + (data.priority_distribution.P2 || 0);
+
+    const rows = [];
+    if (topCat) {
+      rows.push(`<div class="insight-row flex-grow-1"><span class="insight-icon" style="background:#fef9c3;color:#eab308;">
+        <i data-lucide="lightbulb" style="width:20px;height:20px;"></i>
+        </span><div class="d-flex flex-column justify-content-center"><div class="small text-muted mb-1" style="font-size:0.75rem; line-height:1;">Most common issue</div><div class="fw-semibold text-dark" style="font-size:0.85rem;">${topCat[0]} issues</div><div class="text-muted" style="font-size:.75rem;">${topCatPct}% of all tickets</div></div></div>`);
+    }
+
+    const aiResRate = data.ai_resolution_rate ? (data.ai_resolution_rate).toFixed(0) : '0';
+    rows.push(`<div class="insight-row flex-grow-1"><span class="insight-icon" style="background:#fee2e2;color:#ef4444;">
+      <i data-lucide="bot" style="width:20px;height:20px;"></i>
+      </span><div class="d-flex flex-column justify-content-center"><div class="small text-muted mb-1" style="font-size:0.75rem; line-height:1;">AI Resolution Rate</div><div class="fw-semibold text-dark" style="font-size:0.85rem;">${aiResRate}%</div><div class="text-muted fw-normal" style="font-size:.75rem;">Successfully resolved</div></div></div>`);
+
+    rows.push(`<div class="insight-row flex-grow-1 border-0"><span class="insight-icon" style="background:#eff6ff;color:#3b82f6;">
+      <i data-lucide="trending-up" style="width:20px;height:20px;"></i>
+      </span><div class="d-flex flex-column justify-content-center"><div class="small text-muted mb-1" style="font-size:0.75rem; line-height:1;">High priority tickets</div><div class="fw-semibold text-dark" style="font-size:0.85rem;">${highPriority} open tickets</div><div class="text-muted" style="font-size:.75rem;">Require attention</div></div></div>`);
+
+    box.innerHTML = rows.join('') || '<div class="text-muted small py-3">No insights yet.</div>';
+    if (window.lucide) { window.lucide.createIcons(); }
+  }
+
+  document.getElementById('trend-days').addEventListener('change', function() {
+    loadDashboardData(this.value);
+    document.getElementById('trends-subtitle').textContent = `Ticket submissions and resolution over the last ${this.value} days`;
+  });
+
+  async function loadDashboardData(days = 7) {
+    try {
+      const res = await fetch('/api/dashboard/summary?days=' + days + '&t=' + new Date().getTime());
+      if (!res.ok) throw new Error('failed');
+      const data = await res.json();
+
+      document.getElementById('kpi-total').textContent = data.total_tickets;
+      document.getElementById('kpi-open').textContent = data.open_tickets;
+      document.getElementById('kpi-resolved').textContent = data.resolved_tickets;
+      const rate = data.total_tickets ? Math.round((data.resolved_tickets / data.total_tickets) * 100) : 0;
+      document.getElementById('kpi-rate').textContent = rate + '%';
+
+      renderActivityChart(data.ticket_activity);
+      renderCategoryChart(data.category_distribution);
+      renderRecentTickets(data.recent_tickets);
+      renderAiInsights(data);
+      
+      const m3Res = await fetch('/api/dashboard/m3-summary');
+      if(m3Res.ok) {
+        const m3Data = await m3Res.json();
+        document.getElementById('m3-total').textContent = m3Data.total_m3_workflows;
+        document.getElementById('m3-auto').textContent = m3Data.auto_resolve_rate + '%';
+        document.getElementById('m3-esc').textContent = m3Data.escalate_rate + '%';
+        document.getElementById('m3-ints').innerHTML = `
+          <div class="d-flex justify-content-between align-items-center mb-1" style="font-family: 'Inter', sans-serif;">
+            <span class="text-muted fw-semibold" style="font-size: 0.85rem;">Email (Resolved):</span>
+            <span class="fw-bold text-success" style="font-size: 1.1rem;">${m3Data.emails_sent}</span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center" style="font-family: 'Inter', sans-serif;">
+            <span class="text-muted fw-semibold" style="font-size: 0.85rem;">Jira (Escalated):</span>
+            <span class="fw-bold text-primary" style="font-size: 1.1rem;">${m3Data.jira_issues}</span>
+          </div>
+        `;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  loadDashboardData();
+</script>
+{% endblock %}

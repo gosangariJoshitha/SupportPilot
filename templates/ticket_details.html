@@ -1,0 +1,577 @@
+{% extends "base.html" %}
+
+{% block title %}Ticket Details - SupportPilot{% endblock %}
+
+{% block page_title %}Ticket Details{% endblock %}
+{% block page_subtitle %}View and manage ticket information and AI-generated resolution.{% endblock %}
+
+{% set active = 'my_tickets' %}
+
+{% block extra_head %}
+<style>
+  .sp-card { background:var(--surface); border-radius:var(--radius-lg); border:1px solid var(--border); box-shadow:var(--shadow-sm); }
+  .section-title { font-size:1.05rem; font-weight:700; color:var(--text-primary); margin-bottom:1rem; display:flex; align-items:center; gap:.5rem; }
+  
+  .status-badge { display:inline-flex; align-items:center; border-radius:999px; padding:.25rem .75rem; font-size:.78rem; font-weight:700; white-space:nowrap; gap: 0.3rem; }
+  .status-pending { background:var(--surface-hover); color:var(--text-secondary); border:1px solid var(--border); }
+  .status-processing { background:var(--warning-soft); color:var(--warning); }
+  .status-generated { background:var(--success-soft); color:var(--success); }
+  .status-insufficient { background:var(--danger-soft); color:var(--danger); }
+  
+  .ai-stage-list { display: flex; flex-direction: column; }
+  .ai-stage-row { display: flex; align-items: center; justify-content: space-between; border: 1px solid var(--border); padding: 0.85rem 1.25rem; background: var(--surface); margin-bottom: -1px; position: relative; }
+  .ai-stage-row:first-child { border-top-left-radius: var(--radius-md); border-top-right-radius: var(--radius-md); }
+  .ai-stage-row:last-child { border-bottom-left-radius: var(--radius-md); border-bottom-right-radius: var(--radius-md); margin-bottom: 0; }
+  
+  .ai-stage-row.complete { border-color: var(--success); z-index: 1; }
+  .ai-stage-row.active { border-color: var(--primary); z-index: 2; }
+  
+  .stage-row-left { display: flex; align-items: center; gap: 0.8rem; }
+  .stage-row-num { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); width: 32px; display: flex; align-items: center; justify-content: center; }
+  .stage-row-title { font-size: 0.9rem; font-weight: 600; color: var(--text-primary); }
+  .stage-row-detail { font-size: 0.85rem; color: var(--text-secondary); margin-left: 0.5rem; }
+  
+  .stage-row-status { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; display:flex; align-items:center; gap:0.25rem;}
+  .stage-row-status.pending { color: var(--text-muted); }
+  .stage-row-status.active { color: var(--primary); }
+  .stage-row-status.complete { color: var(--success); }
+  .stage-row-status.escalated { color: var(--warning); }
+  
+  .resolution-box { background:var(--background); border:1px solid var(--border); border-radius:var(--radius-md); padding:1.25rem; font-size:.9rem; color:var(--text-secondary); line-height:1.6; }
+  .result-section { margin-top:1.2rem; padding-top:1.2rem; border-top:1px dashed var(--border); }
+  .result-heading { font-size:.82rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.03em; margin-bottom:.5rem; }
+  .source-list { display:flex; gap:.4rem; flex-wrap:wrap; }
+  .source-chip { font-size:.75rem; background:var(--surface); border:1px solid var(--border); border-radius:999px; padding:.25rem .75rem; color:var(--text-secondary); font-weight:600; }
+  
+  .ai-empty-row { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:10px 0; flex-wrap:wrap; }
+  .ai-empty-copy { font-size:.88rem; color:var(--text-secondary); }
+  @keyframes aiPulse { 0%,80%,100% { transform:scale(.75); opacity:.45; } 40% { transform:scale(1); opacity:1; } }
+  .classification-pill-box { border-radius:var(--radius-md); padding:1rem; background:var(--background); border:1px solid var(--border); text-align:center; }
+  .classification-pill-box .lbl { font-size:.72rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:.02em; margin-bottom:.5rem; }
+  .confidence-track { height:8px; border-radius:999px; background:var(--border); overflow:hidden; }
+  .confidence-fill { height:100%; background:var(--ai-gradient); border-radius:999px; }
+  
+  .accordion-btn-sp { width:100%; text-align:left; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:1rem 1.25rem; display:flex; align-items:center; justify-content:space-between; font-weight:600; color:var(--text-primary); font-size:.95rem; transition: background 0.2s; }
+  .accordion-btn-sp:hover { background: var(--surface-hover); }
+  .accordion-body-sp { border:1px solid var(--border); border-top:none; border-radius:0 0 var(--radius-md) var(--radius-md); padding:1.25rem; margin-top:-1px; font-size:.85rem; color:var(--text-secondary); background:var(--surface); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <a href="/my_tickets" class="btn btn-secondary btn-sm d-flex align-items-center gap-2">
+      <i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Back to My Tickets
+    </a>
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- Left Col: Details -->
+  <div class="col-lg-7">
+    <div class="sp-card p-4 h-100">
+      <div class="d-flex justify-content-between align-items-start mb-3">
+        <span class="badge badge-info">TICKET #T-{{ ticket.ticket_id }}</span>
+        <span class="badge {% if ticket.status == 'Open' %}badge-warning{% elif ticket.status == 'In Progress' %}badge-primary{% elif ticket.status == 'Resolved' %}badge-success{% elif ticket.status == 'Closed' %}badge-secondary{% else %}badge-primary{% endif %}">{{ ticket.status }}</span>
+      </div>
+      <h3 class="fw-bold mb-2 text-dark" style="font-size:1.4rem;">{{ ticket.title }}</h3>
+      <p class="text-muted mb-4">{{ ticket.description }}</p>
+
+      <div class="row text-muted small border-top pt-3">
+        <div class="col-sm-6 mb-2 mb-sm-0"><strong class="text-dark">Requester:</strong> {{ ticket.employee_name }} ({{ ticket.email }})</div>
+        <div class="col-sm-6 text-sm-end"><strong class="text-dark">Submitted:</strong> {{ ticket.created_at[:16] }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Col: Classification -->
+  <div class="col-lg-5">
+    <div class="sp-card p-4 h-100">
+      <div class="fw-bold text-dark mb-3 d-flex align-items-center gap-2" style="font-size: 1rem;">
+        <i data-lucide="crosshair" class="text-primary"></i>
+        AI Classification Result
+      </div>
+      <div class="row g-2 mb-4">
+        <div class="col-4">
+          <div class="classification-pill-box">
+            <div class="lbl">Category</div>
+            <span class="badge badge-info text-truncate w-100 d-block">{{ ticket.category }}</span>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="classification-pill-box">
+            <div class="lbl">Severity</div>
+            <span class="badge {% if ticket.severity == 'Critical' %}badge-danger{% elif ticket.severity == 'High' %}badge-warning{% elif ticket.severity == 'Medium' %}badge-info{% else %}badge-success{% endif %} text-truncate w-100 d-block">{{ ticket.severity }}</span>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="classification-pill-box">
+            <div class="lbl">Priority</div>
+            <span class="badge {% if ticket.priority in ['P1','P2'] %}badge-danger{% else %}badge-info{% endif %} text-truncate w-100 d-block">{{ ticket.priority }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="mt-auto">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <span class="small text-muted fw-semibold">M1 Classification Confidence</span>
+          <span class="small fw-bold text-dark">{{ "%.0f"|format((ticket.confidence or 0) * 100) }}%</span>
+        </div>
+        <div class="confidence-track"><div class="confidence-fill" style="width: {{ ((ticket.confidence or 0) * 100)|round(0, 'floor') }}%;"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mt-1" id="ai-resolution-section" data-ticket-id="{{ ticket.ticket_id }}">
+  <div class="col-12">
+    <div class="ai-resolution-panel">
+      <div class="ai-resolution-header">
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+          <div class="d-flex align-items-center gap-3">
+            <div class="ai-icon-wrap" style="background:var(--ai-gradient); color:white; width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center;"><i data-lucide="sparkles"></i></div>
+            <div>
+              <h5 class="ai-resolution-title fw-bold m-0" style="color:var(--text-primary);">AI Resolution Agent</h5>
+              <p class="ai-resolution-subtitle small text-muted m-0 mt-1">Grounded resolution generated from the enterprise knowledge base using Retrieval-Augmented Generation (RAG).</p>
+            </div>
+          </div>
+          <span class="status-badge {% if ticket.ai_resolution or ticket.resolution_decision %}status-generated{% else %}status-pending{% endif %}" id="ai-status-badge">
+            {% if ticket.ai_resolution or ticket.resolution_decision %}<i data-lucide="check" style="width:14px;height:14px;"></i> Generated{% else %}<i data-lucide="bot" style="width:14px;height:14px;"></i> Ready to Generate{% endif %}
+          </span>
+        </div>
+      </div>
+
+      <div class="ai-resolution-content" id="ai-resolution-content">
+        {% if ticket.ai_resolution or ticket.resolution_decision %}
+        <div class="ai-result-shell">
+          <div class="ai-stage-list">
+            <div class="ai-stage-row complete"><div class="stage-row-left"><div class="stage-row-num">1</div><div class="stage-row-title">Diagnosis Agent</div><div class="stage-row-detail">M1 classification completed</div></div><div class="stage-row-status complete"><i data-lucide="check"></i> COMPLETED</div></div>
+            <div class="ai-stage-row complete"><div class="stage-row-left"><div class="stage-row-num">2</div><div class="stage-row-title">Retrieval Agent</div><div class="stage-row-detail">Knowledge base retrieved</div></div><div class="stage-row-status complete"><i data-lucide="check"></i> COMPLETED</div></div>
+            <div class="ai-stage-row complete"><div class="stage-row-left"><div class="stage-row-num">3</div><div class="stage-row-title">Resolution Agent</div><div class="stage-row-detail">OpenRouter resolution generated</div></div><div class="stage-row-status complete"><i data-lucide="check"></i> COMPLETED</div></div>
+            
+            <div class="ai-stage-row complete" style="flex-wrap: wrap;">
+              <div class="stage-row-left" style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
+                <div class="d-flex align-items-center gap-2">
+                  <div class="stage-row-num">4</div><div class="stage-row-title">Validation Agent</div>
+                  <div class="stage-row-detail">{% if ticket.validation_confidence is not none %}Resolution confidence: {{ "%.1f"|format(ticket.validation_confidence) }}%{% else %}N/A{% endif %}</div>
+                </div>
+                <div class="stage-row-status complete"><i data-lucide="check"></i> COMPLETED</div>
+              </div>
+              {% if ticket.structured_validation %}
+              <div class="w-100 mt-3 pt-3 border-top">
+                <div class="d-flex justify-content-between text-muted small mb-2"><span>Diagnosis confidence</span><span>{{ "%.1f"|format(ticket.structured_validation.diagnosis_confidence * 100) }}% &times; 40%</span></div>
+                <div class="d-flex justify-content-between text-muted small mb-2"><span>Retrieval similarity</span><span>{{ "%.1f"|format(ticket.structured_validation.retrieval_similarity * 100) }}% &times; 40%</span></div>
+                <div class="d-flex justify-content-between text-muted small mb-3"><span>Resolution completeness</span><span>{{ "%.1f"|format(ticket.structured_validation.resolution_completeness * 100) }}% &times; 20%</span></div>
+                <div class="d-flex justify-content-between fw-bold text-dark small mb-1 border-top pt-2"><span>Final Resolution Confidence</span><span>{{ "%.1f"|format(ticket.structured_validation.final_confidence) }}%</span></div>
+                <div class="d-flex justify-content-between text-muted small mb-1"><span>Threshold</span><span>{{ "%.0f"|format(ticket.structured_validation.threshold) }}%</span></div>
+                <div class="d-flex justify-content-between text-muted small"><span>Decision</span><span class="{% if ticket.structured_validation.decision == 'AUTO_RESOLVE' %}text-success fw-bold{% else %}text-warning fw-bold{% endif %}">{{ ticket.structured_validation.decision }}</span></div>
+              </div>
+              {% endif %}
+            </div>
+            
+            <div class="ai-stage-row {% if ticket.resolution_decision == 'ESCALATE' %}active{% else %}complete{% endif %}"><div class="stage-row-left"><div class="stage-row-num">5</div><div class="stage-row-title">{% if ticket.resolution_decision == 'ESCALATE' %}Escalation Agent{% else %}Execution Agent{% endif %}</div><div class="stage-row-detail">{% if ticket.resolution_decision == 'AUTO_RESOLVE' %}Email sent{% elif ticket.resolution_decision == 'ESCALATE' %}Jira issue created: {{ ticket.jira_issue_key or 'Pending' }}{% else %}Completed{% endif %}</div></div><div class="stage-row-status {% if ticket.resolution_decision == 'ESCALATE' %}escalated{% else %}complete{% endif %}">{% if ticket.resolution_decision == 'ESCALATE' %}<i data-lucide="alert-triangle"></i> ESCALATED{% else %}<i data-lucide="check"></i> COMPLETED{% endif %}</div></div>
+          </div>
+
+          <div class="result-divider mt-4 mb-4 border-top"></div>
+          
+          {% if ticket.resolution_decision %}
+            {% if ticket.resolution_decision == 'AUTO_RESOLVE' %}
+            <div class="status-banner success mb-4">
+              <div class="status-banner-icon"><i data-lucide="circle-check"></i></div>
+              <div class="status-banner-content w-100">
+                <div class="status-banner-title">AUTO-RESOLVED</div>
+                <div class="row mt-2">
+                  <div class="col-sm-6 text-success text-opacity-75 small">
+                    <div>Resolution confidence: {{ "%.1f"|format(ticket.validation_confidence or 0) }}%</div>
+                    <div>Threshold: {{ "%.0f"|format(ticket.structured_validation.threshold) if ticket.structured_validation else 70 }}%</div>
+                  </div>
+                  <div class="col-sm-6 text-success text-opacity-75 small">
+                    <div>✓ Resolution generated</div>
+                    <div>✓ Validation passed</div>
+                    <div>{% if ticket.email_status == 'SENT' %}✓ Email sent{% else %}⚠ Email failed{% endif %}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% else %}
+            <div class="status-banner warning mb-4">
+              <div class="status-banner-icon"><i data-lucide="alert-triangle"></i></div>
+              <div class="status-banner-content w-100">
+                <div class="status-banner-title text-dark">ESCALATED TO JIRA</div>
+                <div class="row mt-2">
+                  <div class="col-sm-6 text-dark text-opacity-75 small">
+                    <div>Resolution confidence: {{ "%.1f"|format(ticket.validation_confidence or 0) }}%</div>
+                    <div>Threshold: {{ "%.0f"|format(ticket.structured_validation.threshold) if ticket.structured_validation else 70 }}%</div>
+                    <div class="mt-1">Reason: {{ ticket.escalation_reason }}</div>
+                  </div>
+                  <div class="col-sm-6 text-dark text-opacity-75 small">
+                    <div>Jira Issue: {% if ticket.jira_issue_key %}<a href="{{ ticket.jira_issue_url }}" target="_blank" class="fw-bold text-dark text-decoration-underline">{{ ticket.jira_issue_key }}</a>{% else %}FAILED{% endif %}</div>
+                    <div>Priority: {{ ticket.priority }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+          {% endif %}
+
+          {% if ticket.structured_resolution %}
+          <div class="resolution-premium-card mt-3">
+            <div class="premium-row d-flex align-items-center mb-4 pb-3 border-bottom">
+              <div class="premium-icon" style="background:var(--warning-soft); color:var(--warning); padding:10px; border-radius:10px;">
+                <i data-lucide="activity"></i>
+              </div>
+              <div class="ms-3">
+                <div class="fw-bold text-dark mb-1" style="font-size:0.95rem;">Status &amp; Diagnosis</div>
+                <span class="badge {% if ticket.structured_resolution.status == 'RESOLVED' %}badge-success{% else %}badge-warning{% endif %}">
+                  {{ ticket.structured_resolution.status }}
+                </span>
+              </div>
+            </div>
+            
+            <div class="premium-block mb-4">
+              <div class="fw-bold text-dark mb-2 d-flex align-items-center gap-2"><i data-lucide="target" style="width:16px;height:16px;" class="text-primary"></i> Likely Cause</div>
+              <p class="text-muted m-0" style="font-size:0.85rem; line-height:1.6; padding-left: 24px;">{{ ticket.structured_resolution.likely_cause or 'Insufficient data to determine a specific cause.' }}</p>
+            </div>
+
+            <div class="premium-block mb-4">
+              <div class="fw-bold text-dark mb-2 d-flex align-items-center gap-2"><i data-lucide="list-checks" style="width:16px;height:16px;" class="text-primary"></i> Troubleshooting Steps</div>
+              {% if ticket.structured_resolution.troubleshooting_steps %}
+              <div class="steps-list mt-3" style="padding-left: 24px;">
+                {% for step in ticket.structured_resolution.troubleshooting_steps %}
+                <div class="mb-3">
+                  {% if step is mapping %}
+                    <div class="fw-bold text-dark" style="font-size:0.85rem;">{{ loop.index }}. {{ step.heading }}</div>
+                    <div class="text-muted" style="font-size:0.85rem; line-height:1.6;">{{ step.description }}</div>
+                  {% else %}
+                    <div class="text-muted" style="font-size:0.85rem; line-height:1.6;">{{ loop.index }}. {{ step }}</div>
+                  {% endif %}
+                </div>
+                {% endfor %}
+              </div>
+              {% else %}
+              <p class="text-muted m-0 small" style="padding-left: 24px;">No steps provided.</p>
+              {% endif %}
+            </div>
+
+            <div class="premium-block p-4 rounded-3" style="background:var(--success-soft); border:1px solid rgba(22, 163, 74, 0.2);">
+              <div class="d-flex align-items-center gap-2 mb-2 text-success">
+                <i data-lucide="shield-check"></i>
+                <div class="fw-bold" style="font-size:0.9rem;">Recommended Resolution</div>
+              </div>
+              <p class="text-success m-0" style="font-size:0.85rem; line-height:1.6; font-weight:500;">
+                {{ ticket.structured_resolution.recommended_resolution }}
+              </p>
+            </div>
+          </div>
+          {% elif ticket.ai_resolution %}
+          <div class="result-section">
+            <div class="result-heading">Recommended Resolution</div>
+            <pre class="result-pre" style="font-family:inherit;font-size:.85rem;white-space:pre-wrap;">{{ ticket.ai_resolution }}</pre>
+          </div>
+          {% endif %}
+
+          <div class="meta-row mt-4 d-flex gap-2 flex-wrap">
+            {% if ticket.resolution_confidence is not none %}<span class="badge badge-ai">Resolution confidence: {{ (ticket.resolution_confidence * 100)|round(0, 'floor')|int }}%</span>{% endif %}
+            <span class="badge badge-info">Generated by {% if ticket.resolution_engine %}{{ ticket.resolution_engine|upper }}{% else %}Template{% endif %}</span>
+          </div>
+
+          <div class="result-section">
+            <div class="result-heading">Knowledge Sources</div>
+            <div class="source-list">
+              {% if ticket.structured_sources %}
+                {% for source in ticket.structured_sources %}
+                  <span class="source-chip"><i data-lucide="file-text" style="width:12px;height:12px;"></i> {{ source }}</span>
+                {% endfor %}
+              {% else %}
+              <span class="text-muted small">No sources available.</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <div class="ai-empty-row mt-4 p-4 text-center border rounded-3 bg-light">
+          <div class="ai-empty-copy w-100 mb-3"><i data-lucide="bot" class="text-ai mb-2" style="width:32px;height:32px;"></i><br>Generate a grounded troubleshooting recommendation using the enterprise knowledge base.</div>
+          <button type="button" id="generate-ai-resolution-btn" class="btn btn-primary mx-auto"><i data-lucide="sparkles"></i> Generate AI Resolution</button>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Ticket Analysis & Query Generation -->
+<div class="mt-3">
+  <button class="accordion-btn-sp" type="button" data-bs-toggle="collapse" data-bs-target="#analysisCollapse" aria-expanded="false">
+    <span class="d-flex align-items-center gap-2">
+      <i data-lucide="file-text" class="text-primary"></i>
+      Ticket Analysis &amp; Query Generation
+    </span>
+    <i data-lucide="chevron-down" class="text-muted"></i>
+  </button>
+  <div class="collapse" id="analysisCollapse">
+    <div class="accordion-body-sp">
+      <div class="row g-3">
+        <div class="col-md-4"><div class="text-muted small text-uppercase fw-semibold mb-1">Category</div><div class="fw-semibold text-dark">{{ ticket.category }}</div></div>
+        <div class="col-md-4"><div class="text-muted small text-uppercase fw-semibold mb-1">Priority</div><div class="fw-semibold text-dark">{{ ticket.priority }}</div></div>
+        <div class="col-md-4"><div class="text-muted small text-uppercase fw-semibold mb-1">Generated Query</div><div class="fw-semibold text-dark text-truncate">{{ ticket.title }} {{ ticket.description }}</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Knowledge Base Retrieval -->
+<div class="mt-2">
+  {% set src_count = ticket.resolution_sources.split(',')|selectattr('0')|list|length if ticket.resolution_sources else 0 %}
+  <button class="accordion-btn-sp" type="button" data-bs-toggle="collapse" data-bs-target="#kbCollapse" aria-expanded="false">
+    <span class="d-flex align-items-center gap-2">
+      <i data-lucide="database" class="text-info"></i>
+      Knowledge Base Retrieval {% if ticket.ai_resolution %}({{ src_count }} article{{ 's' if src_count != 1 else '' }}){% endif %}
+    </span>
+    <i data-lucide="chevron-down" class="text-muted"></i>
+  </button>
+  <div class="collapse" id="kbCollapse">
+    <div class="accordion-body-sp">
+      {% if ticket.resolution_sources %}
+        <div class="d-flex flex-wrap gap-2">
+          {% for source in ticket.resolution_sources.split(',') %}
+            {% if source.strip() %}<span class="source-chip"><i data-lucide="file" style="width:12px;height:12px;"></i> {{ source.strip() }}</span>{% endif %}
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-muted small">No knowledge-base articles retrieved yet. Generate an AI resolution to search the knowledge base.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Format markdown for any server-rendered resolution text
+    document.querySelectorAll('.result-pre').forEach(pre => {
+      let html = pre.innerHTML;
+      pre.innerHTML = html.replace(/\*\*(.*?)\*\*/g, '<strong class="text-dark fw-bold" style="font-size:0.9rem;">$1</strong>');
+    });
+
+    const generateButton = document.getElementById("generate-ai-resolution-btn");
+    if (!generateButton) return;
+
+    const contentContainer = document.getElementById("ai-resolution-content");
+    const statusBadge = document.getElementById("ai-status-badge");
+    const stageLabels = [
+      { label: "Diagnosis", detail: "Analyzed by M1", icon: '1' },
+      { label: "Retrieval", detail: "Searching KB", icon: '2' },
+      { label: "Resolution", detail: "Generating response", icon: '3' },
+      { label: "Validation", detail: "Checking confidence", icon: '4' },
+      { label: "Execution", detail: "Triggering Integrations", icon: '5' }
+    ];
+
+    function setStatusBadge(status) {
+      if (!statusBadge) return;
+      statusBadge.className = "status-badge";
+      if (status === "generated") { statusBadge.classList.add("status-generated"); statusBadge.innerHTML = '<i data-lucide="check" style="width:14px;height:14px;"></i> Generated'; }
+      else if (status === "insufficient") { statusBadge.classList.add("status-insufficient"); statusBadge.innerHTML = '<i data-lucide="alert-triangle" style="width:14px;height:14px;"></i> Insufficient Knowledge'; }
+      else { statusBadge.classList.add("status-processing"); statusBadge.innerHTML = '<i data-lucide="loader" style="width:14px;height:14px;" class="spin"></i> Processing'; }
+      if(window.lucide) lucide.createIcons();
+    }
+
+    function renderStageCards(activeIndex) {
+      return stageLabels.map((stage, index) => {
+        let className = "ai-stage-row", statusText = "PENDING", statusClass = "pending", iconHtml = "";
+        if (index < activeIndex) { className = "ai-stage-row complete"; statusText = "COMPLETED"; statusClass = "complete"; iconHtml='<i data-lucide="check"></i> '; }
+        else if (index === activeIndex) { className = "ai-stage-row active"; statusText = "RUNNING"; statusClass = "active"; iconHtml='<i data-lucide="loader" class="spin" style="width:14px;height:14px;"></i> ';}
+        return `<div class="${className}"><div class="stage-row-left"><div class="stage-row-num">${stage.icon}</div><div class="stage-row-title">${stage.label}</div><div class="stage-row-detail">${stage.detail}</div></div><div class="stage-row-status ${statusClass}">${iconHtml}${statusText}</div></div>`;
+      }).join("");
+    }
+
+    function renderProcessingState(activeIndex) {
+      setStatusBadge("processing");
+      contentContainer.innerHTML = `
+        <div class="ai-result-shell">
+          <div class="ai-stage-list">${renderStageCards(activeIndex)}</div>
+          <div class="mt-4 text-center text-muted">
+             <i data-lucide="loader" class="spin text-primary" style="width:32px;height:32px;margin-bottom:1rem;"></i>
+            <div class="fw-bold text-dark">Generating a grounded resolution from the retrieved knowledge-base context...</div>
+            <div class="small mt-1">Using the retrieved knowledge to prepare a grounded support response.</div>
+          </div>
+        </div>`;
+      if(window.lucide) lucide.createIcons();
+    }
+
+    function renderGeneratedState(ticket) {
+      const sources = ticket.resolution_sources ? ticket.resolution_sources.split(",").map((i) => i.trim()).filter(Boolean) : [];
+      const confidence = ticket.resolution_confidence != null ? `${Math.round(ticket.resolution_confidence * 100)}%` : null;
+      const engine = ticket.resolution_engine ? ticket.resolution_engine.toUpperCase() : "Template";
+      setStatusBadge("generated");
+      
+      let resolutionHtml = "";
+      if (ticket.structured_resolution) {
+        const sr = ticket.structured_resolution;
+        const statusClass = sr.status === 'RESOLVED' ? 'badge-success' : 'badge-warning';
+            const stepsHtml = sr.troubleshooting_steps && sr.troubleshooting_steps.length 
+              ? `<div class="steps-list mt-3" style="padding-left: 24px;">
+                  ${sr.troubleshooting_steps.map((s, idx) => {
+                    if (typeof s === 'object' && s !== null) {
+                      return `<div class="mb-3"><div class="fw-bold text-dark" style="font-size:0.85rem;">${idx + 1}. ${escapeHtml(s.heading)}</div><div class="text-muted" style="font-size:0.85rem; line-height:1.6;">${escapeHtml(s.description)}</div></div>`;
+                    } else {
+                      return `<div class="mb-3"><div class="text-muted" style="font-size:0.85rem; line-height:1.6;">${idx + 1}. ${escapeHtml(s)}</div></div>`;
+                    }
+                  }).join('')}
+                 </div>`
+              : `<p class="text-muted m-0 small" style="padding-left: 24px;">No steps provided.</p>`;
+          
+        resolutionHtml = `
+          <div class="resolution-premium-card mt-3">
+            <div class="premium-row d-flex align-items-center mb-4 pb-3 border-bottom">
+              <div class="premium-icon" style="background:var(--warning-soft); color:var(--warning); padding:10px; border-radius:10px;">
+                <i data-lucide="activity"></i>
+              </div>
+              <div class="ms-3">
+                <div class="fw-bold text-dark mb-1" style="font-size:0.95rem;">Status &amp; Diagnosis</div>
+                <span class="badge ${statusClass}">${escapeHtml(sr.status || 'UNKNOWN')}</span>
+              </div>
+            </div>
+            
+            <div class="premium-block mt-4 mb-4">
+              <div class="fw-bold text-dark mb-2 d-flex align-items-center gap-2"><i data-lucide="target" style="width:16px;height:16px;" class="text-primary"></i> Likely Cause</div>
+              <p class="text-muted m-0" style="font-size:0.85rem; line-height:1.6; padding-left: 24px;">${escapeHtml(sr.likely_cause || 'Insufficient data to determine a specific cause.')}</p>
+            </div>
+
+            <div class="premium-block mb-4">
+              <div class="fw-bold text-dark mb-2 d-flex align-items-center gap-2"><i data-lucide="list-checks" style="width:16px;height:16px;" class="text-primary"></i> Troubleshooting Steps</div>
+              ${stepsHtml}
+            </div>
+
+            <div class="premium-block p-4 rounded-3" style="background:var(--success-soft); border:1px solid rgba(22, 163, 74, 0.2);">
+              <div class="d-flex align-items-center gap-2 mb-2 text-success">
+                <i data-lucide="shield-check"></i>
+                <div class="fw-bold" style="font-size:0.9rem;">Recommended Resolution</div>
+              </div>
+              <p class="text-success m-0" style="font-size:0.85rem; line-height:1.6; font-weight:500;">
+                ${escapeHtml(sr.recommended_resolution || '')}
+              </p>
+            </div>
+          </div>
+        `;
+      } else {
+        resolutionHtml = `<div class="result-section"><div class="result-heading">Recommended Resolution</div><pre class="result-pre" style="font-family:inherit;font-size:.85rem;white-space:pre-wrap;">${formatMarkdown(ticket.ai_resolution || "")}</pre></div>`;
+      }
+
+      let decisionHtml = '';
+      if(ticket.resolution_decision) {
+        if(ticket.resolution_decision === 'AUTO_RESOLVE') {
+            decisionHtml = `
+            <div class="status-banner success mb-4">
+              <div class="status-banner-icon"><i data-lucide="circle-check"></i></div>
+              <div class="status-banner-content w-100">
+                <div class="status-banner-title">AUTO-RESOLVED</div>
+                <div class="row mt-2">
+                  <div class="col-sm-6 text-success text-opacity-75 small">
+                    <div>Resolution confidence: ${ticket.validation_confidence ? ticket.validation_confidence.toFixed(1) : ''}%</div>
+                    <div>Threshold: {{ "%.0f"|format(ticket.structured_validation.threshold) if ticket.structured_validation else 70 }}%</div>
+                  </div>
+                  <div class="col-sm-6 text-success text-opacity-75 small">
+                    <div>✓ Resolution generated</div>
+                    <div>✓ Validation passed</div>
+                    <div>${ticket.email_status === 'SENT' ? '✓ Email sent' : '⚠ Email failed'}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            `;
+        } else {
+            decisionHtml = `
+            <div class="status-banner warning mb-4">
+              <div class="status-banner-icon"><i data-lucide="alert-triangle"></i></div>
+              <div class="status-banner-content w-100">
+                <div class="status-banner-title text-dark">ESCALATED TO JIRA</div>
+                <div class="row mt-2">
+                  <div class="col-sm-6 text-dark text-opacity-75 small">
+                    <div>Resolution confidence: ${ticket.validation_confidence ? ticket.validation_confidence.toFixed(1) : ''}%</div>
+                    <div>Threshold: {{ "%.0f"|format(ticket.structured_validation.threshold) if ticket.structured_validation else 70 }}%</div>
+                    <div class="mt-1">Reason: ${escapeHtml(ticket.escalation_reason)}</div>
+                  </div>
+                  <div class="col-sm-6 text-dark text-opacity-75 small">
+                    <div>Jira Issue: ${ticket.jira_issue_key ? `<a href="${ticket.jira_issue_url}" target="_blank" class="fw-bold text-dark text-decoration-underline">${ticket.jira_issue_key}</a>` : 'FAILED'}</div>
+                    <div>Priority: ${ticket.priority}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            `;
+        }
+      }
+
+      contentContainer.innerHTML = `
+        <div class="ai-result-shell">
+          <div class="ai-stage-list">${renderStageCards(5)}</div>
+          <div class="result-divider mt-4 mb-4 border-top"></div>
+          ${decisionHtml}
+          ${resolutionHtml}
+          <div class="meta-row mt-4 d-flex gap-2 flex-wrap">
+            ${confidence ? `<span class="badge badge-ai">Resolution confidence: ${confidence}</span>` : ""}
+            <span class="badge badge-info">Generated by ${engine}</span>
+          </div>
+          <div class="result-section mt-3 pt-3 border-top">
+            <div class="result-heading mb-2" style="font-size:0.8rem;">Sources</div>
+            <div class="source-list">${sources.length ? sources.map((s) => `<span class="source-chip"><i data-lucide="file-text" style="width:12px;height:12px;"></i> ${escapeHtml(s)}</span>`).join("") : '<span class="text-muted small">No sources available.</span>'}</div>
+          </div>
+        </div>`;
+      if(window.lucide) lucide.createIcons();
+    }
+
+    generateButton.addEventListener("click", async function () {
+      const ticketId = Number(document.getElementById("ai-resolution-section").dataset.ticketId);
+      const originalHtml = generateButton.innerHTML;
+      generateButton.disabled = true;
+      generateButton.innerHTML = '<i data-lucide="loader" class="spin"></i> Generating...';
+      if(window.lucide) lucide.createIcons();
+
+      let activeIndex = 0;
+      renderProcessingState(activeIndex);
+      const stageInterval = setInterval(() => {
+        activeIndex = Math.min(activeIndex + 1, stageLabels.length - 1);
+        renderProcessingState(activeIndex);
+      }, 450);
+
+      try {
+        const response = await fetch(`/api/tickets/${ticketId}/generate-resolution`, { method: "POST", headers: { "Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token() }}" } });
+        if (!response.ok) throw new Error("Unable to generate AI resolution");
+        const ticket = await response.json();
+        if (!ticket.ai_resolution) throw new Error("No AI resolution returned");
+        clearInterval(stageInterval);
+        renderGeneratedState(ticket);
+      } catch (error) {
+        console.error(error);
+        clearInterval(stageInterval);
+        setStatusBadge("insufficient");
+        contentContainer.innerHTML = `<div class="text-center mt-4 p-4 bg-light rounded"><i data-lucide="alert-triangle" class="text-warning mb-2" style="width:32px;height:32px;"></i><div class="fw-bold">Unable to generate a grounded resolution.</div><div class="small mt-1 text-muted">Please check the retrieved knowledge base results and try again.</div></div>`;
+        if(window.lucide) lucide.createIcons();
+      } finally {
+        generateButton.disabled = false;
+        generateButton.innerHTML = originalHtml;
+        if(window.lucide) lucide.createIcons();
+      }
+    });
+
+    // Auto-generate logic removed as per user request to explicitly require clicks
+  });
+
+  function escapeHtml(unsafe) {
+    if (!unsafe) return "";
+    return unsafe.toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  }
+
+  function formatMarkdown(text) {
+    if (!text) return "";
+    let html = escapeHtml(text);
+    // Replace **text** with styled strong tags
+    return html.replace(/\*\*(.*?)\*\*/g, '<strong class="text-dark fw-bold" style="font-size:0.9rem;">$1</strong>');
+  }
+</script>
+<style>
+@keyframes spin { 100% { transform: rotate(360deg); } }
+.spin { animation: spin 1s linear infinite; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

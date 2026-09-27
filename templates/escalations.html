@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}SupportPilot - Human Intervention{% endblock %}
+{% set active = 'escalations' %}
+{% block page_title %}Human Intervention Monitor{% endblock %}
+{% block page_subtitle %}Tickets requiring human support and escalation analysis.{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-12">
+    <div class="sp-card p-4 bg-white rounded shadow-sm border-0 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">Escalated Tickets</h5>
+      </div>
+      
+      {% if not escalated_tickets %}
+        <div class="text-center text-muted p-5">
+          <i data-lucide="check-circle" style="width: 48px; height: 48px; color: #10b981; margin-bottom: 1rem;"></i>
+          <h5>No tickets currently require human intervention.</h5>
+          <p>The AI is handling all active requests successfully.</p>
+        </div>
+      {% else %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>ID</th>
+                <th>Category</th>
+                <th>Priority</th>
+                <th>AI Confidence</th>
+                <th>Escalation Reason</th>
+                <th>Attempts</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for ticket in escalated_tickets %}
+              <tr>
+                <td>#{{ ticket.ticket_id }}</td>
+                <td><span class="badge bg-secondary">{{ ticket.category or 'Unknown' }}</span></td>
+                <td>
+                  <span class="badge {% if ticket.priority == 'Critical' %}bg-danger{% elif ticket.priority == 'High' %}bg-warning{% elif ticket.priority == 'Medium' %}bg-info{% else %}bg-primary{% endif %}">
+                    {{ ticket.priority or 'Unknown' }}
+                  </span>
+                </td>
+                <td>{{ (ticket.confidence * 100)|round(1) if ticket.confidence else 0 }}%</td>
+                <td><span class="text-danger fw-semibold">{{ ticket.escalation_reason or 'Manual Escalation' }}</span></td>
+                <td>{{ ticket.repeated_attempts }}</td>
+                <td>{{ ticket.status }}</td>
+                <td><a href="{{ url_for('view_ticket', ticket_id=ticket.ticket_id) }}" class="btn btn-sm btn-outline-primary">View</a></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

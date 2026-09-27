@@ -1,0 +1,648 @@
+{% extends "base.html" %}
+
+{% block title %}SupportPilot - Add Ticket{% endblock %}
+
+{% block page_title %}Add Ticket{% endblock %}
+{% block page_subtitle %}Describe your issue and let SupportPilot analyze it.{% endblock %}
+
+{% set active = 'add_tickets' %}
+{% set promo_title = 'Let AI handle the first step' %}
+{% set promo_text = 'Submit your issue and let our AI analyze, classify, and help resolve it.' %}
+{% set promo_icon = 'bot' %}
+
+
+{% block extra_head %}
+<style>
+  /* Stepper */
+  .stepper-container { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 1.25rem; margin-bottom: 1.5rem; }
+  .step { display: flex; align-items: center; gap: 0.75rem; color: var(--text-muted); font-weight: 600; flex: 1; }
+  .step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--surface-hover); color: var(--text-secondary); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; flex-shrink: 0; transition: all 0.2s ease; }
+  .step-text { display: flex; flex-direction: column; line-height: 1.2; }
+  .step-text .main { font-size: 0.85rem; color: inherit; }
+  .step-text .sub { font-size: 0.7rem; font-weight: 400; color: var(--text-muted); margin-top: 2px; }
+  
+  .step.active { color: var(--primary); }
+  .step.active .step-num { background: var(--primary); color: #fff; box-shadow: 0 0 0 3px var(--primary-soft); }
+  
+  .step.complete { color: var(--success); }
+  .step.complete .step-num { background: var(--success); color: #fff; }
+  
+  .step-divider { flex: 0.5; height: 2px; background: var(--border); margin: 0 1rem; }
+  
+  /* Views */
+  .view-section { display: none; animation: fadeIn 0.3s ease; }
+  .view-section.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+  
+  /* Right Panel AI Preview */
+  .preview-box { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.25rem; background: var(--surface); box-shadow: var(--shadow-sm); }
+  .preview-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
+  .preview-title { font-weight: 600; font-size: 0.95rem; color: var(--text-primary); }
+  .live-badge { background: var(--primary-soft); color: var(--primary); font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 4px; border: 1px solid rgba(79, 70, 229, 0.2); }
+  
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 1rem; }
+  .stat-item { background: var(--background); border: 1px solid var(--border); padding: 0.75rem; border-radius: var(--radius-sm); }
+  .stat-label { display: flex; align-items: center; gap: 0.4rem; font-size: 0.7rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.25rem; }
+  .stat-val { font-size: 0.9rem; font-weight: 700; color: var(--text-muted); }
+  .stat-val.active-val { color: var(--text-primary); }
+  
+  /* Compact M2 RAG Workflow Stepper */
+  .rag-workflow { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+  .rag-step { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
+  .rag-icon { display: flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; }
+  .rag-icon.done { border-color: var(--success); background: var(--success); color: #fff; }
+  .rag-icon.running { border-color: var(--primary); border-top-color: transparent; animation: spin 1s linear infinite; }
+  .rag-divider { flex: 1; height: 1px; background: var(--border); margin: 0 0.5rem; }
+  @keyframes spin { 100% { transform: rotate(360deg); } }
+  
+  /* Success State */
+  .success-banner { background: var(--success-soft); border: 1px solid rgba(22, 163, 74, 0.2); border-radius: var(--radius-md); padding: 2rem; text-align: center; }
+  .success-icon { width: 56px; height: 56px; background: var(--success); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; box-shadow: 0 4px 10px rgba(22, 163, 74, 0.3); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <!-- Left Column: Main Form & Workflow -->
+  <div class="col-lg-8">
+    <div class="sp-card">
+      
+      <!-- Stepper -->
+      <div class="stepper-container">
+        <div class="step active" id="step1">
+          <div class="step-num" id="step1-num">01</div>
+          <div class="step-text">
+            <span class="main">Ticket Details</span>
+            <span class="sub">Enter your issue</span>
+          </div>
+        </div>
+        <div class="step-divider"></div>
+        <div class="step" id="step2">
+          <div class="step-num" id="step2-num">02</div>
+          <div class="step-text">
+            <span class="main">Review</span>
+            <span class="sub">AI Classification</span>
+          </div>
+        </div>
+        <div class="step-divider"></div>
+        <div class="step" id="step3">
+          <div class="step-num" id="step3-num">03</div>
+          <div class="step-text">
+            <span class="main">AI Analysis</span>
+            <span class="sub">Generate solution</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- View 1: Ticket Form -->
+      <div id="view-step-1" class="view-section active">
+        <h6 class="card-title mb-3">Ticket Details</h6>
+        <form id="ticketForm">
+          <div class="mb-3">
+            <label class="form-label">Ticket Title *</label>
+            <input type="text" class="form-control" id="title" required placeholder="e.g., VPN connection failing">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description *</label>
+            <textarea class="form-control" id="description" rows="4" required maxlength="1000" placeholder="unable to connect to vpn since this morning. Getting authentication error even with correct credentials."></textarea>
+            <div class="text-end mt-1 text-muted" style="font-size:0.75rem;"><span id="charCount">0</span>/1000</div>
+          </div>
+          <div class="mb-4">
+            <label class="form-label">Department *</label>
+            <select class="form-select" id="department" disabled>
+              <option value="{{ user.department }}" selected>{{ user.department }}</option>
+            </select>
+          </div>
+          
+          <div class="d-flex gap-3">
+            <button type="button" class="btn btn-secondary" style="width: 140px;" onclick="clearForm()"><i data-lucide="eraser"></i> Clear</button>
+            <button type="submit" id="analyzeBtn" class="btn btn-primary flex-grow-1">
+              Analyze with AI <i data-lucide="arrow-right"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- View 2: Analyzing (Transition State) -->
+      <div id="view-step-analyzing" class="view-section">
+        <div class="text-center py-5">
+          <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
+          <h5 class="fw-bold">Analyzing your ticket...</h5>
+          <div class="text-muted small mx-auto mt-3 text-start" style="max-width: 300px;">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <span>Processing your request</span> <span class="text-success"><i data-lucide="check" style="width:14px;height:14px;"></i></span>
+            </div>
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <span>Running AI classification (M1)</span> <span class="text-success"><i data-lucide="check" style="width:14px;height:14px;"></i></span>
+            </div>
+            <div class="d-flex align-items-center justify-content-between">
+              <span>Identifying category, severity...</span> 
+              <span class="spinner-grow spinner-grow-sm text-primary" role="status"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View 3: AI Classification Review -->
+      <div id="view-step-2" class="view-section">
+        <div class="status-banner success mb-4">
+          <div class="status-banner-icon"><i data-lucide="circle-check"></i></div>
+          <div class="status-banner-content">
+            <div class="status-banner-title">AI Classification Complete</div>
+            <p class="status-banner-text">Review the AI predicted metadata on the right panel.</p>
+          </div>
+        </div>
+        
+        <div class="p-3 bg-light border rounded mb-4">
+          <h6 class="fw-bold mb-1 text-dark" id="preview-title"></h6>
+          <p class="text-muted small mb-0" id="preview-desc" style="white-space: pre-wrap;"></p>
+        </div>
+        
+        <div class="d-flex gap-3 mt-4">
+          <button type="button" class="btn btn-secondary" style="width: 140px;" id="editTicketBtn"><i data-lucide="pencil"></i> Edit</button>
+          <button type="button" class="btn btn-primary flex-grow-1" id="generateBtn">
+            Generate AI Resolution <i data-lucide="arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- View 4: AI Resolution Generating / Result -->
+      <div id="view-step-3" class="view-section">
+        <div class="d-flex align-items-center gap-2 mb-4">
+          <div style="background:var(--ai); color:white; width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center;"><i data-lucide="sparkles" style="width:16px;height:16px;"></i></div>
+          <h5 class="fw-bold text-dark m-0">AI Resolution Workflow</h5>
+          <span class="badge badge-success ms-auto" id="gen-badge" style="display:none;"><i data-lucide="check"></i> Generated</span>
+        </div>
+        
+        <!-- Compact Horizontal RAG Stepper -->
+        <div class="rag-workflow" id="rag-stepper">
+          <div class="rag-step" id="rag-1"><div class="rag-icon"></div> Diagnosis</div>
+          <div class="rag-divider"></div>
+          <div class="rag-step" id="rag-2"><div class="rag-icon"></div> Retrieval</div>
+          <div class="rag-divider"></div>
+          <div class="rag-step" id="rag-3"><div class="rag-icon"></div> Resolution</div>
+          <div class="rag-divider"></div>
+          <div class="rag-step" id="rag-4"><div class="rag-icon"></div> Validation</div>
+          <div class="rag-divider"></div>
+          <div class="rag-step" id="rag-5"><div class="rag-icon"></div> Execution</div>
+        </div>
+
+        <div id="rag-content-area">
+          <div class="text-center py-5 text-muted" id="rag-loading-text">
+            <h6 class="fw-bold text-dark mb-2">Executing multi-agent workflow...</h6>
+            <p class="small mb-0">Running Orchestrator...</p>
+          </div>
+        </div>
+        
+        <div class="d-flex gap-3 mt-4" id="final-actions" style="display:none !important;">
+          <button type="button" class="btn btn-secondary" style="width: 140px;" id="editTicketBtn2"><i data-lucide="pencil"></i> Edit</button>
+          <button type="button" class="btn btn-success flex-grow-1" onclick="showSuccess()">
+            Create Ticket <i data-lucide="arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- View 5: Success State -->
+      <div id="view-success" class="view-section">
+        <div class="success-banner">
+          <div class="success-icon"><i data-lucide="check" style="width:32px;height:32px;"></i></div>
+          <h4 class="fw-bold text-dark mb-2">Ticket Created Successfully!</h4>
+          <p class="text-muted mb-4">Your ticket has been submitted and saved to the database.</p>
+          
+          <div class="d-inline-block bg-white border rounded px-4 py-2 mb-4 shadow-sm">
+            <div class="text-muted" style="font-size:0.75rem; text-transform:uppercase; font-weight:700;">Ticket ID</div>
+            <div class="fw-bold text-dark fs-5" id="final-ticket-id">#T-XX</div>
+          </div>
+          
+          <p class="text-muted small mb-4">You can view the ticket details or create another ticket.</p>
+          
+          <div class="d-flex gap-3 justify-content-center mx-auto" style="max-width: 400px;">
+            <a href="#" class="btn btn-secondary flex-grow-1" id="viewDetailsLink"><i data-lucide="eye"></i> View Details</a>
+            <button type="button" class="btn btn-primary flex-grow-1" onclick="resetFlow()"><i data-lucide="plus"></i> New Ticket</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Right Column: AI Preview & Tips -->
+  <div class="col-lg-4">
+    <div class="preview-box mb-3">
+      <div class="preview-header">
+        <div class="preview-title" id="side-panel-title">AI Classification Preview</div>
+        <div class="live-badge" id="side-panel-badge"><i data-lucide="activity" style="width:12px;height:12px;margin-right:2px;"></i> Live</div>
+      </div>
+      <div class="text-muted small mb-3" id="side-panel-sub">Classification will be shown after analysis is complete.</div>
+      
+      <div class="stat-grid">
+        <!-- Category -->
+        <div class="stat-item">
+          <div class="stat-label"><i data-lucide="folder" style="width:14px;height:14px;" class="text-info"></i> Category</div>
+          <div class="stat-val" id="cat-val">-</div>
+        </div>
+        <!-- Severity -->
+        <div class="stat-item">
+          <div class="stat-label"><i data-lucide="alert-triangle" style="width:14px;height:14px;" class="text-warning"></i> Severity</div>
+          <div class="stat-val" id="sev-val">-</div>
+        </div>
+        <!-- Priority -->
+        <div class="stat-item">
+          <div class="stat-label"><i data-lucide="alert-circle" style="width:14px;height:14px;" class="text-danger"></i> Priority</div>
+          <div class="stat-val" id="pri-val">-</div>
+        </div>
+        <!-- Confidence -->
+        <div class="stat-item">
+          <div class="stat-label"><i data-lucide="brain" style="width:14px;height:14px;" class="text-ai"></i> M1 Confidence</div>
+          <div class="stat-val" id="con-val">-</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="sp-card bg-light border-0">
+      <div class="fw-bold text-dark mb-3 d-flex align-items-center gap-2" style="font-size: 0.95rem;">
+        <i data-lucide="lightbulb" class="text-warning"></i> Tips for a Better Resolution
+      </div>
+      <div class="d-flex align-items-start gap-2 mb-2"><i data-lucide="check" class="text-success mt-1" style="width:14px;height:14px;"></i><span class="small text-muted">Be clear and specific in your description</span></div>
+      <div class="d-flex align-items-start gap-2 mb-2"><i data-lucide="check" class="text-success mt-1" style="width:14px;height:14px;"></i><span class="small text-muted">Include error messages you were seeing</span></div>
+      <div class="d-flex align-items-start gap-2 mb-2"><i data-lucide="check" class="text-success mt-1" style="width:14px;height:14px;"></i><span class="small text-muted">Mention what you were doing when it occurred</span></div>
+      <div class="d-flex align-items-start gap-2"><i data-lucide="check" class="text-success mt-1" style="width:14px;height:14px;"></i><span class="small text-muted">Provide any troubleshooting steps already tried</span></div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+  let currentTicketId = null;
+  let isResolving = false;
+  
+  // Character counter
+  const descEl = document.getElementById('description');
+  descEl.addEventListener('input', () => { 
+    document.getElementById('charCount').textContent = descEl.value.length; 
+  });
+
+  // UI Flow Logic
+  function setStep(stepNum) {
+    // Hide all views
+    document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+    
+    // Reset stepper UI
+    [1, 2, 3].forEach(i => {
+      const step = document.getElementById(`step${i}`);
+      const num = document.getElementById(`step${i}-num`);
+      
+      if (i < stepNum) {
+        step.className = 'step complete';
+        num.innerHTML = '✓';
+      } else if (i === stepNum) {
+        step.className = 'step active';
+        num.innerHTML = i;
+      } else {
+        step.className = 'step';
+        num.innerHTML = i;
+      }
+    });
+
+    if (stepNum === 1) {
+      document.getElementById('view-step-1').classList.add('active');
+      resetSidePanel();
+    } else if (stepNum === 1.5) { // Analyzing
+      document.getElementById('view-step-analyzing').classList.add('active');
+      document.getElementById('step1').className = 'step complete';
+      document.getElementById('step1-num').innerHTML = '✓';
+      document.getElementById('step2').className = 'step active';
+    } else if (stepNum === 2) {
+      document.getElementById('view-step-2').classList.add('active');
+    } else if (stepNum === 3) {
+      document.getElementById('view-step-3').classList.add('active');
+      const genBadge = document.getElementById('gen-badge');
+      if (genBadge) genBadge.style.display = 'none';
+      const finalActions = document.getElementById('final-actions');
+      if (finalActions) finalActions.style.setProperty('display', 'none', 'important');
+      const ragStepper = document.getElementById('rag-stepper');
+      if (ragStepper) ragStepper.style.display = 'flex';
+      const rlt = document.getElementById('rag-loading-text');
+      if (rlt) rlt.style.display = 'block';
+      resetRagStepper();
+    } else if (stepNum === 4) { // Resolution ready
+      document.getElementById('view-step-3').classList.add('active');
+      document.getElementById('step3').className = 'step complete';
+      document.getElementById('step3-num').innerHTML = '✓';
+      
+      const genBadge = document.getElementById('gen-badge');
+      if (genBadge) genBadge.style.display = 'block';
+      
+      const finalActions = document.getElementById('final-actions');
+      if (finalActions) finalActions.style.setProperty('display', 'flex', 'important');
+      
+      const rlt = document.getElementById('rag-loading-text');
+      if (rlt) rlt.style.display = 'none';
+    } else if (stepNum === 5) { // Success
+      document.getElementById('view-success').classList.add('active');
+      document.querySelector('.stepper-container').style.display = 'none';
+    }
+  }
+
+  function resetSidePanel() {
+    document.getElementById('side-panel-title').textContent = 'AI Classification Preview';
+    document.getElementById('side-panel-sub').textContent = 'Classification will be shown after analysis is complete.';
+    ['cat', 'sev', 'pri', 'con'].forEach(prefix => {
+      const el = document.getElementById(`${prefix}-val`);
+      el.textContent = '-';
+      el.className = 'stat-val';
+    });
+  }
+
+  function updateSidePanel(ticket) {
+    document.getElementById('side-panel-title').textContent = 'AI Classification Result';
+    document.getElementById('side-panel-sub').textContent = 'Based on the retrieved knowledge base articles, here is the recommended resolution.';
+    
+    document.getElementById('cat-val').textContent = ticket.category;
+    document.getElementById('cat-val').className = 'stat-val active-val fw-bold text-dark';
+    
+    let sevClass = 'text-dark';
+    const sev = ticket.severity.toLowerCase();
+    if (sev === 'critical') sevClass = 'text-danger';
+    else if (sev === 'high') sevClass = 'text-orange';
+    else if (sev === 'medium') sevClass = 'text-warning';
+    else if (sev === 'low') sevClass = 'text-success';
+    
+    document.getElementById('sev-val').textContent = ticket.severity;
+    document.getElementById('sev-val').className = `stat-val active-val fw-bold ${sevClass}`;
+    
+    let priClass = 'text-dark';
+    const pri = ticket.priority.toLowerCase();
+    if (pri === 'p1') priClass = 'text-danger';
+    else if (pri === 'p2') priClass = 'text-orange';
+    else if (pri === 'p3') priClass = 'text-primary';
+    else if (pri === 'p4') priClass = 'text-success';
+    
+    document.getElementById('pri-val').textContent = ticket.priority;
+    document.getElementById('pri-val').className = `stat-val active-val fw-bold ${priClass}`;
+    
+    let conClass = 'text-dark';
+    const conf = ticket.confidence * 100;
+    if (conf >= 90) conClass = 'text-success';
+    else if (conf >= 70) conClass = 'text-warning';
+    else conClass = 'text-danger';
+    
+    document.getElementById('con-val').textContent = conf.toFixed(1) + '%';
+    document.getElementById('con-val').className = `stat-val active-val fw-bold ${conClass}`;
+  }
+  
+  function clearForm() {
+    document.getElementById('ticketForm').reset();
+    document.getElementById('charCount').textContent = '0';
+    currentTicketId = null;
+    setStep(1);
+  }
+  
+  function resetFlow() {
+    document.querySelector('.stepper-container').style.display = 'flex';
+    clearForm();
+  }
+  
+  function showSuccess() {
+    document.getElementById('final-ticket-id').textContent = '#T-' + currentTicketId;
+    document.getElementById('viewDetailsLink').href = '/ticket/' + currentTicketId;
+    setStep(5);
+  }
+
+  function escapeHtml(unsafe) {
+    return (unsafe || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  }
+
+  // Handle Form Submission (Step 1 -> Step 2)
+  document.getElementById('ticketForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    setStep(1.5); // Analyzing view
+    
+    // Set status to analyzing
+    ['cat', 'sev', 'pri', 'con'].forEach(prefix => {
+      const el = document.getElementById(`${prefix}-val`);
+      el.textContent = 'Analyzing...';
+      el.className = 'stat-val';
+    });
+    
+    const formData = {
+      title: document.getElementById('title').value,
+      description: descEl.value,
+      business_impact: 'Medium'
+    };
+
+    try {
+      const endpoint = currentTicketId ? `/api/tickets/${currentTicketId}` : '/api/tickets';
+      const method = currentTicketId ? 'PATCH' : 'POST';
+      
+      const res = await fetch(endpoint, {
+        method: method,
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+        body: JSON.stringify(formData)
+      });
+
+      if (res.ok) {
+        const ticket = await res.json();
+        currentTicketId = ticket.ticket_id;
+        
+        // Update Step 2 preview
+        document.getElementById('preview-title').textContent = ticket.title;
+        document.getElementById('preview-desc').textContent = ticket.description;
+        
+        // Update Right Panel
+        updateSidePanel(ticket);
+        
+        setStep(2);
+      } else {
+        alert('Failed to analyze ticket.');
+        setStep(1);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('An error occurred during submission.');
+      setStep(1);
+    }
+  });
+
+  // Edit Ticket buttons
+  document.getElementById('editTicketBtn').addEventListener('click', () => setStep(1));
+  document.getElementById('editTicketBtn2').addEventListener('click', () => setStep(1));
+
+  // Generate Resolution (Step 2 -> Step 3)
+  document.getElementById('generateBtn').addEventListener('click', async () => {
+    if(isResolving) return;
+    isResolving = true;
+    setStep(3);
+    
+    // UI show loading
+    const ragStepper = document.getElementById('rag-stepper');
+    const resultArea = document.getElementById('rag-content-area');
+    const rlt = document.getElementById('rag-loading-text');
+    
+    ragStepper.style.display = 'flex';
+    resultArea.style.display = 'block';
+    if(rlt) rlt.style.display = 'block';
+    resultArea.innerHTML = `<div class="text-center py-5 text-muted" id="rag-loading-text">
+            <h6 class="fw-bold text-dark mb-2">Executing multi-agent workflow...</h6>
+            <p class="small mb-0">Starting Orchestrator...</p>
+          </div>`;
+          
+    // Animation Logic
+    let currentAnimStep = 1;
+    const stepsText = [
+      'Diagnosing issue and extracting entities...',
+      'Retrieving relevant KB articles...',
+      'Synthesizing resolution steps...',
+      'Validating safety and correctness...',
+      'Finalizing execution plan...'
+    ];
+    
+    for (let i = 1; i <= 5; i++) {
+        const icon = document.querySelector(`#rag-${i} .rag-icon`);
+        if(icon) {
+            icon.className = 'rag-icon';
+            icon.innerHTML = '';
+        }
+    }
+    
+    const animInterval = setInterval(() => {
+        if (currentAnimStep > 1 && currentAnimStep <= 5) {
+            const prevIcon = document.querySelector(`#rag-${currentAnimStep-1} .rag-icon`);
+            if (prevIcon) {
+                prevIcon.className = 'rag-icon done';
+                prevIcon.innerHTML = '✓';
+            }
+        }
+        
+        if (currentAnimStep <= 5) {
+            const currIcon = document.querySelector(`#rag-${currentAnimStep} .rag-icon`);
+            if (currIcon) {
+                currIcon.className = 'rag-icon running';
+                currIcon.innerHTML = '<i data-lucide="loader-2" class="spin-icon" style="width:20px;height:20px;color:var(--rose);"></i>';
+                if (window.lucide) { window.lucide.createIcons(); }
+            }
+            const activeRlt = document.getElementById('rag-loading-text');
+            if (activeRlt) {
+                activeRlt.innerHTML = `<h6 class="fw-bold text-dark mb-2">Executing multi-agent workflow...</h6><p class="small mb-0">${stepsText[currentAnimStep-1]}</p>`;
+            }
+            currentAnimStep++;
+        }
+    }, 700);
+    
+    // Call real API
+    try {
+      const res = await fetch(`/api/tickets/${currentTicketId}/generate-resolution`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' }
+      });
+      
+      const resultArea = document.getElementById('rag-content-area');
+      
+      if(res.ok) {
+        const data = await res.json();
+        
+        let decisionHtml = '';
+        if(data.resolution_decision === 'AUTO_RESOLVE') {
+            decisionHtml = `
+              <div class="alert alert-success mt-3 py-2 px-3 small fw-bold">
+                ✓ AUTO-RESOLVED<br>
+                <span class="fw-normal d-block mt-1">Resolution confidence: ${(data.validation_confidence !== null && data.validation_confidence !== undefined) ? data.validation_confidence.toFixed(1) : '0.0'}%<br>Threshold: ${data.structured_validation && data.structured_validation.threshold ? data.structured_validation.threshold.toFixed(0) : '70'}%</span>
+                <span class="fw-normal mt-2 d-block">✓ Resolution generated<br>✓ Validation passed<br>${data.email_status === 'SENT' ? '✓ Email sent' : '⚠ Email failed'}</span>
+              </div>
+            `;
+        } else {
+            decisionHtml = `
+              <div class="alert alert-warning mt-3 py-2 px-3 small fw-bold text-dark">
+                ⚠ ESCALATED TO JIRA<br>
+                <span class="fw-normal d-block mt-1">Resolution confidence: ${(data.validation_confidence !== null && data.validation_confidence !== undefined) ? data.validation_confidence.toFixed(1) : '0.0'}%<br>Threshold: ${data.structured_validation && data.structured_validation.threshold ? data.structured_validation.threshold.toFixed(0) : '70'}%</span>
+                <span class="fw-normal mt-2 d-block text-muted">Reason: ${escapeHtml(data.escalation_reason)}</span>
+                <span class="fw-normal mt-2 d-block">Jira Issue: ${data.jira_issue_key ? '<a href="' + data.jira_issue_url + '" target="_blank" class="text-dark fw-bold text-decoration-underline">' + data.jira_issue_key + '</a>' : 'FAILED'}</span>
+              </div>
+            `;
+        }
+
+        // Handle Insufficient Knowledge natively
+        if(data.resolution_decision === 'ESCALATE' && data.escalation_reason && (data.escalation_reason.includes('Insufficient') || data.escalation_reason.includes('threshold'))) {
+            resultArea.innerHTML = `
+              <div class="bg-warning bg-opacity-10 border border-warning rounded p-4 mb-4">
+                <h6 class="fw-bold text-dark d-flex align-items-center gap-2 mb-2">
+                  <i data-lucide="alert-triangle" style="width:20px;height:20px;color:var(--teal);"></i>
+                  Insufficient Knowledge
+                </h6>
+                <p class="text-muted small m-0">No sufficiently relevant knowledge-base articles were found for this issue. More investigation is required before a reliable resolution can be provided.</p>
+                ${decisionHtml}
+              </div>
+            `;
+        } else if (data.resolution_decision === 'ESCALATE' && data.escalation_reason && data.escalation_reason.includes('Generation Error')) {
+            resultArea.innerHTML = `
+              <div class="bg-danger bg-opacity-10 border border-danger rounded p-4 mb-4">
+                <h6 class="fw-bold text-danger d-flex align-items-center gap-2 mb-2">
+                  <i data-lucide="alert-circle" style="width:20px;height:20px;color:var(--blue);"></i>
+                  AI Generation Error
+                </h6>
+                <p class="text-muted small m-0">${data.escalation_reason}</p>
+                ${decisionHtml}
+              </div>
+            `;
+        } else {
+            const rawRes = data.structured_resolution ? (data.structured_resolution.recommended_resolution || data.structured_resolution.resolution || data.ai_resolution || '') : (data.ai_resolution || '');
+            const cleanMarkdown = String(rawRes).replace(/(^|\n)(\d+)\.\s+(?:\d+\.\s+)+/g, '$1$2. ');
+            const htmlRes = marked.parse(cleanMarkdown);
+            
+            // Build Sources List
+            let sourcesHtml = '';
+            if(data.structured_sources && data.structured_sources.length > 0) {
+                sourcesHtml = data.structured_sources.map(s => `<span class="badge bg-light text-dark border px-2 py-1">${s}</span>`).join(' ');
+            }
+            
+            resultArea.innerHTML = `
+              <div class="bg-white p-2">
+                <div class="markdown-content text-dark" style="font-size: 0.9rem;">
+                  ${htmlRes}
+                </div>
+                ${sourcesHtml ? `<div class="mt-4 pt-3 border-top"><div class="fw-bold text-dark mb-2" style="font-size:0.85rem;">Knowledge Sources</div><div>${sourcesHtml}</div></div>` : ''}
+                ${decisionHtml}
+              </div>
+            `;
+        }
+        if (window.lucide) { window.lucide.createIcons(); }
+        setStep(4); // Shows resolution result and "Create Ticket" button
+      } else {
+        alert('Failed to generate resolution.');
+        setStep(2);
+      }
+    } catch(err) {
+      console.error(err);
+      alert('An error occurred while generating the resolution. Details: ' + err.message);
+      setStep(2);
+    } finally {
+      clearInterval(animInterval);
+      for (let i = 1; i <= 5; i++) {
+        const icon = document.querySelector(`#rag-${i} .rag-icon`);
+        if(icon) {
+            icon.className = 'rag-icon done';
+            icon.innerHTML = '<i data-lucide="check" style="width:16px;height:16px;"></i>';
+        }
+      }
+      if (window.lucide) { window.lucide.createIcons(); }
+      isResolving = false;
+      const generateBtn = document.getElementById('generateBtn');
+      if (generateBtn) {
+        generateBtn.disabled = false;
+        generateBtn.innerHTML = 'Generate AI Resolution &rarr;';
+      }
+    }
+  });
+  
+  function resetRagStepper() {
+    // Stepper is hidden
+  }
+  
+  async function simulateRagUI() {
+    // Removed to prevent fake delays.
+  }
+</script>
+{% endblock %}
