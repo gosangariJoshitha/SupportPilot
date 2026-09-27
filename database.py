@@ -32,7 +32,10 @@ def get_cursor(conn):
 def execute_query(cursor, query, params=()):
     if IS_POSTGRES:
         query = query.replace('?', '%s')
-        query = query.replace('AUTOINCREMENT', 'SERIAL')
+        query = query.replace('AUTOINCREMENT', '')
+        query = query.replace('INTEGER PRIMARY KEY', 'SERIAL PRIMARY KEY')
+        query = query.replace('BOOLEAN DEFAULT 0', 'BOOLEAN DEFAULT FALSE')
+        query = query.replace('BOOLEAN DEFAULT 1', 'BOOLEAN DEFAULT TRUE')
         if 'JulianDay' in query:
             query = query.replace('CAST((JulianDay(resolved_at) - JulianDay(created_at)) * 24 * 60 * 60 As Integer)', 'EXTRACT(EPOCH FROM (resolved_at - created_at))')
         
@@ -232,7 +235,6 @@ def create_user(full_name, email, password_hash, department):
 
 def get_user_by_email(email):
     conn = get_connection()
-    conn.row_factory = sqlite3.Row
     cursor = get_cursor(conn)
     execute_query(cursor, 'SELECT * FROM users WHERE email = ?', (email,))
     row = cursor.fetchone()
@@ -241,7 +243,6 @@ def get_user_by_email(email):
 
 def get_user_by_id(user_id):
     conn = get_connection()
-    conn.row_factory = sqlite3.Row
     cursor = get_cursor(conn)
     execute_query(cursor, 'SELECT * FROM users WHERE user_id = ?', (user_id,))
     row = cursor.fetchone()
@@ -283,7 +284,6 @@ def insert_ticket(data):
 
 def get_all_tickets(user_id=None):
     conn = get_connection()
-    conn.row_factory = sqlite3.Row
     cursor = get_cursor(conn)
     if user_id:
         execute_query(cursor, 'SELECT * FROM tickets WHERE user_id = ? ORDER BY created_at DESC', (user_id,))
@@ -295,7 +295,6 @@ def get_all_tickets(user_id=None):
 
 def get_ticket(ticket_id, user_id=None):
     conn = get_connection()
-    conn.row_factory = sqlite3.Row
     cursor = get_cursor(conn)
     if user_id:
         execute_query(cursor, 'SELECT * FROM tickets WHERE ticket_id = ? AND user_id = ?', (ticket_id, user_id))
@@ -549,8 +548,7 @@ def get_analytics_stats(user_id=None):
     avg_res_row = cursor.fetchone()
     avg_resolution_confidence = round(avg_res_row[0] * 100, 1) if avg_res_row and avg_res_row[0] is not None else None
 
-    # AI resolutions actually produced vs total
-    resolved_suffix = query_suffix + (' AND' if user_id else ' WHERE') + ' resolution_decision = "AUTO_RESOLVE"'
+    resolved_suffix = query_suffix + (' AND' if user_id else ' WHERE') + " resolution_decision = 'AUTO_RESOLVE'"
     execute_query(cursor, f'SELECT COUNT(*) FROM tickets{resolved_suffix}', params)
     ai_resolved_count = cursor.fetchone()[0]
     ai_resolution_rate = round((ai_resolved_count / total) * 100, 1) if total > 0 else 0
@@ -575,7 +573,7 @@ def get_analytics_stats(user_id=None):
     # Attempts where resolution_decision is not null
     execute_query(cursor, f'SELECT COUNT(*) FROM tickets WHERE resolution_decision IS NOT NULL{" AND user_id = ?" if user_id else ""}', params)
     total_attempts = cursor.fetchone()[0]
-    execute_query(cursor, f'SELECT COUNT(*) FROM tickets WHERE status = "Closed" OR resolution_decision = "AUTO_RESOLVE"{" AND user_id = ?" if user_id else ""}', params)
+    execute_query(cursor, "SELECT COUNT(*) FROM tickets WHERE status = 'Closed' OR resolution_decision = 'AUTO_RESOLVE'" + (" AND user_id = ?" if user_id else ""), params)
     success_attempts = cursor.fetchone()[0]
     res_success_rate = round((success_attempts / total_attempts) * 100, 1) if total_attempts > 0 else 0
 
@@ -633,7 +631,6 @@ def get_agent_stats(user_id=None):
         f'FROM tickets{recent_suffix} ORDER BY created_at DESC LIMIT 5',
         params
     )
-    conn.row_factory = sqlite3.Row
     cursor2 = get_cursor(conn)
     execute_query(cursor2, 
         f'SELECT ticket_id, title, category, resolution_confidence, resolution_engine, created_at '
@@ -688,7 +685,6 @@ def update_user_password(user_id, new_password_hash):
 # --- User Preferences Helpers ---
 def get_user_preferences(user_id):
     conn = get_connection()
-    conn.row_factory = sqlite3.Row
     cursor = get_cursor(conn)
     execute_query(cursor, 'SELECT * FROM user_preferences WHERE user_id = ?', (user_id,))
     row = cursor.fetchone()
@@ -738,7 +734,6 @@ def create_notification(user_id, title, message, type="info", ticket_id=None):
 
 def get_notifications(user_id, limit=20):
     conn = get_connection()
-    conn.row_factory = sqlite3.Row
     cursor = get_cursor(conn)
     execute_query(cursor, 'SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT ?', (user_id, limit))
     rows = cursor.fetchall()
@@ -788,7 +783,6 @@ def save_password_reset_token(user_id, token, expiry):
 
 def get_user_by_reset_token(token):
     conn = get_connection()
-    conn.row_factory = sqlite3.Row
     cursor = get_cursor(conn)
     execute_query(cursor, 'SELECT * FROM users WHERE password_reset_token = ?', (token,))
     row = cursor.fetchone()
