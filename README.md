@@ -180,3 +180,22 @@ Milestone 3 implements the **Multi-Agent Resolution Workflow**, upgrading Suppor
    - JIRA_URL, JIRA_EMAIL, JIRA_API_TOKEN, JIRA_PROJECT_KEY (Required for Escalation)
    - SMTP_SERVER, SMTP_PORT, SMTP_EMAIL, SMTP_PASSWORD (Required for Auto-Resolve)
 3. Restart the Flask app to load new environment variables.
+
+## ? Milestone 4 Completed
+
+Milestone 4 introduces advanced Analytics and production Deployment readiness, allowing SupportPilot to transition from a local prototype to a fully deployable cloud application.
+
+### Key Features
+- **Comprehensive Analytics Dashboard**: Tracks AI Resolution Rates, Average Resolution Time, CSAT (Customer Satisfaction), Classification Accuracy, and System Uptime.
+- **Database Refactoring (database.py)**: The database layer was heavily abstracted to seamlessly support both local SQLite (for rapid development) and cloud PostgreSQL.
+- **PostgreSQL Ready**: All queries, date manipulations, and primary key generations are now fully compatible with PostgreSQL.
+
+### ?? Deployment Strategy (Current Setup)
+SupportPilot is architected to be deployed on a decoupled cloud infrastructure:
+1. **Database (Supabase)**: We utilize Supabase as a fully managed, permanent free-tier PostgreSQL database.
+2. **Backend & Frontend (Render)**: The entire Flask application is containerized via WSGI (Gunicorn) and is ready to be deployed as a Free Web Service on Render. 
+
+#### To deploy:
+1. Create a Supabase PostgreSQL database.
+2. Add the connection string to .env as DATABASE_URL.
+3. Deploy to Render using the included ender.yaml blueprint. The app automatically detects the DATABASE_URL and switches from SQLite to PostgreSQL.
