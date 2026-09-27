@@ -459,11 +459,11 @@ def get_dashboard_summary_stats(user_id=None, days=7):
     stats["total_tickets"] = cursor.fetchone()[0]
     
     # Open tickets (Open or In Progress)
-    execute_query(cursor, f'SELECT COUNT(*) FROM tickets WHERE status != "Closed"{" AND user_id = ?" if user_id else ""}', params)
+    execute_query(cursor, f"SELECT COUNT(*) FROM tickets WHERE status != 'Closed' {' AND user_id = ?' if user_id else ''}", params)
     stats["open_tickets"] = cursor.fetchone()[0]
     
     # Resolved tickets
-    execute_query(cursor, f'SELECT COUNT(*) FROM tickets WHERE status = "Closed"{" AND user_id = ?" if user_id else ""}', params)
+    execute_query(cursor, f"SELECT COUNT(*) FROM tickets WHERE status = 'Closed' {' AND user_id = ?' if user_id else ''}", params)
     stats["resolved_tickets"] = cursor.fetchone()[0]
     
     # Category distribution
@@ -743,7 +743,7 @@ def get_notifications(user_id, limit=20):
 def get_unread_notification_count(user_id):
     conn = get_connection()
     cursor = get_cursor(conn)
-    execute_query(cursor, 'SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0', (user_id,))
+    execute_query(cursor, 'SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = FALSE', (user_id,))
     count = cursor.fetchone()[0]
     conn.close()
     return count
