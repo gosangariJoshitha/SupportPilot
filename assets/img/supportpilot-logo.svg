@@ -1,7 +1,7 @@
 <svg
-  width="700"
+  width="850"
   height="220"
-  viewBox="0 0 700 220"
+  viewBox="0 0 850 220"
   xmlns="http://www.w3.org/2000/svg"
 >
   <defs>
@@ -234,27 +234,14 @@
   <!-- ===================================================== -->
 
   <text
-    x="205"
-    y="112"
+    x="210"
+    y="118"
     font-family="Inter, Segoe UI, Arial, sans-serif"
-    font-size="52"
-    font-weight="700"
-    letter-spacing="-2"
-    fill="#10295C"
+    font-size="76"
+    font-weight="800"
+    letter-spacing="-3"
   >
-    Support
-  </text>
-
-  <text
-    x="402"
-    y="112"
-    font-family="Inter, Segoe UI, Arial, sans-serif"
-    font-size="52"
-    font-weight="700"
-    letter-spacing="-2"
-    fill="#168DF5"
-  >
-    Pilot
+    <tspan fill="#10295C">Support</tspan><tspan fill="#168DF5">Pilot</tspan>
   </text>
 
   <!-- ===================================================== -->
@@ -262,12 +249,12 @@
   <!-- ===================================================== -->
 
   <text
-    x="208"
-    y="139"
+    x="216"
+    y="152"
     font-family="Inter, Segoe UI, Arial, sans-serif"
-    font-size="13"
-    font-weight="600"
-    letter-spacing="3"
+    font-size="20"
+    font-weight="700"
+    letter-spacing="4"
     fill="#64748B"
   >
     YOUR AI-POWERED IT SUPPORT PARTNER
