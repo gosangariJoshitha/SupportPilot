@@ -555,6 +555,7 @@ a:hover {
 .badge svg { width: 12px; height: 12px; }
 
 .badge-success { background: var(--success-soft); color: var(--success); }
+.badge-secondary { background: var(--neutral-soft); color: var(--neutral); }
 .badge-warning { background: var(--warning-soft); color: var(--warning); }
 .badge-danger { background: var(--danger-soft); color: var(--danger); }
 .badge-info { background: var(--info-soft); color: var(--info); }

@@ -256,10 +256,9 @@ def api_dashboard_summary():
 def api_m3_summary():
     user_id = session['user_id']
     conn = database.get_connection()
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
+    cursor = database.get_cursor(conn)
     
-    cursor.execute('''
+    database.execute_query(cursor, '''
         SELECT 
             COUNT(*) as total,
             SUM(CASE WHEN resolution_decision = 'AUTO_RESOLVE' THEN 1 ELSE 0 END) as auto_resolved,
@@ -284,10 +283,10 @@ def api_m3_summary():
         
     return jsonify({
         "total_m3_workflows": row["total"],
-        "auto_resolve_rate": round((row["auto_resolved"] / row["total"]) * 100, 1),
-        "escalate_rate": round((row["escalated"] / row["total"]) * 100, 1),
-        "emails_sent": row["emails_sent"],
-        "jira_issues": row["jira_created"]
+        "auto_resolve_rate": round(((row["auto_resolved"] or 0) / row["total"]) * 100, 1),
+        "escalate_rate": round(((row["escalated"] or 0) / row["total"]) * 100, 1),
+        "emails_sent": row["emails_sent"] or 0,
+        "jira_issues": row["jira_created"] or 0
     })
 
 @app.route("/api/integrations/status", methods=["GET"])
@@ -655,17 +654,16 @@ def analytics():
     
     # For Escalations tab
     conn = database.get_connection()
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM tickets WHERE resolution_decision = "ESCALATE" OR status = "Escalated" ORDER BY created_at DESC')
+    cursor = database.get_cursor(conn)
+    database.execute_query(cursor, "SELECT * FROM tickets WHERE resolution_decision = 'ESCALATE' OR status = 'Escalated' ORDER BY created_at DESC")
     escalated_tickets = [dict(r) for r in cursor.fetchall()]
     
     # For Monitoring tab
-    cursor.execute('SELECT COUNT(*), AVG(ai_response_time) FROM tickets WHERE ai_response_time IS NOT NULL')
+    database.execute_query(cursor, "SELECT COUNT(*), AVG(ai_response_time) FROM tickets WHERE ai_response_time IS NOT NULL")
     ai_count, ai_avg_resp = cursor.fetchone()
-    cursor.execute('SELECT COUNT(*) FROM tickets WHERE resolution_decision = "ESCALATE"')
+    database.execute_query(cursor, "SELECT COUNT(*) FROM tickets WHERE resolution_decision = 'ESCALATE'")
     esc_count = cursor.fetchone()[0]
-    cursor.execute('SELECT COUNT(*) FROM tickets WHERE resolution_decision = "AUTO_RESOLVE"')
+    database.execute_query(cursor, "SELECT COUNT(*) FROM tickets WHERE resolution_decision = 'AUTO_RESOLVE'")
     auto_count = cursor.fetchone()[0]
     conn.close()
     
@@ -694,9 +692,8 @@ def escalations():
     user = database.get_user_by_id(user_id)
     # Get all escalated tickets
     conn = database.get_connection()
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM tickets WHERE resolution_decision = "ESCALATE" OR status = "Escalated" ORDER BY created_at DESC')
+    cursor = database.get_cursor(conn)
+    database.execute_query(cursor, "SELECT * FROM tickets WHERE resolution_decision = 'ESCALATE' OR status = 'Escalated' ORDER BY created_at DESC")
     escalated_tickets = [dict(r) for r in cursor.fetchall()]
     conn.close()
     
@@ -714,14 +711,14 @@ def monitoring():
     
     # Calculate performance metrics
     conn = database.get_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT COUNT(*), AVG(ai_response_time) FROM tickets WHERE ai_response_time IS NOT NULL')
+    cursor = database.get_cursor(conn)
+    database.execute_query(cursor, "SELECT COUNT(*), AVG(ai_response_time) FROM tickets WHERE ai_response_time IS NOT NULL")
     ai_count, ai_avg_resp = cursor.fetchone()
     
-    cursor.execute('SELECT COUNT(*) FROM tickets WHERE resolution_decision = "ESCALATE"')
+    database.execute_query(cursor, "SELECT COUNT(*) FROM tickets WHERE resolution_decision = 'ESCALATE'")
     esc_count = cursor.fetchone()[0]
     
-    cursor.execute('SELECT COUNT(*) FROM tickets WHERE resolution_decision = "AUTO_RESOLVE"')
+    database.execute_query(cursor, "SELECT COUNT(*) FROM tickets WHERE resolution_decision = 'AUTO_RESOLVE'")
     auto_count = cursor.fetchone()[0]
     conn.close()
     

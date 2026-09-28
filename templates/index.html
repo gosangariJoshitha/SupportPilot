@@ -342,8 +342,9 @@
       case 'Open': return 'badge-warning';
       case 'In Progress': return 'badge-info';
       case 'Resolved': return 'badge-success';
-      case 'Closed': return 'badge-secondary';
-      default: return 'badge-secondary';
+      case 'Escalated': return 'badge-danger';
+      case 'Closed': return 'badge-neutral';
+      default: return 'badge-neutral';
     }
   }
   function formatDate(dateStr) {

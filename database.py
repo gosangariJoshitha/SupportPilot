@@ -524,7 +524,7 @@ def get_dashboard_summary_stats(user_id=None, days=7):
     ''', params)
     for row in cursor.fetchall():
         if row[0]:
-            stats["ticket_activity"]["dates"].append(row[0])
+            stats["ticket_activity"]["dates"].append(str(row[0])[:10])
             stats["ticket_activity"]["counts"].append(row[1])
             stats["ticket_activity"]["resolved_counts"].append(row[2] or 0)
         
