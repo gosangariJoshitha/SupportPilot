@@ -235,7 +235,7 @@
 
   <text
     x="210"
-    y="118"
+    y="108"
     font-family="Inter, Segoe UI, Arial, sans-serif"
     font-size="76"
     font-weight="800"
@@ -250,9 +250,9 @@
 
   <text
     x="216"
-    y="152"
+    y="158"
     font-family="Inter, Segoe UI, Arial, sans-serif"
-    font-size="20"
+    font-size="18"
     font-weight="700"
     letter-spacing="4"
     fill="#64748B"
