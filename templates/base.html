@@ -14,51 +14,49 @@
     const activeTheme = savedTheme === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : savedTheme;
     document.documentElement.setAttribute('data-bs-theme', activeTheme);
   </script>
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}?v=4">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}?v=4">
 </head>
 <body>
   <div class="app-wrapper w-100">
     <!-- Sidebar -->
     {% if not hide_sidebar %}
     <aside class="sidebar">
-      <div class="sidebar-header d-flex justify-content-center align-items-center w-100">
-        <div class="d-flex align-items-center gap-2 sidebar-brand-text-wrapper">
-          <div class="sidebar-brand-icon flex-shrink-0"><i data-lucide="headset"></i></div>
-          <div class="sidebar-brand-titles">
-            <div class="sidebar-brand-text">SupportPilot</div>
-            <div class="sidebar-brand-sub">AI Resolution Platform</div>
-          </div>
-        </div>
+      <div class="sidebar-header">
+        <a href="{{ url_for('index') }}" class="sidebar-brand-icon" title="Dashboard">
+          <img src="{{ url_for('static', filename='img/favicon.png') }}?v=3" alt="SupportPilot Logo" style="width: 24px; height: 24px; object-fit: contain;">
+        </a>
       </div>
       
-      <nav class="sidebar-nav mt-2">
+      <nav class="sidebar-nav">
         <a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">
           <i data-lucide="layout-dashboard"></i> <span>Dashboard</span>
         </a>
         <a href="{{ url_for('my_tickets') }}" class="nav-link {% if request.endpoint == 'my_tickets' or request.endpoint == 'view_ticket' %}active{% endif %}">
-          <i data-lucide="ticket"></i> <span>My Tickets</span>
+          <i data-lucide="ticket"></i> <span>Tickets</span>
         </a>
         <a href="{{ url_for('add_tickets') }}" class="nav-link {% if request.endpoint == 'add_tickets' %}active{% endif %}">
-          <i data-lucide="plus"></i> <span>Add Ticket</span>
+          <i data-lucide="plus"></i> <span>Create Ticket</span>
         </a>
         <a href="{{ url_for('agents') }}" class="nav-link {% if request.endpoint == 'agents' %}active{% endif %}">
-          <i data-lucide="bot"></i> <span>AI Resolution Agent</span>
+          <i data-lucide="bot"></i> <span>AI Assistant</span>
         </a>
         <a href="{{ url_for('analytics') }}" class="nav-link {% if request.endpoint == 'analytics' %}active{% endif %}">
-          <i data-lucide="bar-chart-3"></i> <span>Analytics</span>
+          <i data-lucide="bar-chart-2"></i> <span>Analytics</span>
         </a>
         <a href="{{ url_for('integrations') }}" class="nav-link {% if request.endpoint == 'integrations' %}active{% endif %}">
-          <i data-lucide="workflow"></i> <span>Integrations</span>
+          <i data-lucide="link"></i> <span>Integrations</span>
         </a>
-        
-        <a href="{{ url_for('settings') }}" class="nav-link mt-2 {% if request.endpoint == 'settings' %}active{% endif %}">
+        <a href="{{ url_for('settings') }}" class="nav-link {% if request.endpoint == 'settings' %}active{% endif %}">
           <i data-lucide="settings"></i> <span>Settings</span>
         </a>
       </nav>
 
       {% if user %}
-      <div class="mt-auto d-flex justify-content-center p-3 border-top" style="border-color: var(--border-light) !important;">
-        <a href="{{ url_for('logout') }}" class="nav-link text-danger w-100 justify-content-center px-0" title="Logout">
-          <i data-lucide="log-out" style="width: 22px; height: 22px;"></i>
+      <div class="sidebar-footer">
+        <a href="{{ url_for('logout') }}" class="nav-link">
+          <i data-lucide="log-out"></i> <span>Logout</span>
         </a>
       </div>
       {% endif %}
@@ -71,13 +69,7 @@
       <header class="topbar">
         <div>
           <div class="d-flex align-items-center gap-2 mb-3">
-            <div style="width:32px;height:32px; background:var(--primary); color:#fff; border-radius:8px; display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);">
-              <i data-lucide="bot" style="width:18px;height:18px;"></i>
-            </div>
-            <div>
-              <div class="fw-bold text-dark" style="font-size: 1.5rem; font-weight: 800 !important; line-height: 1.1; letter-spacing: -0.02em;">SupportPilot</div>
-              <div class="text-muted fw-medium" style="font-size: 0.85rem;">AI Resolution Platform</div>
-            </div>
+            <img src="{{ url_for('static', filename='img/logo.png') }}?v=3" alt="SupportPilot Title" style="height: 40px; object-fit: contain;">
           </div>
           <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
           <p class="page-subtitle">{% block page_subtitle %}<span id="greeting-text">Welcome</span>, {{ user.full_name if user else 'Guest' }}{% endblock %}</p>
