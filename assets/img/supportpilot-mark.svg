@@ -1,5 +1,232 @@
-<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M20 3L14.5 14.5L3 20L14.5 25.5L20 37V3Z" fill="#2563EB"/>
-  <path d="M20 3L25.5 14.5L37 20L25.5 25.5L20 37V3Z" fill="#1D4ED8"/>
-  <path d="M20 3L25.5 14.5L37 20H20V3Z" fill="#1E3A8A" fill-opacity="0.2"/>
+<svg
+  width="200"
+  height="220"
+  viewBox="0 0 200 220"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <defs>
+    <!-- Main blue gradient -->
+    <linearGradient id="blueGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0D6EFD"/>
+      <stop offset="100%" stop-color="#00A8FF"/>
+    </linearGradient>
+
+    <!-- Dark blue gradient -->
+    <linearGradient id="darkGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#071A44"/>
+      <stop offset="100%" stop-color="#173B7A"/>
+    </linearGradient>
+
+    <!-- Soft shadow -->
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow
+        dx="0"
+        dy="5"
+        stdDeviation="5"
+        flood-opacity="0.15"
+      />
+    </filter>
+  </defs>
+
+  <!-- ===================================================== -->
+  <!-- SUPPORTPILOT ICON -->
+  <!-- ===================================================== -->
+
+  <!-- Dynamic blue swoosh -->
+  <path
+    d="
+      M 45 170
+      C 75 145, 105 130, 132 105
+      C 153 86, 165 65, 170 42
+      C 155 62, 134 77, 108 91
+      C 79 107, 55 126, 38 151
+      C 31 161, 34 170, 45 170
+      Z
+    "
+    fill="url(#blueGradient)"
+  />
+
+  <!-- Dark upper support arc -->
+  <path
+    d="
+      M 30 95
+      C 40 51, 75 27, 112 30
+      C 139 32, 156 49, 159 70
+      C 145 61, 130 55, 111 54
+      C 82 52, 57 67, 42 94
+      C 38 101, 32 102, 30 95
+      Z
+    "
+    fill="url(#darkGradient)"
+  />
+
+  <!-- Small blue side circle -->
+  <circle
+    cx="43"
+    cy="96"
+    r="14"
+    fill="#1769E8"
+  />
+
+  <!-- ===================================================== -->
+  <!-- AI ROBOT / SUPPORT HEAD -->
+  <!-- ===================================================== -->
+
+  <g filter="url(#shadow)">
+
+    <!-- Head outer shape -->
+    <rect
+      x="52"
+      y="66"
+      width="104"
+      height="82"
+      rx="28"
+      fill="url(#darkGradient)"
+    />
+
+    <!-- Head inner panel -->
+    <rect
+      x="62"
+      y="77"
+      width="84"
+      height="62"
+      rx="21"
+      fill="#F8FBFF"
+    />
+
+    <!-- Face -->
+    <rect
+      x="69"
+      y="84"
+      width="70"
+      height="47"
+      rx="17"
+      fill="#10295C"
+    />
+
+    <!-- Left eye -->
+    <circle
+      cx="91"
+      cy="107"
+      r="7"
+      fill="#FFFFFF"
+    />
+
+    <!-- Right eye -->
+    <circle
+      cx="117"
+      cy="107"
+      r="7"
+      fill="#FFFFFF"
+    />
+
+    <!-- Eye glow -->
+    <circle
+      cx="91"
+      cy="107"
+      r="3"
+      fill="#31B8FF"
+    />
+
+    <circle
+      cx="117"
+      cy="107"
+      r="3"
+      fill="#31B8FF"
+    />
+
+    <!-- Friendly AI smile -->
+    <path
+      d="M 91 119 Q 104 128 117 119"
+      fill="none"
+      stroke="#FFFFFF"
+      stroke-width="3"
+      stroke-linecap="round"
+    />
+
+    <!-- Headset left -->
+    <path
+      d="M 60 100 C 51 100 47 108 49 117"
+      fill="none"
+      stroke="#FFFFFF"
+      stroke-width="5"
+      stroke-linecap="round"
+    />
+
+    <!-- Headset right -->
+    <path
+      d="M 148 100 C 157 100 161 108 159 117"
+      fill="none"
+      stroke="#FFFFFF"
+      stroke-width="5"
+      stroke-linecap="round"
+    />
+
+    <!-- Microphone -->
+    <path
+      d="M 143 119 L 153 124"
+      stroke="#FFFFFF"
+      stroke-width="4"
+      stroke-linecap="round"
+    />
+
+  </g>
+
+  <!-- ===================================================== -->
+  <!-- AI / PILOT SYMBOL -->
+  <!-- ===================================================== -->
+
+  <!-- Small pilot cap -->
+  <path
+    d="
+      M 88 55
+      Q 103 45 119 54
+      L 116 64
+      Q 103 59 90 64
+      Z
+    "
+    fill="#FFFFFF"
+  />
+
+  <!-- Small star -->
+  <path
+    d="
+      M 76 45
+      L 79 51
+      L 85 54
+      L 79 57
+      L 76 63
+      L 73 57
+      L 67 54
+      L 73 51
+      Z
+    "
+    fill="#00A8FF"
+  />
+
+  <!-- ===================================================== -->
+  <!-- PAPER PLANE -->
+  <!-- ===================================================== -->
+
+  <path
+    d="
+      M 148 48
+      L 195 25
+      L 173 67
+      L 166 52
+      Z
+    "
+    fill="#00A8FF"
+  />
+
+  <path
+    d="
+      M 148 48
+      L 166 52
+      L 195 25
+      Z
+    "
+    fill="#1795F5"
+  />
+
 </svg>
