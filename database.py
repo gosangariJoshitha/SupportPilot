@@ -593,6 +593,32 @@ def get_analytics_stats(user_id=None):
         if row[0] in engine_counts:
             engine_counts[row[0]] = row[1]
 
+    # SLA Adherence Calculation
+    # P1: 1h, P2: 4h, P3: 24h, P4: 48h
+    sla_thresholds = {"P1": 3600, "P2": 14400, "P3": 86400, "P4": 172800}
+    sla_stats = {"P1": {"total": 0, "met": 0}, "P2": {"total": 0, "met": 0}, "P3": {"total": 0, "met": 0}, "P4": {"total": 0, "met": 0}}
+    
+    execute_query(cursor, f'''
+        SELECT priority, CAST((JulianDay(resolved_at) - JulianDay(created_at)) * 24 * 60 * 60 As Integer) 
+        FROM tickets 
+        WHERE resolved_at IS NOT NULL{" AND user_id = ?" if user_id else ""}
+    ''', params)
+    
+    for row in cursor.fetchall():
+        pri = row[0]
+        res_time = row[1]
+        if pri in sla_stats and res_time is not None:
+            sla_stats[pri]["total"] += 1
+            if res_time <= sla_thresholds[pri]:
+                sla_stats[pri]["met"] += 1
+
+    sla_adherence = {}
+    for pri, stats in sla_stats.items():
+        if stats["total"] > 0:
+            sla_adherence[pri] = round((stats["met"] / stats["total"]) * 100, 1)
+        else:
+            sla_adherence[pri] = 100.0 # Default to 100% if no tickets
+
     conn.close()
 
     return {
@@ -606,6 +632,7 @@ def get_analytics_stats(user_id=None):
         "avg_csat": avg_csat,
         "res_success_rate": res_success_rate,
         "engine_counts": engine_counts,
+        "sla_adherence": sla_adherence
     }
 
 
