@@ -45,19 +45,19 @@ class ValidationAgent:
         
         # Resolution failure / insufficient knowledge
         if resolution.get("status") == "INSUFFICIENT_KNOWLEDGE":
-            val_info.update({"decision": "ESCALATE", "reason": "INSUFFICIENT_KNOWLEDGE", "confidence": 0.0})
+            val_info.update({"decision": "ESCALATE", "reason": "INSUFFICIENT_KNOWLEDGE"})
             return val_info
             
         if resolution.get("status") == "ERROR" or resolution.get("error"):
-            val_info.update({"decision": "ESCALATE", "reason": "LLM_FAILURE", "confidence": 0.0})
+            val_info.update({"decision": "ESCALATE", "reason": "LLM_FAILURE"})
             return val_info
             
         if not steps:
-            val_info.update({"decision": "ESCALATE", "reason": "RESOLUTION_FAILED", "confidence": 0.0})
+            val_info.update({"decision": "ESCALATE", "reason": "RESOLUTION_FAILED"})
             return val_info
             
         if retrieval["retrieved_count"] == 0 or retrieval["top_score"] < 0.02:
-            val_info.update({"decision": "ESCALATE", "reason": "VALIDATION_FAILURE", "confidence": 0.0})
+            val_info.update({"decision": "ESCALATE", "reason": "VALIDATION_FAILURE"})
             return val_info
 
         # Final AI confidence check
