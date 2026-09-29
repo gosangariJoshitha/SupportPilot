@@ -15,6 +15,9 @@ import secrets
 import uuid
 import json
 import sqlite3
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
 
 load_dotenv()  # loads OPENROUTER_API_KEY, OPENROUTER_MODEL, JWT_SECRET_KEY from .env
@@ -162,6 +165,35 @@ def logout():
     resp.set_cookie("access_token", "", expires=0)
     return resp
 
+def send_reset_email(to_email, reset_url):
+    smtp_server = os.environ.get("SMTP_SERVER")
+    smtp_port = int(os.environ.get("SMTP_PORT", 587))
+    smtp_email = os.environ.get("SMTP_EMAIL")
+    smtp_password = os.environ.get("SMTP_PASSWORD")
+    
+    if not all([smtp_server, smtp_email, smtp_password]):
+        print("SMTP credentials not fully configured.")
+        return False
+        
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = f"SupportPilot <{smtp_email}>"
+        msg['To'] = to_email
+        msg['Subject'] = "SupportPilot - Password Reset Request"
+        
+        body = f"Hello,\n\nYou have requested to reset your SupportPilot password.\nPlease click the link below to set a new password:\n\n{reset_url}\n\nIf you did not request this, please ignore this email.\nThis link will expire in 1 hour.\n\nRegards,\nSupportPilot Team"
+        msg.attach(MIMEText(body, 'plain'))
+        
+        server = smtplib.SMTP(smtp_server, smtp_port)
+        server.starttls()
+        server.login(smtp_email, smtp_password)
+        server.send_message(msg)
+        server.quit()
+        return True
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+        return False
+
 @app.route("/forgot-password", methods=["GET", "POST"])
 def forgot_password():
     if request.method == "POST":
@@ -172,37 +204,36 @@ def forgot_password():
             expiry = datetime.utcnow() + timedelta(hours=1)
             database.save_password_reset_token(user["user_id"], token, expiry.isoformat())
             
-            reset_url = url_for("reset_password", token=token, _external=True)
-            print(f"--- PASSWORD RESET LINK (MOCK EMAIL) ---")
-            print(f"To: {email}")
-            print(f"Link: {reset_url}")
-            print(f"----------------------------------------")
+            base_url = os.environ.get("APP_BASE_URL", request.url_root.rstrip('/'))
+            reset_url = f"{base_url}/reset-password/{token}"
+            print(f"TESTING - Reset URL: {reset_url}")
+            send_reset_email(email, reset_url)
             
-            return render_template("forgot_password.html", success="If your email is in our system, you will receive a reset link shortly.")
-        return render_template("forgot_password.html", success="If your email is in our system, you will receive a reset link shortly.")
+            return render_template("login.html", message="If your email is in our system, you will receive a reset link shortly.", view="forgot")
+        return render_template("login.html", message="If your email is in our system, you will receive a reset link shortly.", view="forgot")
     
-    return render_template("forgot_password.html")
+    return render_template("login.html", view="forgot")
 
 @app.route("/reset-password/<token>", methods=["GET", "POST"])
 def reset_password(token):
     user = database.get_user_by_reset_token(token)
     
     if not user:
-        return render_template("reset_password.html", error="Invalid or expired reset token.")
+        return render_template("login.html", error="Invalid or expired reset token.", view="forgot")
         
     expiry = datetime.fromisoformat(user["reset_token_expiry"])
     if datetime.utcnow() > expiry:
-        return render_template("reset_password.html", error="Reset token has expired.")
+        return render_template("login.html", error="Reset token has expired.", view="forgot")
         
     if request.method == "POST":
         password = request.form.get("password")
         confirm_password = request.form.get("confirm_password")
         
         if len(password) < 8:
-            return render_template("reset_password.html", token=token, error="Password must be at least 8 characters.")
+            return render_template("login.html", token=token, error="Password must be at least 8 characters.")
             
         if password != confirm_password:
-            return render_template("reset_password.html", token=token, error="Passwords do not match.")
+            return render_template("login.html", token=token, error="Passwords do not match.")
             
         password_hash = generate_password_hash(password)
         database.update_user_password(user["user_id"], password_hash)
@@ -210,9 +241,9 @@ def reset_password(token):
         
         return redirect(url_for("login", msg="Password reset successfully. Please log in."))
         
-    return render_template("reset_password.html", token=token)
+    return render_template("login.html", token=token)
 
-@app.route("/", methods=["GET"])
+@app.route("/dashboard", methods=["GET"])
 @login_required
 def index():
     user_id = session['user_id']
@@ -231,6 +262,10 @@ def index():
         avg_resolution_confidence=analytics.get("avg_resolution_confidence"),
         ai_resolution_rate=analytics.get("ai_resolution_rate")
     )
+
+@app.route("/", methods=["GET"])
+def landing():
+    return render_template("landing.html")
 
 @app.route("/api/dashboard/summary", methods=["GET"])
 @login_required

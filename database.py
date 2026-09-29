@@ -947,3 +947,23 @@ def get_ai_messages(user_id, conversation_id):
             "created_at": row[5]
         })
     return result
+
+def save_password_reset_token(user_id, token, expiry):
+    conn = get_connection()
+    cursor = get_cursor(conn)
+    if IS_POSTGRES:
+        execute_query(cursor, "UPDATE users SET password_reset_token = %s, reset_token_expiry = %s WHERE user_id = %s", (token, expiry, user_id))
+    else:
+        execute_query(cursor, "UPDATE users SET password_reset_token = ?, reset_token_expiry = ? WHERE user_id = ?", (token, expiry, user_id))
+    conn.commit()
+    conn.close()
+
+def update_user_password(user_id, password_hash):
+    conn = get_connection()
+    cursor = get_cursor(conn)
+    if IS_POSTGRES:
+        execute_query(cursor, "UPDATE users SET password_hash = %s WHERE user_id = %s", (password_hash, user_id))
+    else:
+        execute_query(cursor, "UPDATE users SET password_hash = ? WHERE user_id = ?", (password_hash, user_id))
+    conn.commit()
+    conn.close()
