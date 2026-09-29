@@ -550,7 +550,7 @@
               <div class="alert alert-success mt-3 py-2 px-3 small fw-bold">
                 ✓ AUTO-RESOLVED<br>
                 <span class="fw-normal d-block mt-1">Resolution confidence: ${(data.validation_confidence !== null && data.validation_confidence !== undefined) ? data.validation_confidence.toFixed(1) : '0.0'}%<br>Threshold: ${data.structured_validation && data.structured_validation.threshold ? data.structured_validation.threshold.toFixed(0) : '70'}%</span>
-                <span class="fw-normal mt-2 d-block">✓ Resolution generated<br>✓ Validation passed<br>${data.email_status === 'SENT' ? '✓ Email sent' : '⚠ Email failed'}</span>
+                <span class="fw-normal mt-2 d-block">✓ Resolution generated<br>✓ Validation passed<br>${data.email_status === 'SENT' ? '✓ Email sent' : (data.email_status === 'NOT_CONFIGURED' ? '⚠ Email not configured' : '⚠ Email failed ' + (data.email_error ? '<span class="text-danger">(' + escapeHtml(data.email_error) + ')</span>' : ''))}</span>
               </div>
             `;
         } else {

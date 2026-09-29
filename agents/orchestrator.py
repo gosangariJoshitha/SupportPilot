@@ -139,6 +139,7 @@ class SupportPilotOrchestrator:
             
             updates["email_status"] = email_status
             updates["email_sent_at"] = sent_at
+            updates["email_error"] = email_error
             
             log_trace("EmailService", "completed" if email_status == "SENT" else "failed", {
                 "email_status": email_status,
@@ -163,4 +164,7 @@ class SupportPilotOrchestrator:
         updates["workflow_trace"] = json.dumps(workflow_trace)
         update_m3_workflow_state(ticket_id, user_id, updates)
         
-        return get_ticket(ticket_id, user_id)
+        final_ticket = get_ticket(ticket_id, user_id)
+        if final_ticket:
+            final_ticket["email_error"] = updates.get("email_error")
+        return final_ticket
