@@ -7,8 +7,9 @@ import requests
 
 def is_configured():
     has_resend = bool(os.environ.get("RESEND_API_KEY"))
+    has_sendgrid = bool(os.environ.get("SENDGRID_API_KEY")) and bool(os.environ.get("SENDGRID_SENDER_EMAIL"))
     has_smtp = bool(os.environ.get("SMTP_EMAIL")) and bool(os.environ.get("SMTP_PASSWORD"))
-    return has_resend or has_smtp
+    return has_resend or has_sendgrid or has_smtp
 
 def send_resolution_email(ticket_data):
     """
@@ -101,7 +102,30 @@ SupportPilot AI Support
         except Exception as e:
             return "FAILED", f"Resend Request Error: {str(e)}", None
 
-    # OPTION 2: Fallback to SMTP (Works locally, blocked on Render)
+    # OPTION 2: SendGrid HTTP API (Allows sending to ANY email if you verify a Single Sender)
+    sendgrid_api_key = os.environ.get("SENDGRID_API_KEY")
+    sendgrid_sender = os.environ.get("SENDGRID_SENDER_EMAIL") # The email you verified on SendGrid
+    if sendgrid_api_key and sendgrid_sender:
+        try:
+            headers = {
+                "Authorization": f"Bearer {sendgrid_api_key}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "personalizations": [{"to": [{"email": to_email}]}],
+                "from": {"email": sendgrid_sender, "name": "SupportPilot AI"},
+                "subject": subject,
+                "content": [{"type": "text/plain", "value": body}]
+            }
+            resp = requests.post("https://api.sendgrid.com/v3/mail/send", json=payload, headers=headers, timeout=10)
+            if resp.status_code in [200, 201, 202]:
+                return "SENT", None, datetime.utcnow().isoformat()
+            else:
+                return "FAILED", f"SendGrid API Error: {resp.text}", None
+        except Exception as e:
+            return "FAILED", f"SendGrid Request Error: {str(e)}", None
+
+    # OPTION 3: Fallback to SMTP (Works locally, blocked on Render)
     smtp_server = os.environ.get("SMTP_SERVER", "smtp.gmail.com")
     smtp_port = int(os.environ.get("SMTP_PORT", 587))
     smtp_email = os.environ.get("SMTP_EMAIL")
