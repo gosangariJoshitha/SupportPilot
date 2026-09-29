@@ -3,9 +3,12 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
+import requests
 
 def is_configured():
-    return bool(os.environ.get("SMTP_EMAIL")) and bool(os.environ.get("SMTP_PASSWORD"))
+    has_resend = bool(os.environ.get("RESEND_API_KEY"))
+    has_smtp = bool(os.environ.get("SMTP_EMAIL")) and bool(os.environ.get("SMTP_PASSWORD"))
+    return has_resend or has_smtp
 
 def send_resolution_email(ticket_data):
     """
@@ -17,13 +20,6 @@ def send_resolution_email(ticket_data):
     if not is_configured():
         return "NOT_CONFIGURED", "Email integration is not configured.", None
         
-    # Idempotency check should be done by the caller using db state
-    
-    smtp_server = os.environ.get("SMTP_SERVER", "smtp.gmail.com")
-    smtp_port = int(os.environ.get("SMTP_PORT", 587))
-    smtp_email = os.environ.get("SMTP_EMAIL")
-    smtp_password = os.environ.get("SMTP_PASSWORD")
-    
     to_email = ticket_data.get("email")
     if not to_email:
         return "FAILED", "No recipient email provided.", None
@@ -52,6 +48,7 @@ def send_resolution_email(ticket_data):
     sources = ticket_data.get("structured_sources", [])
     sources_str = ", ".join(sources) if sources else "None"
     
+    subject = f"Support Ticket Resolved — #{ticket_id}"
     body = f"""Hello,
 
 Your support ticket has been analyzed by SupportPilot.
@@ -82,10 +79,38 @@ Regards,
 SupportPilot AI Support
 """
 
+    # OPTION 1: Resend HTTP API (Works on Render Free Tier)
+    resend_api_key = os.environ.get("RESEND_API_KEY")
+    if resend_api_key:
+        try:
+            headers = {
+                "Authorization": f"Bearer {resend_api_key}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "from": "SupportPilot <onboarding@resend.dev>",
+                "to": [to_email],
+                "subject": subject,
+                "text": body
+            }
+            resp = requests.post("https://api.resend.com/emails", json=payload, headers=headers, timeout=10)
+            if resp.status_code in [200, 201]:
+                return "SENT", None, datetime.utcnow().isoformat()
+            else:
+                return "FAILED", f"Resend API Error: {resp.text}", None
+        except Exception as e:
+            return "FAILED", f"Resend Request Error: {str(e)}", None
+
+    # OPTION 2: Fallback to SMTP (Works locally, blocked on Render)
+    smtp_server = os.environ.get("SMTP_SERVER", "smtp.gmail.com")
+    smtp_port = int(os.environ.get("SMTP_PORT", 587))
+    smtp_email = os.environ.get("SMTP_EMAIL")
+    smtp_password = os.environ.get("SMTP_PASSWORD")
+    
     msg = MIMEMultipart()
     msg['From'] = smtp_email
     msg['To'] = to_email
-    msg['Subject'] = f"Support Ticket Resolved — #{ticket_id}"
+    msg['Subject'] = subject
     
     msg.attach(MIMEText(body, 'plain'))
     
