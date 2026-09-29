@@ -610,44 +610,53 @@ def api_generate_ticket_resolution(ticket_id):
     
     try:
         ticket = SupportPilotOrchestrator.process_ticket(ticket_id, user_id)
+        
+        if ticket.get("error"):
+            return jsonify({"error": ticket["error"]}), 404
+            
+        database.create_notification(
+            user_id, 
+            "AI Workflow Completed", 
+            f"AI workflow has completed for Ticket #{ticket_id}. Decision: {ticket.get('resolution_decision', 'Unknown')}", 
+            type="info", 
+            ticket_id=ticket_id
+        )
+            
+        if ticket.get("ai_resolution"):
+            try:
+                import re
+                raw = ticket["ai_resolution"]
+                if raw:
+                    raw = re.sub(r'```(?:json)?\n?(.*?)\n?```', r'\1', raw, flags=re.DOTALL).strip()
+                ticket["structured_resolution"] = json.loads(raw)
+            except Exception:
+                ticket["structured_resolution"] = None
+
+        if ticket.get("resolution_sources"):
+            if isinstance(ticket["resolution_sources"], list):
+                ticket["structured_sources"] = ticket["resolution_sources"]
+            else:
+                try:
+                    ticket["structured_sources"] = json.loads(ticket["resolution_sources"])
+                except Exception:
+                    try:
+                        ticket["structured_sources"] = [s.strip() for s in ticket["resolution_sources"].split(',') if s.strip()]
+                    except Exception:
+                        ticket["structured_sources"] = []
+
+        if ticket.get("validation_details"):
+            if isinstance(ticket["validation_details"], dict):
+                ticket["structured_validation"] = ticket["validation_details"]
+            else:
+                try:
+                    ticket["structured_validation"] = json.loads(ticket["validation_details"])
+                except Exception:
+                    ticket["structured_validation"] = None
+
+        return jsonify(ticket)
     except Exception as e:
         import traceback
         return jsonify({"error": "Internal Server Error", "traceback": traceback.format_exc()}), 500
-    
-    if ticket.get("error"):
-        return jsonify({"error": ticket["error"]}), 404
-        
-    database.create_notification(
-        user_id, 
-        "AI Workflow Completed", 
-        f"AI workflow has completed for Ticket #{ticket_id}. Decision: {ticket.get('resolution_decision', 'Unknown')}", 
-        type="info", 
-        ticket_id=ticket_id
-    )
-        
-    if ticket.get("ai_resolution"):
-        try:
-            import re
-            raw = ticket["ai_resolution"]
-            if raw:
-                raw = re.sub(r'```(?:json)?\n?(.*?)\n?```', r'\1', raw, flags=re.DOTALL).strip()
-            ticket["structured_resolution"] = json.loads(raw)
-        except Exception:
-            ticket["structured_resolution"] = None
-
-    if ticket.get("resolution_sources"):
-        try:
-            ticket["structured_sources"] = json.loads(ticket["resolution_sources"])
-        except Exception:
-            ticket["structured_sources"] = [s.strip() for s in ticket["resolution_sources"].split(',') if s.strip()]
-
-    if ticket.get("validation_details"):
-        try:
-            ticket["structured_validation"] = json.loads(ticket["validation_details"])
-        except Exception:
-            ticket["structured_validation"] = None
-
-    return jsonify(ticket)
 
 
 @app.route("/api/model-info", methods=["GET"])
