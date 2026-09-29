@@ -90,7 +90,7 @@ SupportPilot AI Support
     msg.attach(MIMEText(body, 'plain'))
     
     try:
-        with smtplib.SMTP(smtp_server, smtp_port) as server:
+        with smtplib.SMTP(smtp_server, smtp_port, timeout=5) as server:
             server.starttls()
             server.login(smtp_email, smtp_password)
             server.send_message(msg)
