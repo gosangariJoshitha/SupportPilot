@@ -608,7 +608,11 @@ def api_generate_ticket_resolution(ticket_id):
     from agents.orchestrator import SupportPilotOrchestrator
     user_id = session['user_id']
     
-    ticket = SupportPilotOrchestrator.process_ticket(ticket_id, user_id)
+    try:
+        ticket = SupportPilotOrchestrator.process_ticket(ticket_id, user_id)
+    except Exception as e:
+        import traceback
+        return jsonify({"error": "Internal Server Error", "traceback": traceback.format_exc()}), 500
     
     if ticket.get("error"):
         return jsonify({"error": ticket["error"]}), 404

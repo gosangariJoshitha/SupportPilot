@@ -28,8 +28,8 @@ class ValidationAgent:
         
         # M4 Escalation Rules Check
         priority = ticket.get("priority", "Low")
-        repeated_attempts = ticket.get("repeated_attempts", 0)
-        customer_requested_human = ticket.get("customer_requested_human", False)
+        repeated_attempts = ticket.get("repeated_attempts") or 0
+        customer_requested_human = ticket.get("customer_requested_human") or False
         
         if priority == "Critical":
             val_info.update({"decision": "ESCALATE", "reason": "CRITICAL_PRIORITY"})

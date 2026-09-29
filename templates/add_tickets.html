@@ -611,7 +611,9 @@
         if (window.lucide) { window.lucide.createIcons(); }
         setStep(4); // Shows resolution result and "Create Ticket" button
       } else {
-        alert('Failed to generate resolution.');
+        const errText = await res.text();
+        console.error("Backend Error:", errText);
+        alert('Failed to generate resolution. Server says: ' + errText);
         setStep(2);
       }
     } catch(err) {
